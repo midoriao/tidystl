@@ -1,0 +1,50 @@
+\begin{tikzpicture}[
+font=\footnotesize,
+box/.style={draw, rounded corners, align=center, inner sep=3pt},
+group/.style={draw, dashed, rounded corners, inner sep=4pt},
+grouplabel/.style={font=\footnotesize\itshape, anchor=south west},
+arrow/.style={->, thick}
+]
+
+% ---- AST (root at top, leaves at bottom) ----
+\node[box] (astG) {$\Box_{[0,5]}$};
+\node[box, below=4mm of astG] (astAnd) {$\wedge$};
+\node[box, below left=4mm and 1mm of astAnd] (astX) {$x \ge 0$};
+\node[box, below right=4mm and 1mm of astAnd] (astF) {$\Diamond_{[0,2]}$};
+\node[box, below=4mm of astF] (astY) {$y \ge 0$};
+
+\draw[arrow] (astG) -- (astAnd);
+\draw[arrow] (astAnd) -- (astX);
+\draw[arrow] (astAnd) -- (astF);
+\draw[arrow] (astF) -- (astY);
+
+\node[group, fit=(astG) (astX) (astY)] (astgroup) {};
+\node[grouplabel] at (astgroup.north west) {formula AST};
+
+% ---- DAG (two rows, strict left-to-right flow) ----
+% top row:    x -> Ineq -> Min -> WMin
+% bottom row: y -> Ineq -> WMax (into Min)
+\node[box, right=57mm of astAnd, yshift=9mm] (px) {\texttt{Ineq}\\ $p_x(t)$};
+\node[box, below=5mm of px] (py) {\texttt{Ineq}\\ $p_y(t)$};
+\node[box, right=6mm of py] (fwin) {\texttt{WMax}$_{[0,2]}$\\ $e_y(t)$};
+\node[box] (andop) at (fwin |- px) {\texttt{Min}\\ $c(t)$};
+\node[box, right=6mm of andop] (gwin) {\texttt{WMin}$_{[0,5]}$\\ $\rho_\varphi(t)$};
+
+\node[left=4mm of px] (sx) {$x(t)$};
+\node[left=4mm of py] (sy) {$y(t)$};
+
+\draw[arrow] (sx) -- (px);
+\draw[arrow] (sy) -- (py);
+\draw[arrow] (px) -- (andop);
+\draw[arrow] (py) -- (fwin);
+\draw[arrow] (fwin) -- (andop);
+\draw[arrow] (andop) -- (gwin);
+
+\node[group, fit=(sx) (sy) (px) (fwin) (gwin)] (daggroup) {};
+\node[grouplabel] at (daggroup.north west) {computation DAG};
+
+% ---- lowering arrow between the groups (horizontal, at the height of astAnd) ----
+\draw[arrow] (astgroup.east |- astAnd) -- (daggroup.west |- astAnd)
+  node[midway, above=0.5mm, align=center] {backend-specific\\ lowering};
+
+\end{tikzpicture}%

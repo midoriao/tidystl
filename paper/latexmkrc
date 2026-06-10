@@ -1,0 +1,17 @@
+$pdf_mode = 1;
+$pdflatex = 'pdflatex -synctex=1 -interaction=nonstopmode -file-line-error %O %S';
+
+# bibliography
+$bibtex = 'bibtex %O %B';
+
+# clean
+$clean_ext = 'synctex.gz bbl blg aux log out toc fls fdb_latexmk';
+
+# Skim preview
+$pdf_previewer = 'open -a Skim';
+
+# continuous preview
+$pvc_view_file_via_temporary = 0;
+
+# Treat warnings as warnings, not fatal errors
+$silent = 0;

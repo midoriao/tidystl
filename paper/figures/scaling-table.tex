@@ -1,0 +1,18 @@
+% AUTO-GENERATED from extra/artifacts/rv2026-eval/e4/scaling_merged.json
+% by extra/experiments/e4_merge_scaling.py (tidystl repo); do not hand-edit.
+% Times in ms, mean +- std over repeats, identical workload G[0,5]((x>0) and F[0,2](y>0)).
+% dagger: N x measured per-trace time (RTAMT is single-trace; its
+% batching model is a loop, linearity measured at N in {1,8}).
+% OOM: window materialization exceeds memory on the 31 GiB host.
+\begin{tabular}{rr r r r r r r}
+\hline
+$N$ & $T$ & Native & Breach-c. & RTAMT-c. & SIMD & RTAMT & STLCG++ \\
+\hline
+   1 &   101 & $1.30 \pm 0.08$ & $0.98 \pm 0.06$ & $0.57 \pm 0.06$ & $0.02 \pm 0.01$ & $0.40 \pm 0.01$ & $0.31 \pm 0.05$ \\
+   1 &  1001 & $12.15 \pm 0.19$ & $9.34 \pm 0.28$ & $4.58 \pm 0.08$ & $0.19 \pm 0.01$ & $3.74 \pm 0.28$ & $33.71 \pm 1.31$ \\
+  64 &   501 & $11.75 \pm 0.25$ & $7.94 \pm 0.15$ & $5.24 \pm 0.20$ & $2.44 \pm 0.41$ & $118^\dagger$ & $224 \pm 3$ \\
+  64 &  5001 & $358 \pm 11$ & $167 \pm 6$ & $136 \pm 2$ & $31.20 \pm 1.89$ & $1195^\dagger$ & OOM \\
+ 256 &   501 & $26.19 \pm 1.54$ & $21.42 \pm 0.65$ & $15.97 \pm 0.37$ & $3.09 \pm 0.50$ & $471^\dagger$ & $934 \pm 44$ \\
+ 256 &  5001 & $1377 \pm 155$ & $569 \pm 9$ & $515 \pm 23$ & $115 \pm 2$ & $4781^\dagger$ & OOM \\
+\hline
+\end{tabular}%
