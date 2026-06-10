@@ -1,0 +1,93 @@
+%%
+%%  Venue: RV 2026 tool demonstration track
+%%  CfP: https://rv2026.smithengineering.queensu.ca/cfp/
+%%  DL: 2026-6-14 AoE
+
+\documentclass[runningheads]{llncs}
+
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{pdflscape}
+\usepackage[colorinlistoftodos,textsize=small]{todonotes}
+% \todo{...}     actionable: must be resolved before submission (orange, default)
+% \mynote{...}   discussion/consultation item (yellow margin note)
+% \resolved{...} addressed item kept for audit trail (green margin note)
+\newcommand{\mynote}[1]{\todo[color=yellow!40]{#1}}
+\newcommand{\resolved}[1]{\todo[color=green!25]{#1}}
+\usepackage{wasysym}
+\usepackage{xspace}
+\usepackage{listings}
+\definecolor{codebg}{gray}{0.94}
+\definecolor{codekw}{rgb}{0.10,0.15,0.55}
+\definecolor{codestr}{rgb}{0.45,0.10,0.10}
+\definecolor{codecomment}{gray}{0.45}
+\lstset{
+  language=Python,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\itshape\color{codecomment},
+  stringstyle=\color{codestr},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  frame=single, rulecolor=\color{codebg},   % invisible rule = padding only
+  framexleftmargin=4pt, framexrightmargin=4pt,
+  framextopmargin=2pt, framexbottommargin=2pt,
+  xleftmargin=4pt, xrightmargin=4pt,
+  aboveskip=\medskipamount,
+  belowskip=\medskipamount,
+}
+% Page-break-proof code listing (minipage keeps the snippet on one page).
+% NB: no literal \par in the args (\lstnewenvironment is non-\long); \endgraf is its alias.
+\lstnewenvironment{pycode}%
+  {\endgraf\medskip\noindent\minipage{\linewidth}%
+   \lstset{aboveskip=0pt,belowskip=0pt}}%
+  {\endminipage\endgraf\medskip}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{positioning,fit}
+\usepackage[capitalize]{cleveref}
+\crefformat{section}{\S#2#1#3}
+\Crefformat{section}{\S#2#1#3}
+\crefmultiformat{section}{\S#2#1#3}{ and~\S#2#1#3}{, \S#2#1#3}{, and~\S#2#1#3}
+\Crefmultiformat{section}{\S#2#1#3}{ and~\S#2#1#3}{, \S#2#1#3}{, and~\S#2#1#3}
+\crefrangeformat{section}{\S#3#1#4--\S#5#2#6}
+\Crefrangeformat{section}{\S#3#1#4--\S#5#2#6}
+\crefname{table}{Table}{Tables}
+\Crefname{table}{Table}{Tables}
+\crefname{figure}{Figure}{Figures}
+\Crefname{figure}{Figure}{Figures}
+
+\newcommand{\tool}{\textrm{tidySTL}\xspace}
+\newcommand{\toolpkg}{\texttt{tidystl}\xspace}
+
+\title{tidySTL: Exposing Implicit Semantics in STL Evaluation}
+\author{Sota Sato\inst{1} \and Masaki Waga\inst{2}}
+\institute{National Institute of Advanced Industrial Science and Technology (AIST)
+\and Kyoto University}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Signal Temporal Logic (STL) is a specification language with quantitative robust semantics, used across runtime monitoring, falsification, and learning-enabled control. Yet capable tools for evaluating the robust semantics are typically organized around particular applications: a runtime monitor here, a falsification backend there.
+We argue that this fragmentation is largely not accidental. The robust semantics has historically been realized through signal-processing pipelines, in which low-level choices (signal representation, sampling, interpolation) materially affect the robustness values. Together these choices act as an \emph{implicit semantics}, resulting in a patchwork of tools that are not directly comparable and not easily repurposed outside their original application contexts.
+We present tidySTL, a Python library built around an explicit computation DAG, which decouples logical syntax from these implicit choices and exposes extension points where they vary.
+We validate tidySTL with a systematic test suite and cross-check it against existing STL tools, revealing discrepancies that flip verdicts and can mislead downstream falsification. We also demonstrate its extensibility by expressing representative semantics via localized changes to the evaluator layer.
+\end{abstract}
+
+\input{sections/content}
+
+\appendix
+\renewcommand{\theHsection}{appendix.\Alph{section}}
+\input{sections/appendix}
+% \input{sections/working-notes}
+
+\bibliographystyle{splncs04}
+\bibliography{bib/references}
+
+\end{document}

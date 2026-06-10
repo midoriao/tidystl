@@ -1,0 +1,36 @@
+% AUTO-GENERATED from extra/artifacts/rv2026-eval/e1/divergence_matrix.json
+% by extra/experiments/e1_emit_matrix_tex.py (tidystl repo); do not hand-edit.
+% B = Breach 1.11.4, R = RTAMT 0.3.5, S = STLCG++ 0.0.2 (hard min/max).
+% Cells: = matches the common behavior (atol 1e-6, mutually defined
+% timesteps), * differs from the other two, -- cannot express the case
+% (coverage finding), dagger documented special handling.
+\begin{tabular}{l c ccc l}
+\hline
+Case & $|\sigma|$ & B & R & S & Decision point \\
+\hline
+\multicolumn{6}{l}{\emph{Baseline block (operator coverage)}} \\
+\quad $x \ge 3$ & 5 & $=$ & $=$ & $=$ &  \\
+\quad $\neg (x \ge 0)$ & 5 & $=$ & $=$ & $=$ &  \\
+\quad $(x \ge 0) \wedge (y \ge 0)$ & 5 & $\ast$ & $=$ & $=$ & terminal-step rule \\
+\quad $(x \ge 0) \vee (y \ge 0)$ & 5 & $\ast$ & $=$ & $=$ & terminal-step rule \\
+\quad $((x \ge 0) \wedge (y \ge 0)) \vee (z \ge 0)$ & 5 & $\ast$ & $=$ & $=$ & terminal-step rule \\
+\quad $\Box_{[0,2]}(x \ge 0)$ & 5 & $=$ & $=$ & $=$ &  \\
+\quad $\Box_{[1,2]}(x \ge 0)$ & 3 & $=$ & $\ast$ & $=$ & boundary rule \\
+\quad $\Diamond_{[0,2]}(x \ge 0)$ & 5 & $=$ & $=$ & $=$ &  \\
+\quad $\Diamond_{[1,3]}(x \ge 0)$ & 7 & $=$ & $\ast$ & $=$ & boundary rule \\
+\quad $\Diamond_{[1,2]}(x \ge 0)$ & 3 & $=$ & $\ast$ & $=$ & boundary rule \\
+\quad $(x \ge 0) \mathbin{U_{[0,3]}} (y \ge 0)$ & 5 & $=$ & $\ast$ & $=$ & open vs.\ closed endpoints \\
+\quad $(x \ge 0) \mathbin{U_{[1,2]}} (y \ge 0)$ & 5 & $=$ & $\ast$ & $=$ & open vs.\ closed endpoints \\
+\quad $(x \ge 0) \mathbin{U_{[0,4]}} (y \ge 0)$ & 5 & $=$ & $=$ & $=$ &  \\
+\quad $(x \ge 0) \mathbin{U_{[1,2]}} (y \ge 0)$ & 2 & $=$ & $\ast$ & $=$ & boundary rule \\
+\quad $x + y \ge 0$ & 4 & $=$ & $=$ & $=$ &  \\
+\quad $x - y \ge 0$ & 4 & $=$ & $=$ & $=$ &  \\
+\hline
+\multicolumn{6}{l}{\emph{Divergence block (one case per decision point)}} \\
+\quad $\Diamond_{[2,4]}(x \ge 0)$ & 3 & $=$ & $\ast$ & $=$ & boundary rule \\
+\quad $(x \ge 0) \wedge (y \ge 0)$ & 3 & $\ast$ & $=$ & $=$ & terminal-step rule \\
+\quad $\Box_{[0.5,1.5]}(x > 0)$ & 3 & $=$ & -- & -- & window alignment (coverage) \\
+\quad $\Box_{[0,1]}(x > 0)$ & 5 & $=$ & $\dagger$ & -- & signal model \\
+\quad $x = 3$ & 5 & $\ast$ & $=$ & $=$ & equality predicates \\
+\hline
+\end{tabular}%

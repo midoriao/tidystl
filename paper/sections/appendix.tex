@@ -1,0 +1,398 @@
+% ================================================================
+% ################################################################
+% ================================================================
+\section{The Decision Points in Detail}
+\label{sec:formal}
+
+This appendix expands on the decision points of \cref{tab:divergence}: the
+choices an evaluator must fix but the STL formula does not determine. We
+follow the three groups of the table, discussing each decision point in
+turn. The signal interpretation, which bundles the several choices of
+\cref{tab:siginterp}, is treated choice by choice, and for the two headline
+choices of \cref{sec:discrepancies}---the boundary rule and the
+terminal-step rule---we show how each produces the divergence reported
+there. We first recall the standard robustness semantics that every
+evaluator approximates.
+
+% ------------------------------------------------
+\subsection{Standard Robustness}
+
+Fix a signal $\sigma$ in the sense of \cref{def:signal} and a formula
+$\varphi \in \mathbf{Fml}$ as in \cref{def:stl}. The standard quantitative
+(robustness) semantics
+$\rho(\varphi, \sigma, t) \in \mathbb{R} \cup \{\pm\infty\}$ is defined
+inductively, following \cite{fainekos2009robustness,donze2010robust}:
+\begin{align*}
+  \rho(\top,\sigma,t) &= +\infty \\
+  \rho(f(\vec{x}) \geq 0,\sigma,t) &= f(\sigma_{\vec{x}}(t)) \\
+  \rho(\neg\varphi,\sigma,t) &= -\rho(\varphi,\sigma,t) \\
+  \rho(\varphi_1 \vee \varphi_2, \sigma, t) &= \max(\rho(\varphi_1,\sigma,t),\,\rho(\varphi_2,\sigma,t)) \\
+  \rho(\varphi_1 \wedge \varphi_2, \sigma, t) &= \min(\rho(\varphi_1,\sigma,t),\,\rho(\varphi_2,\sigma,t)) \\
+  \rho(\varphi_1 \mathbin{U_I} \varphi_2, \sigma, t) &= \sup_{t' \in t + I} \min\Bigl(\rho(\varphi_2,\sigma,t'),\, \inf_{t'' \in [t,\,t')} \rho(\varphi_1,\sigma,t'')\Bigr) \\
+  \rho(\Diamond_I\varphi, \sigma, t) &= \sup_{t' \in t + I} \rho(\varphi,\sigma,t') \\
+  \rho(\Box_I\varphi, \sigma, t) &= \inf_{t' \in t + I} \rho(\varphi,\sigma,t'),
+\end{align*}
+where $t + I = \{t + s \mid s \in I\}$ and $f(\sigma_{\vec{x}}(t))$ applies
+$f$ to the values of the variables $\vec{x}$ at time $t$. The release
+operator is defined by duality,
+$\varphi_1 \mathbin{R_I} \varphi_2 :\equiv
+ \neg(\neg\varphi_1 \mathbin{U_I} \neg\varphi_2)$,
+and the constant $\bot :\equiv \neg\top$ has
+$\rho(\bot,\sigma,t) = -\infty$.
+
+Read literally, this definition assumes an idealized signal: continuous,
+infinitely long, and known at every instant. An evaluator never has that. It
+has a finite list of samples $\sigma(t_0), \dots, \sigma(t_n)$, and to compute the
+$\sup$, $\inf$, and $\min$ above it must decide what the signal does at the
+times that fall between, before, and after those samples. Those decisions
+form the signal interpretation discussed in \cref{sec:app-open}; the
+remaining decision points arise from corner cases of the definition itself
+(\cref{sec:app-corner}) and from extensions that applications demand beyond
+it (\cref{sec:app-ext}).
+
+% ------------------------------------------------
+\subsection{Fragments and Corner Cases of the Standard Definition}
+\label{sec:app-corner}
+
+\paragraph{Support for until and release.}
+Few tools implement the full syntax of \cref{def:stl}. The until operator,
+with its nested $\inf$, is harder to implement and to vectorize than $\Box$
+and $\Diamond$, and release is often dropped together with it: some tools
+support only the box/diamond fragment, others support until under
+restricted interval forms. The effect is on coverage: a specification
+accepted by one tool is rejected by another before any robustness is
+computed.
+
+\paragraph{Open vs.\ closed interval endpoints.}
+\cref{def:stl} admits open and half-open intervals such as $(1,3]$, but many
+front ends parse only closed ones. Where open intervals are accepted, their
+reading depends on the signal interpretation: under a continuous interpolant
+the $\inf$ over an open window coincides with that over its closure, so the
+difference is invisible, while under a discrete reading excluding an
+endpoint drops a sample and can change the aggregated value.
+
+\paragraph{Robustness of $\top$ and $\bot$.}
+The standard semantics assigns $\rho(\top,\sigma,t) = +\infty$ and
+$\rho(\bot,\sigma,t) = -\infty$. Tools differ in whether they admit infinite
+values at all: some propagate genuine infinities through the $\min$/$\max$
+aggregation, others substitute large finite sentinels, and a sentinel leaks
+into reported values once it is aggregated, scaled, or differentiated.
+
+% ------------------------------------------------
+\subsection{Choices the Definition Leaves Open}
+\label{sec:app-open}
+
+The central decision point in this group is the \emph{signal
+interpretation}: the bundle of choices, summarized in \cref{tab:siginterp},
+by which the finite timed state sequence an evaluator receives is read as
+the signal $\sigma$ that the semantics quantifies over. We discuss its
+choices in turn, then the remaining decision points of the group.
+
+\paragraph{Signal model.}
+The signal model decides how a sampled trace is read as a function of
+continuous time. Under a \emph{piecewise-linear} dense-time model (Breach, and
+\tool's native backend) the value between two samples is their linear
+interpolant, so a predicate such as $x \geq 0$ can change truth between sample
+points. A \emph{piecewise-constant} model holds each sample until the next. A
+\emph{discrete-time} model (RTAMT's default) drops the notion of between-sample
+time altogether: the trace is an indexed sequence and temporal operators count
+indices, not durations. The same formula and the same samples can therefore
+denote different signals before evaluation even begins.
+
+\paragraph{Window alignment.}
+Even once the signal model is fixed, a temporal window $[t+a,\,t+b]$ has
+endpoints that need not coincide with samples. The window-alignment rule
+decides the value taken there. A dense-time backend evaluates the interpolant
+at the exact endpoint; a discrete backend snaps to the nearest index or
+ignores the fractional part. This choice is invisible on uniformly sampled
+traces whose windows align with samples, which is why it is easy to overlook,
+and why divergence appears only on alignment-sensitive inputs.
+
+\paragraph{Boundary rule.}
+When a window $[t+a,\,t+b]$ reaches past the end of the trace at $T$, the
+$\sup$ or $\inf$ ranges in part over times where no sample exists. The boundary
+rule supplies those values. Under \emph{clamp} (\tool, Breach) the last
+sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. Under
+a \emph{pessimistic} rule (RTAMT discrete) the out-of-range part contributes
+nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
+(the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$.
+This is the boundary-rule row of the divergence block in
+\cref{tab:divergence-matrix}. For
+$\varphi = \Diamond_{[2,4]}(x \geq 0)$ evaluated at $t = 1$ on a trace that
+ends at $T = 2$ with $x(T) = 3$, the window $[3,5]$ lies entirely beyond the
+trace. Clamp sees the persisting value $3$ and reports $+3$ (satisfied);
+the pessimistic rule sees an empty window and reports $-\infty$ (violated).
+Same formula, same samples, same time point; opposite verdicts.
+
+\paragraph{Terminal-step rule.}
+At the final sample $t_N$ a tool may report the robustness it computed there,
+or it may overwrite it with the value from the penultimate sample $t_{N-1}$.
+Breach does the latter by default; RTAMT does the former. The two
+agree whenever the final and penultimate robustness coincide, so the choice is
+silent on most traces. It is not silent when they differ.
+This is the terminal-step row of the divergence block in
+\cref{tab:divergence-matrix}. For
+$\varphi = (x \geq 0) \wedge (y \geq 0)$ on trace~A with $x = y = [5, 5, -3]$,
+the penultimate robustness is $+5$ and the final is $-3$. The standard rule
+reports $-3$; the extension rule copies the penultimate $+5$. Against a
+trace~B that holds $+0.1$ throughout, this flips which trace looks better,
+reversing a ranking that a falsification search would act on.
+
+\paragraph{Range of expressible atomic predicates.}
+\cref{def:stl} permits an arbitrary function symbol $f$, but front ends
+restrict what is expressible: to threshold comparisons on single variables,
+to linear arithmetic, or to a fixed expression grammar. The effect is on
+coverage.
+
+\paragraph{Robustness of atomic predicates.}
+Even for an accepted predicate, the evaluator must decide how it is scored:
+the robustness of $f(\vec{x}) \geq 0$ may be the raw signed margin
+$f(\vec{x})$ or a Euclidean distance to the satisfaction
+set~\cite{fainekos2009robustness}, and the two disagree once a predicate
+involves several variables.
+
+% ------------------------------------------------
+\subsection{Domain-Specific Extensions}
+\label{sec:app-ext}
+
+The third group extends the definition rather than reads it: applications
+genuinely demand more than \cref{def:stl} provides, and each extension is a
+decision point because adopting a tool silently adopts its extensions along
+with their semantics.
+
+\paragraph{Equality predicates.}
+The equality $x = 0$ is absent from \cref{def:stl} yet common in practical
+specifications. It is satisfied only at the single value $x = 0$ and admits
+no single standard robustness; a common choice is $-|x|$, which is never
+positive, so even a satisfied equality reports non-positive robustness.
+Breach instead scores equality by a fixed-magnitude sign convention
+($\pm 10^4$), so the reported value carries no metric information at
+all---the equality row of \cref{tab:divergence-matrix} shows the resulting
+cross-tool divergence on inputs every tool accepts.
+
+\paragraph{Past-time operators.}
+Operators such as once and historically mirror the temporal modalities into
+the past. They change the direction in which an evaluator walks the trace,
+and tools either provide them (RTAMT) or not. The effect is on coverage.
+
+\paragraph{Differentiable robustness.}
+Gradient-based learning replaces the $\min$/$\max$ aggregations by smooth
+approximations~\cite{levenberg2020stlcg,pant2017smooth}. The smooth value
+deviates from the standard robustness by construction; the decision point is
+whether the deviation is an exposed, tunable parameter or an implicit
+consequence of the tool choice.
+
+\paragraph{Online evaluation.}
+Online monitoring evaluates a growing prefix, so verdicts must be issued
+before the trace is complete~\cite{deshmukh2017online}. This forces a
+treatment of missing future information---three-valued verdicts, robustness
+intervals---that offline evaluation never confronts.
+
+% ------------------------------------------------
+\subsection{Why ``Implicit''}
+
+None of these choices is written in the STL formula; each is fixed by the
+evaluator. Choosing a tool therefore silently chooses a combination of them,
+and two tools whose combinations differ can report different robustness, or
+even opposite verdicts, on identical input, as the boundary and terminal-step
+examples show. Nor is \cref{tab:divergence} a closed taxonomy: the point is
+not completeness but that such choices exist, are fixed by the evaluator, and
+should be made explicit. The contribution of \tool is not to declare one
+combination correct, but to turn the combination into an explicit, switchable
+argument rather than a property baked into the tool.
+
+% ================================================================
+% ################################################################
+% ================================================================
+\section{The Trace Interface}
+\label{sec:app-trace}
+
+This appendix records how the inspectability used in
+\cref{sec:discrepancies} is realized; the rationale is in
+\cref{sec:design}. The facts below follow the implementation.
+
+Every backend's \texttt{evaluate(formula, signal)} returns a result
+object satisfying one protocol: \texttt{robustness} (the $(N,T)$ output
+array; \texttt{robustness(...)}\ in the public API is shorthand for it),
+a \texttt{has\_trace} flag, and two trace methods,
+\texttt{trace\_for(node)} and \texttt{traced\_nodes()}. During lowering,
+the backend records for every DAG operation it emits the sub-formula
+node it originates from; the operation that produces a sub-formula's
+value is that sub-formula's \emph{representative}. The executor
+evaluates the DAG in topological order and retains every operation's
+output, so the result carries all intermediate robustness signals, not
+only the root. \texttt{trace\_for(sub)} returns the representative
+output for the sub-formula \texttt{sub}; \texttt{traced\_nodes()}
+enumerates the sub-formulas with observable traces.
+
+\begin{pycode}
+phi = parse("G[0,5]((x >= 0) and F[0,2](y >= 0))")
+res = evaluate(phi, sig, backend="native")
+sub = phi.children[0].children[1]   # the F[0,2] sub-formula
+rho_sub = res.trace_for(sub)        # its (N, T) robustness trace
+\end{pycode}
+
+\noindent
+Three details matter for the experiments of \cref{sec:discrepancies}.
+First, \texttt{trace\_for} is keyed by the identity of the sub-formula
+node, so one parsed formula evaluated under two backends yields
+directly comparable per-sub-formula traces; the localizer of
+\cref{sec:discrepancies} is a post-order walk over
+\texttt{node.children} that diffs \texttt{trace\_for} at each node.
+Second, backend post-processing participates in the trace: the
+Breach-compatible backend's terminal-step extension replaces the
+top-level output in the result, which is why the localizer reports it
+(the ``\texttt{PointwiseMin + terminal-step extension}'' line). Third,
+trace support is per backend: the Rust SIMD executor declares
+\texttt{has\_trace = False} and raises on the trace methods---the
+per-operation retention is exactly the cost its scaling column drops.
+
+% ================================================================
+% ################################################################
+% ================================================================
+\section{The Tool Landscape in Detail}
+\label{sec:app-landscape}
+
+\cref{tab:landscape-detailed} compares representative tools along the axes
+on which their evaluators actually differ, expanding the summary in
+\cref{sec:background}.
+
+\begin{table}[ht]
+\centering
+\caption{How representative tools differ along the axes that shape their
+evaluators.}
+\label{tab:landscape-detailed}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllllll}
+\hline
+Tool & Interface & Signal model & Online mode & Primary target & Auto-grad & Stack \\
+\hline
+Breach~\cite{donze2010breach,donze2013efficient} & API + DSL & piecewise-linear   & offline & falsification           & no  & MATLAB, mature \\
+RTAMT~\cite{nickovic2020rtamt,nickovic2024rtamt} & DSL + API & discrete (default) / dense & delayed & runtime verification    & no  & Python, heavy \\
+MoonLight~\cite{bartocci2023moonlight}           & DSL + API & spatial + temporal & partial & spatial RV              & no  & Java / CLI / Python \\
+STLCG++~\cite{kapoor2025stlcgpp}                 & API       & discrete (tensor)  & none    & differentiable learning & yes & PyTorch \\
+% \tool     & DSL + API & piecewise-linear   & offline & evaluation              & no  & Python, light \\
+\hline
+\end{tabular}%
+}
+\end{table}
+
+% ================================================================
+\section{Experimental Details}
+\label{sec:app-eval}
+% ================================================================
+
+This appendix records the protocols and full data behind the findings
+reported in \cref{sec:evaluation}.
+
+\paragraph{Case set and comparison protocol.}
+The baseline block comprises 16 operator-coverage cases drawn from the
+regression suite; the divergence block adds five cases, each targeting one
+decision point of \cref{tab:divergence,tab:siginterp}. Each tool runs in
+its native environment (versions as in \cref{tab:divergence-matrix}).
+Outputs are normalized to per-timestep robustness vectors and compared
+pairwise at absolute tolerance $10^{-6}$ on mutually defined timesteps.
+STLCG++ runs with exact $\min$/$\max$ aggregation---its default
+configuration; smooth aggregation is opt-in---so its column reflects its
+discrete-time semantics rather than smoothing, which remains a
+coverage-level decision point of \cref{tab:divergence} not exercised here.
+
+\paragraph{Compatibility validation.}
+Every tool column of \cref{tab:divergence-matrix} doubles as a validation
+check: on each case, the named compatibility backend must reproduce its
+tool's output per timestep at $10^{-6}$---21 cases $\times$ 3 tools, hence
+63 case--tool cells. The check passes on all 59 cells that carry values;
+three further cells match on coverage (backend and tool agree the case is
+inexpressible). The one mismatch is deliberate: where real RTAMT silently
+reinterprets a non-uniform grid as uniformly indexed samples, the
+RTAMT-compatible backend rejects the input instead of reproducing the
+reinterpretation. The backends implement each tool's \emph{documented}
+rules; the reproduction check verifies the implementations rather than
+defining them---and it is nontrivial: on the first live Breach run it
+exposed two fidelity bugs in our own Breach-compatible backend (the
+equality convention and the window-endpoint reduction), both fixed and
+re-verified before the numbers reported here were produced.
+
+\paragraph{Localization procedure.}
+On the validated columns, the localizer exploits that \tool backends share
+one formula representation with per-node traces: it walks the shared
+syntax tree in post-order and reports the \emph{minimal divergent
+node}---the lowest node whose traces disagree while all its children
+agree---together with each backend's primitive operation at that node. On
+the two headline rows of \cref{tab:divergence-matrix}:
+\begin{lstlisting}[language={},keywordstyle={},basicstyle=\footnotesize\ttfamily]
+first divergent op at `F[2,4]`: WindowMax[2,4] vs
+    DiscreteWindowMax[2,4] (t-index 1) -> boundary rule
+first divergent op at `and`: PointwiseMin vs PointwiseMin
+    + terminal-step extension (t-index 2) -> terminal-step rule
+\end{lstlisting}
+Backend pairs whose lowerings differ structurally are compared at the
+shared syntax-tree level rather than between lowered representations;
+predicate-internal arithmetic is treated as a leaf, since no decision
+point lives inside it.
+
+\paragraph{Trace-family construction.}
+A single constructed trace could sit on a knife edge, so each headline
+case is widened to a swept family of 201 traces whose final sample varies
+over $[-5,5]$, spanning regions of agreement and disagreement; no rule is
+taken as the reference, and the rates are symmetric between the rules by
+construction. For the boundary-rule family ($\Diamond_{[2,4]}(x \ge 0)$,
+window past the trace end), the clamping and pessimistic rules return
+opposite verdicts at the divergence timestep on exactly those traces whose
+final sample is non-negative (101 of 201). The terminal-step family is a
+conjunction violated only at the final sample; the as-is and
+extend-penultimate rules flip the final verdict on 100 of 201 traces and
+rank the trace oppositely against a fixed reference trace with an interior
+violation---the ranking signal a falsification search acts on---on 80 of
+201. These rates measure the width of the disagreement region within
+each controlled family---the divergences are not measure-zero
+coincidences---not a frequency claim about any particular workload.
+
+\paragraph{Falsification setup.}
+The system is a closed-form speed model $\dot v = K u(t) - c\,v$ with
+piecewise-constant throttle on four segments (a bounded $[0,1]^4$ search
+space; traces sampled exactly, no integrator); the specification is
+$(v \le 8.8) \wedge \Diamond_{[0.5,1.5]}(v \le 25)$, whose second conjunct
+never fails but carries the monitor horizon past the end of the trace. A
+fixed $(1{+}1)$-ES with random restarts minimizes the monitor-style
+objective $\min_t \rho(t)$; only the objective semantics varies across
+arms, and every claimed falsification is validated by an exact closed-form
+check of the system itself, so no backend acts as the verdict oracle. The
+configuration, seeds, and budget (50 seeded runs, 300 simulations each)
+were frozen before the runs.
+
+Per-arm results behind \cref{fig:falsification}: under the clamping
+boundary rule the search falsifies in 50/50 runs (median 26.5
+simulations); adding the terminal-step extension masks violations that
+appear only at the final sample, costing one run and roughly $1.5\times$
+the simulations (49/50, median 40). Under the pessimistic rule the
+out-of-range window makes the objective $-\infty$ for every input, so the
+search degenerates to blind sampling: 10/50 runs falsify (median 214), and
+14{,}027 candidate falsifications claimed across the campaign are rejected
+by the exact system-level check. The search runs to completion in every
+arm; the disagreement between the arms is silent.
+
+\paragraph{Variant accounting.}
+LOC in \cref{tab:variation} counts variant-specific code only: blank,
+comment-only, and docstring lines are excluded, shared infrastructure is
+excluded, and Rust is counted separately. The native backend is the
+baseline and has no row; the Rust SIMD executor ships as an optional
+native extension alongside the five backends. The full regression suite
+comprises 181 tests and passes with all variants installed.
+
+\paragraph{Full timing data.}
+\cref{tab:scaling} tabulates the measurements plotted in
+\cref{fig:scaling}.
+
+\begin{table}[ht]
+\centering
+\caption{Mean evaluation time (ms) $\pm$ std over a batch of $N$ traces of
+length $T$; identical workload
+$\Box_{[0,5]}((x>0)\wedge\Diamond_{[0,2]}(y>0))$ for every column. This is
+the data plotted in \cref{fig:scaling}. $\dagger$: RTAMT evaluates one
+trace per call, so batch times are $N \times$ the measured per-trace time
+(linearity checked at $N \in \{1,8\}$). OOM: window materialization
+exceeds memory on the 32\,GB host.}
+\label{tab:scaling}
+\input{figures/scaling-table}
+\end{table}
