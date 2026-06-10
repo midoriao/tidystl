@@ -1,0 +1,34 @@
+{
+  "div_boundary_F24": {
+    "tidystl": "F[2,4](x >= 0)",
+    "rtamt": "eventually[2:4](x >= 0)",
+    "breach": "ev_[2,4] (x[t] > 0)",
+    "stlcgpp": "F[2,4](x >= 0)",
+    "notes": "At t>0 the window [t+2, t+4] runs past the trace end (t_max=2): clamping vs pessimistic boundary rules differ. Hero cell: Breach output must come from a real run (no recorded CSV exists for this case)."
+  },
+  "div_terminal_and": {
+    "tidystl": "(x >= 0) and (y >= 0)",
+    "rtamt": "((x >= 0) and (y >= 0))",
+    "breach": "(x[t] > 0) and (y[t] > 0)",
+    "stlcgpp": "(x >= 0) and (y >= 0)",
+    "notes": "Both signals violate only at the final sample; Breach extends the penultimate value of top-level and/or results over the terminal step. Hero cell: Breach output must come from a real run (no recorded CSV exists for this case)."
+  },
+  "div_interp_sparse": {
+    "tidystl": "G[0.5,1.5](x > 0)",
+    "breach": "alw_[0.5,1.5] (x[t] > 0)",
+    "notes": "Window falls entirely between sample points; piecewise-linear vs discrete sampling differ. Discrete tools cannot express the non-integer-multiple interval bounds: RTAMT discrete-time and STLCG++ are coverage '--'. Reuses the recorded Breach case interp_sparse (identical data)."
+  },
+  "div_nonuniform_always": {
+    "tidystl": "G[0,1](x > 0)",
+    "rtamt": "always[0:1](x > 0)",
+    "breach": "alw_[0,1] (x[t] > 0)",
+    "notes": "Non-uniform grid. Observed 2026-06-05: real RTAMT 0.3.5 does NOT raise; it silently treats the trace as uniform sample indices (out[i] = min(x[i], x[i+1])). The original trace (x[3]=4) made index semantics coincide with the piecewise-linear reading; x[3]=-2 separates them (PL [0,1,-1,-2,2] vs index [0,1,-2,-2,2], divergence at t=1.5). tidystl's rtamt backend instead REJECTS non-uniform grids -- a deliberate, documented coverage mismatch with the real tool, reported as such in the reproduction artifact. STLCG++ has no time vector -> coverage '--'. Breach cell needs the Day-3 run (the recorded nonuniform_always CSV has the pre-change trace)."
+  },
+  "div_equality": {
+    "tidystl": "x == 3",
+    "rtamt": "x == 3",
+    "breach": "x[t] == 3",
+    "stlcgpp": "x == 3",
+    "notes": "Robustness of an equality predicate. Verified 2026-06-05: RTAMT 0.3.5 and STLCG++ 0.0.2 (Equal) both yield -|x-3|, matching tidystl on these samples. Re-verified on the live Breach run (1.11.4, MATLAB R2022b): contrary to the Day-2 assumption, Breach PARSES 'x[t] == 3' and returns BigM sign semantics (+/-10000), not a distance -- the cell is a genuine value divergence on the equality-predicate decision point, not a coverage gap."
+  }
+}

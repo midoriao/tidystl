@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.venv-*/
+dist/
+build/
+.worktrees/
+.tmp/
+.ruff_cache/
+.pyright/
+
+# Editor / IDE / agent-tool local config (never part of a release)
+.claude/
+.idea/
+.vscode/
+.mcp.json
+
+# Experiment outputs (regeneratable from the e*/ runners)
+extra/outputs/
+
+# Rust/maturin
+extra/tidystl_simd/target/
+extra/tidystl_simd/tidystl_simd/*.so
+extra/tidystl_simd/tidystl_simd/*.pyd

@@ -1,0 +1,98 @@
+{
+  "predicate_gte": {
+    "tidystl": "x >= 3",
+    "rtamt": "x >= 3",
+    "breach": "x[t] - 3 > 0",
+    "stlcgpp": "x >= 3"
+  },
+  "not_simple": {
+    "tidystl": "not (x >= 0)",
+    "rtamt": "not (x >= 0)",
+    "breach": "not (x[t] > 0)",
+    "stlcgpp": "not (x >= 0)"
+  },
+  "and_two": {
+    "tidystl": "(x >= 0) and (y >= 0)",
+    "rtamt": "((x >= 0) and (y >= 0))",
+    "breach": "(x[t] > 0) and (y[t] > 0)",
+    "stlcgpp": "(x >= 0) and (y >= 0)"
+  },
+  "or_two": {
+    "tidystl": "(x >= 0) or (y >= 0)",
+    "rtamt": "((x >= 0) or (y >= 0))",
+    "breach": "(x[t] > 0) or (y[t] > 0)",
+    "stlcgpp": "(x >= 0) or (y >= 0)"
+  },
+  "combined_and_or": {
+    "tidystl": "((x >= 0) and (y >= 0)) or (z >= 0)",
+    "rtamt": "(((x >= 0) and (y >= 0)) or (z >= 0))",
+    "breach": "((x[t] > 0) and (y[t] > 0)) or (z[t] > 0)",
+    "stlcgpp": "((x >= 0) and (y >= 0)) or (z >= 0)"
+  },
+  "always_sliding": {
+    "tidystl": "G[0,2](x >= 0)",
+    "rtamt": "always[0:2](x >= 0)",
+    "breach": "alw_[0,2] (x[t] > 0)",
+    "stlcgpp": "G[0,2](x >= 0)"
+  },
+  "always_boundary": {
+    "tidystl": "G[1,2](x >= 0)",
+    "rtamt": "always[1:2](x >= 0)",
+    "breach": "alw_[1,2] (x[t] > 0)",
+    "stlcgpp": "G[1,2](x >= 0)"
+  },
+  "eventually_sliding": {
+    "tidystl": "F[0,2](x >= 0)",
+    "rtamt": "eventually[0:2](x >= 0)",
+    "breach": "ev_[0,2] (x[t] > 0)",
+    "stlcgpp": "F[0,2](x >= 0)"
+  },
+  "eventually_offset": {
+    "tidystl": "F[1,3](x >= 0)",
+    "rtamt": "eventually[1:3](x >= 0)",
+    "breach": "ev_[1,3] (x[t] > 0)",
+    "stlcgpp": "F[1,3](x >= 0)"
+  },
+  "eventually_boundary": {
+    "tidystl": "F[1,2](x >= 0)",
+    "rtamt": "eventually[1:2](x >= 0)",
+    "breach": "ev_[1,2] (x[t] > 0)",
+    "stlcgpp": "F[1,2](x >= 0)"
+  },
+  "until_basic": {
+    "tidystl": "(x >= 0) U[0,3] (y >= 0)",
+    "rtamt": "((x >= 0) until[0:3] (y >= 0))",
+    "breach": "(x[t] > 0) until_[0,3] (y[t] > 0)",
+    "stlcgpp": "(x >= 0) U[0,3] (y >= 0)"
+  },
+  "until_tight": {
+    "tidystl": "(x >= 0) U[1,2] (y >= 0)",
+    "rtamt": "((x >= 0) until[1:2] (y >= 0))",
+    "breach": "(x[t] > 0) until_[1,2] (y[t] > 0)",
+    "stlcgpp": "(x >= 0) U[1,2] (y >= 0)"
+  },
+  "until_never_sat": {
+    "tidystl": "(x >= 0) U[0,4] (y >= 0)",
+    "rtamt": "((x >= 0) until[0:4] (y >= 0))",
+    "breach": "(x[t] > 0) until_[0,4] (y[t] > 0)",
+    "stlcgpp": "(x >= 0) U[0,4] (y >= 0)"
+  },
+  "until_boundary": {
+    "tidystl": "(x >= 0) U[1,2] (y >= 0)",
+    "rtamt": "((x >= 0) until[1:2] (y >= 0))",
+    "breach": "(x[t] > 0) until_[1,2] (y[t] > 0)",
+    "stlcgpp": "(x >= 0) U[1,2] (y >= 0)"
+  },
+  "arith_sum": {
+    "tidystl": "x + y >= 0",
+    "rtamt": "x + y >= 0",
+    "breach": "x[t] + y[t] > 0",
+    "stlcgpp": "x + y >= 0"
+  },
+  "arith_difference": {
+    "tidystl": "x - y >= 0",
+    "rtamt": "x - y >= 0",
+    "breach": "x[t] - y[t] > 0",
+    "stlcgpp": "x - y >= 0"
+  }
+}
