@@ -1,27 +1,25 @@
 % ================================================================
 % ################################################################
 % ================================================================
-\section{The Decision Points in Detail}
+\section{Scope and Implicit Semantic Choices in Detail}
 \label{sec:formal}
 
-This appendix expands on the decision points of \cref{tab:divergence}: the
-choices an evaluator must fix but the STL formula does not determine. We
-follow the three groups of the table, discussing each decision point in
-turn. The signal interpretation, which bundles the several choices of
-\cref{tab:siginterp}, is treated choice by choice, and for the two headline
-choices of \cref{sec:discrepancies}---the boundary rule and the
-terminal-step rule---we show how each produces the divergence reported
-there. We first recall the standard robustness semantics that every
-evaluator approximates.
+This appendix expands the implicit choices of
+\cref{tab:divergence} and organizes the sources of cross-tool
+difference. We first recall the reference robustness semantics, then detail
+finite-trace interpretation, coverage, and implementation-specific behavior.
+We finally distinguish explicit selection of advanced semantic
+extensions from implicit tool behavior around them.
 
 % ------------------------------------------------
 \subsection{Standard Robustness}
 
-Fix a signal $\sigma$ in the sense of \cref{def:signal} and a formula
+Following Donz\'e and Maler~\cite{donze2010robust}, fix a signal
+$\sigma$ in the sense of \cref{def:signal} and a formula
 $\varphi \in \mathbf{Fml}$ as in \cref{def:stl}. The standard quantitative
 (robustness) semantics
 $\rho(\varphi, \sigma, t) \in \mathbb{R} \cup \{\pm\infty\}$ is defined
-inductively, following \cite{fainekos2009robustness,donze2010robust}:
+inductively:
 \begin{align*}
   \rho(\top,\sigma,t) &= +\infty \\
   \rho(f(\vec{x}) \geq 0,\sigma,t) &= f(\sigma_{\vec{x}}(t)) \\
@@ -45,13 +43,10 @@ infinitely long, and known at every instant. An evaluator never has that. It
 has a finite list of samples $\sigma(t_0), \dots, \sigma(t_n)$, and to compute the
 $\sup$, $\inf$, and $\min$ above it must decide what the signal does at the
 times that fall between, before, and after those samples. Those decisions
-form the signal interpretation discussed in \cref{sec:app-open}; the
-remaining decision points arise from corner cases of the definition itself
-(\cref{sec:app-corner}) and from extensions that applications demand beyond
-it (\cref{sec:app-ext}).
+form the finite-trace interpretation discussed in \cref{sec:app-open}.
 
 % ------------------------------------------------
-\subsection{Fragments and Corner Cases of the Standard Definition}
+\subsection{Coverage and Implementation Deviations}
 \label{sec:app-corner}
 
 \paragraph{Support for until and release.}
@@ -61,7 +56,14 @@ and $\Diamond$, and release is often dropped together with it: some tools
 support only the box/diamond fragment, others support until under
 restricted interval forms. The effect is on coverage: a specification
 accepted by one tool is rejected by another before any robustness is
-computed.
+computed. This is a syntax-coverage choice: adopting the tool implicitly
+selects which formulas can be evaluated.
+
+\paragraph{Range of expressible atomic predicates.}
+\cref{def:stl} permits an arbitrary function symbol $f$, but front ends
+restrict what is expressible: to threshold comparisons on single variables,
+to linear arithmetic, or to a fixed expression grammar. This is also a
+coverage choice.
 
 \paragraph{Open vs.\ closed interval endpoints.}
 \cref{def:stl} admits open and half-open intervals such as $(1,3]$, but many
@@ -69,24 +71,32 @@ front ends parse only closed ones. Where open intervals are accepted, their
 reading depends on the signal interpretation: under a continuous interpolant
 the $\inf$ over an open window coincides with that over its closure, so the
 difference is invisible, while under a discrete reading excluding an
-endpoint drops a sample and can change the aggregated value.
+endpoint drops a sample and can change the aggregated value. Rejecting an
+open interval is a coverage choice; silently treating it as closed is an
+implementation deviation. Both are implicit because the formula does not
+announce how the evaluator will handle it.
 
 \paragraph{Robustness of $\top$ and $\bot$.}
 The standard semantics assigns $\rho(\top,\sigma,t) = +\infty$ and
 $\rho(\bot,\sigma,t) = -\infty$. Tools differ in whether they admit infinite
 values at all: some propagate genuine infinities through the $\min$/$\max$
 aggregation, others substitute large finite sentinels, and a sentinel leaks
-into reported values once it is aggregated, scaled, or differentiated.
+into reported values once it is aggregated, scaled, or differentiated. Since
+the reference semantics fixes genuine infinities, a finite sentinel is an
+implementation deviation. It is nevertheless an implicit semantic choice in
+our taxonomy because adopting the evaluator silently selects this effective
+behavior.
 
 % ------------------------------------------------
-\subsection{Choices the Definition Leaves Open}
+\subsection{Implicit Semantic Choices for Finite Inputs}
 \label{sec:app-open}
 
-The central decision point in this group is the \emph{signal
-interpretation}: the bundle of choices, summarized in \cref{tab:siginterp},
+The most consequential category is the \emph{finite-trace interpretation}: the bundle of
+implicit choices, summarized in \cref{tab:divergence},
 by which the finite timed state sequence an evaluator receives is read as
 the signal $\sigma$ that the semantics quantifies over. We discuss its
-choices in turn, then the remaining decision points of the group.
+choices in turn, then the remaining implicit choices in
+\cref{tab:divergence}.
 
 \paragraph{Signal model.}
 The signal model decides how a sampled trace is read as a function of
@@ -138,12 +148,6 @@ reports $-3$; the extension rule copies the penultimate $+5$. Against a
 trace~B that holds $+0.1$ throughout, this flips which trace looks better,
 reversing a ranking that a falsification search would act on.
 
-\paragraph{Range of expressible atomic predicates.}
-\cref{def:stl} permits an arbitrary function symbol $f$, but front ends
-restrict what is expressible: to threshold comparisons on single variables,
-to linear arithmetic, or to a fixed expression grammar. The effect is on
-coverage.
-
 \paragraph{Robustness of atomic predicates.}
 Even for an accepted predicate, the evaluator must decide how it is scored:
 the robustness of $f(\vec{x}) \geq 0$ may be the raw signed margin
@@ -152,19 +156,23 @@ set~\cite{fainekos2009robustness}, and the two disagree once a predicate
 involves several variables.
 
 % ------------------------------------------------
-\subsection{Domain-Specific Extensions}
+\subsection{Advanced Semantic Extensions}
 \label{sec:app-ext}
 
-The third group extends the definition rather than reads it: applications
-genuinely demand more than \cref{def:stl} provides, and each extension is a
-decision point because adopting a tool silently adopts its extensions along
-with their semantics.
+Applications genuinely demand more than \cref{def:stl} provides. The
+following extensions explicitly select a different language or evaluation
+problem. That selection is not implicit when exposed to the user; whether a
+tool supports the extension is an implicit coverage choice, and any
+tool-fixed behavior within the selected extension remains an implicit choice.
 
 \paragraph{Equality predicates.}
 The equality $x = 0$ is absent from \cref{def:stl} yet common in practical
-specifications. It is satisfied only at the single value $x = 0$ and admits
-no single standard robustness; a common choice is $-|x|$, which is never
-positive, so even a satisfied equality reports non-positive robustness.
+specifications. Adding equality to the language is an explicit extension;
+once a tool accepts it, however, the assigned robustness is an implicit
+choice because the formula does not select one. Equality is satisfied only
+at the single value $x = 0$ and admits no single standard robustness; a
+common choice is $-|x|$, which is never positive, so even a satisfied
+equality reports non-positive robustness.
 Breach instead scores equality by a fixed-magnitude sign convention
 ($\pm 10^4$), so the reported value carries no metric information at
 all---the equality row of \cref{tab:divergence-matrix} shows the resulting
@@ -178,9 +186,10 @@ and tools either provide them (RTAMT) or not. The effect is on coverage.
 \paragraph{Differentiable robustness.}
 Gradient-based learning replaces the $\min$/$\max$ aggregations by smooth
 approximations~\cite{levenberg2020stlcg,pant2017smooth}. The smooth value
-deviates from the standard robustness by construction; the decision point is
-whether the deviation is an exposed, tunable parameter or an implicit
-consequence of the tool choice.
+deviates from the standard robustness by construction. Whether the deviation
+is exposed as a tunable parameter or buried in the tool determines its
+classification: explicitly selecting smooth robustness changes the evaluation
+problem, while a buried approximation is implicit implementation behavior.
 
 \paragraph{Online evaluation.}
 Online monitoring evaluates a growing prefix, so verdicts must be issued
@@ -191,61 +200,16 @@ intervals---that offline evaluation never confronts.
 % ------------------------------------------------
 \subsection{Why ``Implicit''}
 
-None of these choices is written in the STL formula; each is fixed by the
-evaluator. Choosing a tool therefore silently chooses a combination of them,
-and two tools whose combinations differ can report different robustness, or
-even opposite verdicts, on identical input, as the boundary and terminal-step
-examples show. Nor is \cref{tab:divergence} a closed taxonomy: the point is
-not completeness but that such choices exist, are fixed by the evaluator, and
-should be made explicit. The contribution of \tool is not to declare one
-combination correct, but to turn the combination into an explicit, switchable
-argument rather than a property baked into the tool.
-
-% ================================================================
-% ################################################################
-% ================================================================
-\section{The Trace Interface}
-\label{sec:app-trace}
-
-This appendix records how the inspectability used in
-\cref{sec:discrepancies} is realized; the rationale is in
-\cref{sec:design}. The facts below follow the implementation.
-
-Every backend's \texttt{evaluate(formula, signal)} returns a result
-object satisfying one protocol: \texttt{robustness} (the $(N,T)$ output
-array; \texttt{robustness(...)}\ in the public API is shorthand for it),
-a \texttt{has\_trace} flag, and two trace methods,
-\texttt{trace\_for(node)} and \texttt{traced\_nodes()}. During lowering,
-the backend records for every DAG operation it emits the sub-formula
-node it originates from; the operation that produces a sub-formula's
-value is that sub-formula's \emph{representative}. The executor
-evaluates the DAG in topological order and retains every operation's
-output, so the result carries all intermediate robustness signals, not
-only the root. \texttt{trace\_for(sub)} returns the representative
-output for the sub-formula \texttt{sub}; \texttt{traced\_nodes()}
-enumerates the sub-formulas with observable traces.
-
-\begin{pycode}
-phi = parse("G[0,5]((x >= 0) and F[0,2](y >= 0))")
-res = evaluate(phi, sig, backend="native")
-sub = phi.children[0].children[1]   # the F[0,2] sub-formula
-rho_sub = res.trace_for(sub)        # its (N, T) robustness trace
-\end{pycode}
-
-\noindent
-Three details matter for the experiments of \cref{sec:discrepancies}.
-First, \texttt{trace\_for} is keyed by the identity of the sub-formula
-node, so one parsed formula evaluated under two backends yields
-directly comparable per-sub-formula traces; the localizer of
-\cref{sec:discrepancies} is a post-order walk over
-\texttt{node.children} that diffs \texttt{trace\_for} at each node.
-Second, backend post-processing participates in the trace: the
-Breach-compatible backend's terminal-step extension replaces the
-top-level output in the result, which is why the localizer reports it
-(the ``\texttt{PointwiseMin + terminal-step extension}'' line). Third,
-trace support is per backend: the Rust SIMD executor declares
-\texttt{has\_trace = False} and raises on the trace methods---the
-per-operation retention is exactly the cost its scaling column drops.
+The choices in \cref{tab:divergence} are implicit because they
+are absent from both the STL formula and the finite sampled input, yet are
+fixed by adopting the evaluator. Choosing a tool therefore silently chooses a
+combination of finite-trace conventions, scoring rules, coverage boundaries,
+and implementation behavior. ``Choice'' here names that effective behavior
+without judging whether it is deliberate. Two tools whose
+combinations differ can reject different inputs, report different robustness,
+or even produce opposite verdicts on identical input. The contribution of
+\tool is not to declare one combination correct, but to expose and diagnose
+the combination rather than leave it as a property buried in the tool.
 
 % ================================================================
 % ################################################################
@@ -285,17 +249,25 @@ STLCG++~\cite{kapoor2025stlcgpp}                 & API       & discrete (tensor)
 This appendix records the protocols and full data behind the findings
 reported in \cref{sec:evaluation}.
 
+\paragraph{Artifact and reproducibility.}
+The public \href{https://github.com/midoriao/tidystl}{artifact repository}
+contains the implementation, fixtures, and reference-tool adapters. The
+\href{https://github.com/midoriao/tidystl/blob/main/docs/usage.md}{user manual}
+documents installation, backend semantics, and worked examples; the
+\href{https://github.com/midoriao/tidystl/blob/main/extra/experiments/README.md}{experiment guide}
+documents how to regenerate every evaluation record, table, and figure.
+
 \paragraph{Case set and comparison protocol.}
 The baseline block comprises 16 operator-coverage cases drawn from the
 regression suite; the divergence block adds five cases, each targeting one
-decision point of \cref{tab:divergence,tab:siginterp}. Each tool runs in
+implicit choice from \cref{tab:divergence}. Each tool runs in
 its native environment (versions as in \cref{tab:divergence-matrix}).
 Outputs are normalized to per-timestep robustness vectors and compared
 pairwise at absolute tolerance $10^{-6}$ on mutually defined timesteps.
 STLCG++ runs with exact $\min$/$\max$ aggregation---its default
 configuration; smooth aggregation is opt-in---so its column reflects its
-discrete-time semantics rather than smoothing, which remains a
-coverage-level decision point of \cref{tab:divergence} not exercised here.
+discrete-time semantics rather than smoothing, which remains an
+advanced semantic extension not exercised here.
 
 \paragraph{Compatibility validation.}
 Every tool column of \cref{tab:divergence-matrix} doubles as a validation
@@ -315,9 +287,9 @@ re-verified before the numbers reported here were produced.
 
 \paragraph{Localization procedure.}
 On the validated columns, the localizer exploits that \tool backends share
-one formula representation with per-node traces: it walks the shared
+one formula representation with inspectable per-node outputs: it walks the shared
 syntax tree in post-order and reports the \emph{minimal divergent
-node}---the lowest node whose traces disagree while all its children
+node}---the lowest node whose outputs disagree while all its children
 agree---together with each backend's primitive operation at that node. On
 the two headline rows of \cref{tab:divergence-matrix}:
 \begin{lstlisting}[language={},keywordstyle={},basicstyle=\footnotesize\ttfamily]
@@ -328,8 +300,8 @@ first divergent op at `and`: PointwiseMin vs PointwiseMin
 \end{lstlisting}
 Backend pairs whose lowerings differ structurally are compared at the
 shared syntax-tree level rather than between lowered representations;
-predicate-internal arithmetic is treated as a leaf, since no decision
-point lives inside it.
+predicate-internal arithmetic is treated as a leaf, since none of the
+implicit choices studied here concerns its internal operations.
 
 \paragraph{Trace-family construction.}
 A single constructed trace could sit on a knife edge, so each headline
@@ -380,8 +352,29 @@ baseline and has no row; the Rust SIMD executor ships as an optional
 native extension alongside the five backends. The full regression suite
 comprises 181 tests and passes with all variants installed.
 
-\paragraph{Full timing data.}
-\cref{tab:scaling} tabulates the measurements plotted in
+\paragraph{Performance sanity check.}
+The benchmark in \cref{fig:scaling} compares \tool backends with real RTAMT and STLCG++ on
+the same workload. On single traces, the explicit evaluator layer remains
+within the same order of magnitude as the Python-stack references. On
+batches, \tool's batch-first signal layout amortizes per-trace cost, making
+the native backend substantially faster than looping RTAMT and faster than
+the tensor-batched STLCG++ run shown here. The SIMD executor gives the
+expected speed ceiling once per-node observability is dropped. This check
+shows that inspectability does not impose prohibitive overhead; performance
+is not a primary evaluation claim.
+
+\begin{figure}[ht]
+\centering
+\input{figures/scaling-plot}
+\caption{Mean evaluation time on representative workloads, plotted on a
+log scale. All bars use the same formula
+$\Box_{[0,5]}((x>0)\wedge\Diamond_{[0,2]}(y>0))$; error bars show one
+standard deviation. RTAMT$^\dagger$ batch times are $N \times$ the
+measured per-trace time; missing STLCG++ bars exceed memory (OOM).}
+\label{fig:scaling}
+\end{figure}
+
+\Cref{tab:scaling} tabulates the measurements plotted in
 \cref{fig:scaling}.
 
 \begin{table}[ht]

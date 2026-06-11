@@ -6,7 +6,7 @@
 % (coverage finding), dagger documented special handling.
 \begin{tabular}{l c ccc l}
 \hline
-Case & $|\sigma|$ & B & R & S & Decision point \\
+Case & $|\sigma|$ & B & R & S & Implicit choice \\
 \hline
 \multicolumn{6}{l}{\emph{Baseline block (operator coverage)}} \\
 \quad $x \ge 3$ & 5 & $=$ & $=$ & $=$ &  \\
@@ -26,7 +26,7 @@ Case & $|\sigma|$ & B & R & S & Decision point \\
 \quad $x + y \ge 0$ & 4 & $=$ & $=$ & $=$ &  \\
 \quad $x - y \ge 0$ & 4 & $=$ & $=$ & $=$ &  \\
 \hline
-\multicolumn{6}{l}{\emph{Divergence block (one case per decision point)}} \\
+\multicolumn{6}{l}{\emph{Divergence block (one case per implicit choice)}} \\
 \quad $\Diamond_{[2,4]}(x \ge 0)$ & 3 & $=$ & $\ast$ & $=$ & boundary rule \\
 \quad $(x \ge 0) \wedge (y \ge 0)$ & 3 & $\ast$ & $=$ & $=$ & terminal-step rule \\
 \quad $\Box_{[0.5,1.5]}(x > 0)$ & 3 & $=$ & -- & -- & window alignment (coverage) \\
