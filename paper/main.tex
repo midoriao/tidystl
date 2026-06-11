@@ -8,6 +8,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{array}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{pdflscape}
@@ -74,10 +75,15 @@
 \maketitle
 
 \begin{abstract}
-Signal Temporal Logic (STL) is a specification language with quantitative robust semantics, used across runtime monitoring, falsification, and learning-enabled control. Yet capable tools for evaluating the robust semantics are typically organized around particular applications: a runtime monitor here, a falsification backend there.
-We argue that this fragmentation is largely not accidental. The robust semantics has historically been realized through signal-processing pipelines, in which low-level choices (signal representation, sampling, interpolation) materially affect the robustness values. Together these choices act as an \emph{implicit semantics}, resulting in a patchwork of tools that are not directly comparable and not easily repurposed outside their original application contexts.
-We present tidySTL, a Python library built around an explicit computation DAG, which decouples logical syntax from these implicit choices and exposes extension points where they vary.
-We validate tidySTL with a systematic test suite and cross-check it against existing STL tools, revealing discrepancies that flip verdicts and can mislead downstream falsification. We also demonstrate its extensibility by expressing representative semantics via localized changes to the evaluator layer.
+Robust semantics of Signal Temporal Logic (STL) provides a verdict, optimization objective, and training feedback across monitoring, falsification, and control.
+Evaluating a finite sampled trace, however, requires decisions that neither the STL formula nor the trace fully specify, such as interpolation and end-of-trace behavior.
+These call this behavior \emph{implicit semantics},
+which can differ among tools and lead to different downstream
+consequences such as falsification outcomes.
+We present tidySTL, a diagnostic toolkit that makes such evaluator
+behavior explicit and exposes their computations through an inspectable DAG.
+Using a set of controlled cross-tool comparison cases, tidySTL identifies and localizes differences in implicit semantics among existing tools.
+Its architecture also serves as an extensible evaluator layer: representative variations require only localized backend changes, while the formula, signal, and public interface remain fixed.
 \end{abstract}
 
 \input{sections/content}
