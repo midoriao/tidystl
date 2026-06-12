@@ -58,6 +58,17 @@ This paper makes the following contributions.
 % ----------------------------------------------------------------
 % ================================================================
 
+\begin{table}[t]
+\centering
+\caption{Representative \emph{implicit choices} in robustness evaluation~\cite{donze2010robust}.
+Each choice can affect \emph{robustness} (the reported value) or \emph{acceptance} (class of accepted inputs), given the same formula and trace.
+Appendix~\ref{sec:formal} further explores their scope.}
+\label{tab:divergence}
+
+\input{figures/choice-table.tex}
+\end{table}
+
+
 We take the quantitative STL semantics of Donz\'e and
 Maler~\cite{donze2010robust} as the theoretical reference for
 evaluation. We recall here only the definitions needed to delimit where
@@ -107,29 +118,6 @@ when it is not specified by the STL formula or finite input, but is fixed by
 adopting the evaluator and changes acceptance or reported robustness.
 \Cref{tab:divergence} organizes the choices we consider.
 
-\begin{table}[ht]
-\centering
-\caption{Implicit semantic choices in robustness evaluation. Indented rows
-decompose finite-trace interpretation. A indicates an effect on input
-acceptance, and R indicates an effect on reported robustness. Appendix~\ref{sec:formal} further explores the scope of these choices.}
-\label{tab:divergence}
-\small
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{.30\linewidth}>{\raggedright\arraybackslash}p{.58\linewidth}c@{}}
-\hline
-Implicit choice & What it fixes; representative variants & Effect \\
-\hline
-\emph{Finite-trace interpretation} & How finite samples are evaluated as a signal & A/R \\
-\quad Signal model & Values between samples; piecewise-linear, piecewise-constant, or discrete & R \\
-\quad Window alignment & Edges between samples; exact or snapped to samples & A/R \\
-\quad Boundary rule & Windows past the trace end; clamp or pessimistic (empty) & R \\
-\quad Terminal-step rule & Reported final robustness; as-is or extend penultimate & R \\
-Atomic predicates & Scoring of accepted predicates; signed margin or distance to satisfaction set & R \\
-Nonstandard predicates & Scoring of extensions such as equality & R \\
-Coverage & Accepted formulas, predicates, intervals, and traces & A \\
-Implementation-specific & Other evaluator-fixed behavior, such as finite sentinels for infinity & A/R \\
-\hline
-\end{tabular}
-\end{table}
 
 % ================================================================
 \section{Design and Implementation}
@@ -330,15 +318,17 @@ further cases.
 
 The tools disagree even on small formulas and traces. In the baseline
 block, one tool deviates from the other two on 9 of the 16 cases; most
-disagreements come from Breach's terminal-step convention or RTAMT's
-boundary rule for windows extending past the trace end. As a concrete
+disagreements come from Breach's terminal-step convention (the
+\emph{robustness at horizon} row of \cref{tab:divergence}) or RTAMT's
+boundary rule for windows extending past the trace end (the \emph{signal
+beyond horizon} row). As a concrete
 instance of the latter, for $\varphi = \Diamond_{[2,4]}(x \geq 0)$ evaluated
 at $t = 1$ on a trace ending at $T = 2$ with $x(T) = 3$, the window $[3,5]$
 lies entirely past the trace: clamp treats the last sample as persisting and
 reports $+3$ (satisfied), while the pessimistic rule sees an empty window and
 reports $-\infty$ (violated)---same formula, same samples, opposite verdicts.
 The divergence block isolates further
-choices such as window alignment, signal model, and equality predicates.
+choices such as sampling-grid constraints, signal model, and equality predicates.
 The point is not that one tool is correct and another is wrong, but that
 the same nominal input can induce different robustness behavior under
 different implicit choices.

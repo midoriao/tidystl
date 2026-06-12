@@ -59,6 +59,14 @@ accepted by one tool is rejected by another before any robustness is
 computed. This is a syntax-coverage choice: adopting the tool implicitly
 selects which formulas can be evaluated.
 
+\paragraph{Unbounded temporal operators.}
+\cref{def:stl} admits unbounded intervals such as $[0,\infty)$, so $\Box$,
+$\Diamond$, and until quantify over the whole remaining horizon. Many tools
+require a finite upper bound and reject the unbounded forms, or accept them
+only by silently truncating the window to the trace end. This too is a
+syntax-coverage choice: the logic fixes the construct, and an evaluator that
+omits it restricts to the bounded fragment.
+
 \paragraph{Range of expressible atomic predicates.}
 \cref{def:stl} permits an arbitrary function symbol $f$, but front ends
 restrict what is expressible: to threshold comparisons on single variables,
@@ -75,6 +83,18 @@ endpoint drops a sample and can change the aggregated value. Rejecting an
 open interval is a coverage choice; silently treating it as closed is an
 implementation deviation. Both are implicit because the formula does not
 announce how the evaluator will handle it.
+
+\paragraph{Sampling-grid constraints.}
+A discrete-time evaluator addresses time by integer sample index, so under an
+appropriate time scaling it admits only the integer-interval fragment: every
+temporal-interval bound must be an integer multiple of the sampling period
+(and the trace must be uniformly sampled). \tool's RTAMT- and
+STLCG++-compatible backends enforce this as a coverage restriction---they
+reject a non-uniform grid, and they reject a non-commensurate interval rather
+than silently snapping it. On an integer-time trace (step $1$), $\Box_{[1,2]}$
+is admitted but $\Box_{[0.5,1.5]}$ is rejected outright. Like the other
+fragment choices this is an input-acceptance effect, and it is the coverage
+finding marked in \cref{tab:divergence-matrix}.
 
 \paragraph{Robustness of $\top$ and $\bot$.}
 The standard semantics assigns $\rho(\top,\sigma,t) = +\infty$ and
@@ -109,23 +129,39 @@ time altogether: the trace is an indexed sequence and temporal operators count
 indices, not durations. The same formula and the same samples can therefore
 denote different signals before evaluation even begins.
 
-\paragraph{Window alignment.}
-Even once the signal model is fixed, a temporal window $[t+a,\,t+b]$ has
-endpoints that need not coincide with samples. The window-alignment rule
-decides the value taken there. A dense-time backend evaluates the interpolant
-at the exact endpoint; a discrete backend snaps to the nearest index or
-ignores the fractional part. This choice is invisible on uniformly sampled
-traces whose windows align with samples, which is why it is easy to overlook,
-and why divergence appears only on alignment-sensitive inputs.
+\paragraph{Window endpoints.}
+Even under a fixed dense signal model, a temporal window $[t+a,\,t+b]$ whose
+endpoints fall between samples leaves a choice of which points the
+$\inf$/$\sup$ ranges over. \tool's native backend includes the interpolated
+values at the exact endpoints alongside the in-window samples, returning the
+true piecewise-linear extremum over the real interval. The Breach-compatible
+backend reduces over the in-window \emph{samples only} and never interpolates
+at an endpoint (pinned to Breach ground truth). Both backends are
+piecewise-linear, yet they disagree on any off-grid window: for
+$\Diamond_{[0.3,0.7]}(v \geq 5)$ the native backend reports $-0.2$ and the
+Breach-compatible one $-1.0$. This is less a principled semantic choice than a
+Breach implementation convention---the samples-only reduction merely omits the
+exact endpoint---so \tool records it among the evaluator-specific behaviors in
+\cref{tab:divergence} rather than as a primary finite-trace choice, even though
+it still shifts the reported robustness.
 
-\paragraph{Boundary rule.}
+The \emph{signal beyond horizon} and \emph{robustness at horizon} rows of
+\cref{tab:divergence} cover the next two choices: how a window reaching past
+the trace end is filled, and how the final sample is reported.
+
+\paragraph{Signal beyond horizon (boundary rule).}
 When a window $[t+a,\,t+b]$ reaches past the end of the trace at $T$, the
 $\sup$ or $\inf$ ranges in part over times where no sample exists. The boundary
-rule supplies those values. Under \emph{clamp} (\tool, Breach) the last
+rule supplies those values, either by \emph{extending} the signal past the
+horizon or by leaving the past-end region \emph{empty}---the \emph{Extend} and
+\emph{Empty} entries in \cref{tab:divergence}. Under \emph{clamp} (\tool, Breach) the last
 sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. Under
 a \emph{pessimistic} rule (RTAMT discrete) the out-of-range part contributes
 nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
-(the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$.
+(the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$. A third rule,
+\emph{last-value extension} (STLCG++ with \texttt{padding=last}), repeats the
+final sample to fill a truncated window in index space; it agrees with clamp
+in spirit but is computed on the discrete grid.
 This is the boundary-rule row of the divergence block in
 \cref{tab:divergence-matrix}. For
 $\varphi = \Diamond_{[2,4]}(x \geq 0)$ evaluated at $t = 1$ on a trace that
@@ -133,10 +169,15 @@ ends at $T = 2$ with $x(T) = 3$, the window $[3,5]$ lies entirely beyond the
 trace. Clamp sees the persisting value $3$ and reports $+3$ (satisfied);
 the pessimistic rule sees an empty window and reports $-\infty$ (violated).
 Same formula, same samples, same time point; opposite verdicts.
+This is a sign change in the robustness value, not a difference in input
+acceptance: both backends evaluate the formula, and only the reported
+value---and hence the verdict---differs. The \emph{signal beyond horizon} rule
+is therefore a robustness effect, like the signal model.
 
-\paragraph{Terminal-step rule.}
-At the final sample $t_N$ a tool may report the robustness it computed there,
-or it may overwrite it with the value from the penultimate sample $t_{N-1}$.
+\paragraph{Robustness at horizon (terminal-step rule).}
+At the final sample $t_N$ a tool may report the \emph{exact} robustness it
+computed there, or it may \emph{copy} the value from the penultimate sample
+$t_{N-1}$---the \emph{Exact} and \emph{Copy-prev} entries in \cref{tab:divergence}.
 Breach does the latter by default; RTAMT does the former. The two
 agree whenever the final and penultimate robustness coincide, so the choice is
 silent on most traces. It is not silent when they differ.
@@ -149,7 +190,8 @@ trace~B that holds $+0.1$ throughout, this flips which trace looks better,
 reversing a ranking that a falsification search would act on.
 
 \paragraph{Robustness of atomic predicates.}
-Even for an accepted predicate, the evaluator must decide how it is scored:
+Even for an accepted predicate, the evaluator must decide how it is scored
+(the \emph{distance metric} row of \cref{tab:divergence}):
 the robustness of $f(\vec{x}) \geq 0$ may be the raw signed margin
 $f(\vec{x})$ or a Euclidean distance to the satisfaction
 set~\cite{fainekos2009robustness}, and the two disagree once a predicate
@@ -169,7 +211,8 @@ tool-fixed behavior within the selected extension remains an implicit choice.
 The equality $x = 0$ is absent from \cref{def:stl} yet common in practical
 specifications. Adding equality to the language is an explicit extension;
 once a tool accepts it, however, the assigned robustness is an implicit
-choice because the formula does not select one. Equality is satisfied only
+choice because the formula does not select one (the \emph{nonstandard
+predicates} row of \cref{tab:divergence}). Equality is satisfied only
 at the single value $x = 0$ and admits no single standard robustness; a
 common choice is $-|x|$, which is never positive, so even a satisfied
 equality reports non-positive robustness.

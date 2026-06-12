@@ -1,0 +1,101 @@
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.14}
+
+\definecolor{finiteblue}{RGB}{232,240,250}
+\definecolor{predgreen}{RGB}{235,247,238}
+\definecolor{fragorange}{RGB}{252,241,229}
+\definecolor{implgray}{RGB}{244,244,244}
+
+\newcommand{\altsep}{\(\,\mid\,\)}
+
+\newcommand{\choicelead}[1]{%
+  \;\;\textsf{#1}%
+  \nobreak
+  \leaders\hbox to 0.45em{\hss\textcolor{gray!55}{.}\hss}\hfill
+  \kern0pt
+}
+
+\newcommand{\groupnote}[1]{%
+  {\normalfont\small\textcolor{black!65}{#1}}%
+}
+
+\begin{tabularx}{\linewidth}{@{}%
+  p{0.31\linewidth}
+  >{\raggedright\arraybackslash}X
+@{}}
+\toprule
+\textbf{Choice} & \textbf{Description} \\
+\midrule
+
+\rowcolor{finiteblue}
+\multicolumn{2}{@{}l}{%
+  \textbf{Finite-trace interpretation}
+  \quad\groupnote{Reading samples as a signal, affects robustness}
+} \\
+
+\rowcolor{gray!4}
+\choicelead{Signal model}
+& Piecewise-linear \altsep Piecewise-constant \altsep Discrete \\
+
+\choicelead{Signal beyond horizon}
+& Extend \altsep Empty \\
+
+\rowcolor{gray!4}
+\choicelead{Robustness at horizon}
+& Exact \altsep Copy-prev \\
+
+\addlinespace[0.35em]
+
+\rowcolor{predgreen}
+\multicolumn{2}{@{}l}{%
+  \textbf{Predicate semantics}
+  \quad\groupnote{Atomic-level semantics and supported forms}
+} \\
+
+\rowcolor{gray!4}
+\choicelead{Distance metric}
+& Signed margin \altsep Euclidean \hfill \textcolor{black!65}{(affects robustness)}\\
+
+\choicelead{Nonstandard predicates}
+& E.g., Equality \hfill \textcolor{black!65}{(affects acceptance/robustness)} \\
+
+\addlinespace[0.35em]
+
+\rowcolor{fragorange}
+\multicolumn{2}{@{}l}{%
+  \textbf{Logic fragment}
+  \quad\groupnote{Which parts of the full logic are supported, affects acceptance}
+} \\
+
+\rowcolor{gray!4}
+\choicelead{Unbounded intervals}
+& Unbounded operators like $\Box_{[0,\infty)}$ supported? \\
+
+\choicelead{Until/release}
+& $U_I$ and $R_I$ supported? \\
+
+\rowcolor{gray!4}
+\choicelead{Open intervals}
+& Bounds such as $(a, b)$ and $(a, b]$ supported? \\
+
+\choicelead{Top/bottom}
+& $\top (+\infty)$ and $\bot (-\infty)$ supported? \\
+
+\rowcolor{gray!4}
+\choicelead{Real-valued bounds}
+& Non-integer temporal bounds supported? \\
+
+\addlinespace[0.35em]
+
+\rowcolor{implgray}
+\multicolumn{2}{@{}l}{%
+  \textbf{Implementation-specific}
+  \quad\groupnote{Others, affects acceptance/robustness}
+} \\
+
+\rowcolor{gray!4}
+\choicelead{Evaluator conventions}
+& Remaining corner cases specific to implementations \\
+
+\bottomrule
+\end{tabularx}
