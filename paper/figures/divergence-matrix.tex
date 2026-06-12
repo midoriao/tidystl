@@ -1,5 +1,5 @@
-% AUTO-GENERATED from extra/artifacts/rv2026-eval/e1/divergence_matrix.json
-% by extra/experiments/e1_emit_matrix_tex.py (tidystl repo); do not hand-edit.
+% AUTO-GENERATED from extra/outputs/e1_divergence/matrix.json
+% by extra/experiments/e1_divergence/aggregate.py (tidystl repo); do not hand-edit.
 % B = Breach 1.11.4, R = RTAMT 0.3.5, S = STLCG++ 0.0.2 (hard min/max).
 % Cells: = matches the common behavior (atol 1e-6, mutually defined
 % timesteps), * differs from the other two, -- cannot express the case
@@ -29,7 +29,7 @@ Case & $|\sigma|$ & B & R & S & Implicit choice \\
 \multicolumn{6}{l}{\emph{Divergence block (one case per implicit choice)}} \\
 \quad $\Diamond_{[2,4]}(x \ge 0)$ & 3 & $=$ & $\ast$ & $=$ & boundary rule \\
 \quad $(x \ge 0) \wedge (y \ge 0)$ & 3 & $\ast$ & $=$ & $=$ & terminal-step rule \\
-\quad $\Box_{[0.5,1.5]}(x > 0)$ & 3 & $=$ & -- & -- & window alignment (coverage) \\
+\quad $\Box_{[0.5,1.5]}(x > 0)$ & 3 & $=$ & -- & -- & sampling-grid constraints (coverage) \\
 \quad $\Box_{[0,1]}(x > 0)$ & 5 & $=$ & $\dagger$ & -- & signal model \\
 \quad $x = 3$ & 5 & $\ast$ & $=$ & $=$ & equality predicates \\
 \hline

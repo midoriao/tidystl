@@ -448,14 +448,14 @@ DECISION_POINT_SHORT = {
     "boundary rule": "boundary rule",
     "terminal-step rule": "terminal-step rule",
     "open vs. closed interval endpoints": "open vs.\\ closed endpoints",
-    "interpolation": "window alignment",  # renamed in the paper (rv2026)
+    "interpolation": "sampling-grid constraints",  # renamed in the paper (rv2026)
     "signal model": "signal model",
     "equality predicates": "equality predicates",
 }
 
 TEX_BLOCKS = (
     ("baseline", "Baseline block (operator coverage)"),
-    ("divergence", "Divergence block (one case per decision point)"),
+    ("divergence", "Divergence block (one case per implicit choice)"),
 )
 
 
@@ -545,7 +545,7 @@ def emit_tex(
         "% (coverage finding), dagger documented special handling.",
         "\\begin{tabular}{l c ccc l}",
         "\\hline",
-        "Case & $|\\sigma|$ & B & R & S & Decision point \\\\",
+        "Case & $|\\sigma|$ & B & R & S & Implicit choice \\\\",
         "\\hline",
     ]
     for blk, label in TEX_BLOCKS:
