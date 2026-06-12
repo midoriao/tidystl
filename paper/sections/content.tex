@@ -16,15 +16,16 @@ usually evaluates it on a finite trace---and a formula and trace do not determin
 robustness value on their own. Each tool fixes the rest, silently; we call this
 \emph{implicit semantics} and organize the choices in \cref{tab:divergence}.
 These choices are not cosmetic: they can flip a tool's verdict and propagate
-downstream, where a falsification search that succeeds reliably under one
-setting succeeds much less reliably under another (\cref{fig:falsification}).
+downstream. A constructed falsification task shows a search succeeding
+reliably under one setting but much less reliably under another
+(\cref{fig:falsification}).
 Prior cross-tool studies reconciled such disagreements by post-hoc independent
 checking~\cite{ernst2021archcomp}; we instead make the responsible choice explicit
 and switchable before evaluation.
 
 We present \tool,%
 \footnote{Artifact repository: \url{https://github.com/midoriao/tidystl}.}
-a diagnostic toolkit that makes the responsible choice explicit and switchable---rather than reconciling discrepancies after the fact~\cite{ernst2021archcomp}.
+a diagnostic toolkit that does exactly this.
 It places the implicit choices behind a
 backend boundary, so the same formula and signal can be evaluated under named,
 swappable backends while the parser, formula representation, and public interface
@@ -35,7 +36,7 @@ cross-tool diagnosis, and the same separation makes the evaluator layer extensib
 
 This paper makes the following contributions.
 \begin{itemize}
-  \item We identify and organize implicit semantic choices in STL robustness
+  \item We organize the implicit semantic choices in STL robustness
     evaluation, and show that they can materially affect acceptance, verdicts,
     rankings, and downstream falsification
     (\cref{sec:background,sec:discrepancies}).
@@ -139,9 +140,7 @@ Implementation-specific & Other evaluator-fixed behavior, such as finite sentine
 This section turns the implicit choices of \cref{sec:background} into
 inspectable implementation structure. \tool exposes robustness evaluation
 through a small interface, while placing choices that vary across evaluators
-behind a backend boundary. This boundary allows the same formula and signal
-to be evaluated under named choices, compared, and diagnosed without changing
-the surrounding application.
+behind a backend boundary.
 
 % ------------------------------------------------
 \subsection{Evaluation Interface}
@@ -242,19 +241,17 @@ remain inspectable in the evaluation result.
 
 A backend consists of primitive operations, a lowering rule, and an executor.
 Extensions may introduce new primitive operations during lowering or override the interpretation of existing ones.
-For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations.
-\cref{sec:implement-variations}
-measures the code required for representative variants. Despite this explicit
-structure, our performance sanity check found its overhead to be negligible
+For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations. In \cref{sec:implement-variations}, we demonstrate that emulating an existing tool's behavior requires only localized changes to the backend with small effort.
+Despite this explicit structure, our performance sanity check found its overhead to be negligible
 (Appendix~\ref{sec:app-eval}).
 
 \paragraph{Architectural byproducts.}
 The swappable architecture (\cref{fig:arch}) also supports capabilities outside
-the paper's central scope.
-For example, it enables advanced semantic extensions such as smooth
+the central scope of this paper.
+For example, it can accomodate advanced semantic extensions, such as smooth
 differentiable robustness~\cite{levenberg2020stlcg,pant2017smooth}, as well as
-performance-optimized backends, under the same interface.
-The resulting implementation also includes differentiable and SIMD-optimized backends.
+performance-optimized backends, all through the same interface.
+The codebase also contains differentiable and SIMD-optimized backends as instances of this extensibility.
 
 
 
@@ -270,7 +267,7 @@ The resulting implementation also includes differentiable and SIMD-optimized bac
 %% Experiment campaign plan: notes/eval-plan.md (experiments E1-E5).
 % ================================================================
 
-We evaluate \tool in two steps.\footnote{The artifact repository provides reproduction instructions for all experiments (\texttt{extra/experiments/README.md}); Appendix~\ref{sec:app-eval} records supplementary protocol and setup details.}
+We evaluate \tool in two steps.\footnote{The artifact repository provides reproduction instructions (\texttt{extra/experiments/}) for all experiments; Appendix~\ref{sec:app-eval} records supplementary protocol and setup details.}
 First, we show that
 implicit choices are not cosmetic: across tools, they can change verdicts and downstream falsification outcomes
 (\cref{sec:discrepancies}).
@@ -299,9 +296,9 @@ Second, we show that realizing such a choice in
 %% - Setting: same formula and signal, no special semantics
 % ================================================================
 
-The implicit choices listed in \cref{tab:divergence} resolve
-questions that an evaluator must answer but the formula does not. This
-subsection first establishes, using real-tool runs, that these choices produce
+%The implicit choices listed in \cref{tab:divergence} resolve questions that an evaluator must answer but the formula does not.
+This
+subsection first establishes, using real-tool runs, that the implicit choices listed in \cref{tab:divergence} produce
 observable cross-tool discrepancies. It then uses validated compatibility
 backends to localize the responsible choice and to illustrate downstream
 consequences.
@@ -380,14 +377,15 @@ no backend acts as the verdict oracle.}
 \label{fig:falsification}
 \end{figure}
 
-The same effect can compound downstream. We isolate this in a standard
-falsification loop where the system, specification, search algorithm,
-seeds, and budget are fixed, and only the objective semantics varies
+The same effect can compound downstream, as a purpose-built falsification
+task illustrates. We hold the system, specification, search algorithm,
+seeds, and budget fixed and vary only the objective semantics
 across three boundary\slash terminal-step rule combinations: clamp with the
 terminal step as-is, clamp with the extend-penultimate step, and
-pessimistic with as-is. The specification's monitor horizon reaches
-past the end of the trace, so the boundary convention directly affects the
-objective. \Cref{fig:falsification} shows the result: the clamping
+pessimistic with as-is. The task is constructed so that the specification's
+monitor horizon reaches past the end of the trace, exactly where the
+boundary convention drives the objective. \Cref{fig:falsification} shows
+what happens in this case: the clamping
 variants falsify in 50/50 and 49/50 runs, while the pessimistic boundary
 rule collapses the objective to the same out-of-range value for every
 input and falsifies in only 10/50 runs.
@@ -490,4 +488,4 @@ for comparison.
 % ================================================================
 \tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary.  By separating formula syntax, signal data, backend-specific lowering, and DAG interpretation, it exposes choices that are otherwise buried in tool internals and shows that they materially affect acceptance, verdicts, trace rankings, and falsification behavior across real, widely used tools---and that the choice responsible for a disagreement can be named mechanically.
 
-The implementation supports the view of robustness evaluation as an extensible semantic layer rather than an implementation detail of a particular monitor, falsifier, or learning pipeline.  Semantic variants can be expressed by changing backend primitives, lowering rules, and DAG interpretations while preserving the public evaluation interface.  Future work will extend this layer to broader semantics, including online evaluation, and expand its validation suite.
+The implementation supports the view of robustness evaluation as an extensible semantic layer rather than an implementation detail of a particular monitor, falsifier, or learning pipeline.  Future work will extend this layer to broader semantics, including online evaluation, and expand its validation suite.
