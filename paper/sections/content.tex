@@ -334,7 +334,13 @@ further cases.
 The tools disagree even on small formulas and traces. In the baseline
 block, one tool deviates from the other two on 9 of the 16 cases; most
 disagreements come from Breach's terminal-step convention or RTAMT's
-boundary rule for windows extending past the trace end. The divergence block isolates further
+boundary rule for windows extending past the trace end. As a concrete
+instance of the latter, for $\varphi = \Diamond_{[2,4]}(x \geq 0)$ evaluated
+at $t = 1$ on a trace ending at $T = 2$ with $x(T) = 3$, the window $[3,5]$
+lies entirely past the trace: clamp treats the last sample as persisting and
+reports $+3$ (satisfied), while the pessimistic rule sees an empty window and
+reports $-\infty$ (violated)---same formula, same samples, opposite verdicts.
+The divergence block isolates further
 choices such as window alignment, signal model, and equality predicates.
 The point is not that one tool is correct and another is wrong, but that
 the same nominal input can induce different robustness behavior under
@@ -345,8 +351,8 @@ The discrepancies themselves are established by running the original
 tools. To inspect per-node outputs and to name the responsible implicit
 semantic choice mechanically, we built compatibility backends for each tool; each
 reproduces its tool's column of \cref{tab:divergence-matrix} per timestep
-(62 of 63 case--tool cells agree; the one mismatch is deliberate and
-documented). On a diverging case, a localizer reports the lowest
+(59 of 63 case--tool cells agree on computed robustness and three more on
+coverage; the single remaining mismatch is deliberate and documented). On a diverging case, a localizer reports the lowest
 syntax-tree node whose outputs disagree: on the boundary-rule
 headline row it returns \texttt{WindowMax[2,4]} vs.\
 \texttt{DiscreteWindowMax[2,4]}, naming the boundary rule from
