@@ -52,6 +52,11 @@ This paper makes the following contributions.
     (\cref{sec:implement-variations}).
 \end{itemize}
 
+\paragraph{Related Work.}
+In this paper, we focus on the comparison of \tool{} with Breach, RTAMT, and STLCG++, which employ the quantitative STL semantics of Donz\'e and Maler~\cite{donze2010robust} as the explicit semantics.
+\cref{section:detailed_comparison} lists some other related tools.
+Extending \tool{} to support other quantitative STL semantics, such as the RoSI semantics~\cite{deshmukh2017online}, is an interesting future direction.
+
 % ================================================================
 \section{Implicit Semantic Choices in STL Evaluation}
 \label{sec:background}
@@ -430,45 +435,45 @@ keep the semantics fixed and change only execution. Thus locality here
 means a boundary of modification: the parser, formula representation,
 signal layer, and user-facing interface are reused unchanged.
 
-% ================================================================
-\section{Related Work}
-\label{sec:relatedwork}
-% ----------------------------------------------------------------
-% ================================================================
+% % ================================================================
+% \section{Related Work}
+% \label{sec:relatedwork}
+% % ----------------------------------------------------------------
+% % ================================================================
 
-\Cref{sec:background} defines the semantic scope of this paper.
-\tool differs from Breach, S-TaLiRo, RTAMT, and similar systems
-not by replacing their workflows but by making the evaluator layer itself the
-primary object of extension and comparison~\cite{donze2010breach,donze2013efficient,annpureddy2011staliro,nickovic2020rtamt,nickovic2024rtamt}.
-A supplementary comparison of representative tool characteristics is provided
-in Appendix~\ref{sec:app-landscape}.
+% \Cref{sec:background} defines the semantic scope of this paper.
+% \tool differs from Breach, S-TaLiRo, RTAMT, and similar systems
+% not by replacing their workflows but by making the evaluator layer itself the
+% primary object of extension and comparison~\cite{donze2010breach,donze2013efficient,annpureddy2011staliro,nickovic2020rtamt,nickovic2024rtamt}.
+% A supplementary comparison of representative tool characteristics is provided
+% in Appendix~\ref{sec:app-landscape}.
 
-Proof-oriented monitoring work~\cite{dokhanchi2014online,chattopadhyay2020verified}
-makes correctness guarantees for monitoring algorithms a central object.
-\tool does not claim comparable formal verification; instead it makes
-the implicit choices explicit so that divergence sources can be
-identified without proof.
+% Proof-oriented monitoring work~\cite{dokhanchi2014online,chattopadhyay2020verified}
+% makes correctness guarantees for monitoring algorithms a central object.
+% \tool does not claim comparable formal verification; instead it makes
+% the implicit choices explicit so that divergence sources can be
+% identified without proof.
 
-Speaking of implicitness is not a claim that tools such as RTAMT or Breach are
-poorly documented. The choices in question are simply not determined by the
-STL formula: adopting RTAMT, for instance, commits an evaluation to its
-discrete-time signal and pessimistic boundary rule regardless of the
-formula.
-The ARCH-COMP 2021 report~\cite{ernst2021archcomp} documented cross-tool
-discrepancies arising from exactly these implicit choices and
-resolved them by post-hoc independent checking; \tool instead makes the
-responsible choices explicit and switchable in advance.
+% Speaking of implicitness is not a claim that tools such as RTAMT or Breach are
+% poorly documented. The choices in question are simply not determined by the
+% STL formula: adopting RTAMT, for instance, commits an evaluation to its
+% discrete-time signal and pessimistic boundary rule regardless of the
+% formula.
+% The ARCH-COMP 2021 report~\cite{ernst2021archcomp} documented cross-tool
+% discrepancies arising from exactly these implicit choices and
+% resolved them by post-hoc independent checking; \tool instead makes the
+% responsible choices explicit and switchable in advance.
 
-MoonLight~\cite{bartocci2023moonlight} shows that pluggable monitoring domains
-can be a first-class contribution; \tool similarly makes the implicit choices
-of STL robustness evaluation first-class.
-TeSSLa, RTLola, and HLola~\cite{kallwies2022tessla,finkbeiner2019rtlola,sanchez2021hlola}
-demonstrate that front-end/back-end separation is itself a scientific
-contribution; their backends vary in execution platform while \tool's vary
-in the implicit choices they realize.
-STLCG and related differentiable tools~\cite{levenberg2020stlcg,kapoor2025stlcgpp} occupy the
-smooth-semantics niche that the STLCG++-compatible backend in \tool targets
-for comparison.
+% MoonLight~\cite{bartocci2023moonlight} shows that pluggable monitoring domains
+% can be a first-class contribution; \tool similarly makes the implicit choices
+% of STL robustness evaluation first-class.
+% TeSSLa, RTLola, and HLola~\cite{kallwies2022tessla,finkbeiner2019rtlola,sanchez2021hlola}
+% demonstrate that front-end/back-end separation is itself a scientific
+% contribution; their backends vary in execution platform while \tool's vary
+% in the implicit choices they realize.
+% STLCG and related differentiable tools~\cite{levenberg2020stlcg,kapoor2025stlcgpp} occupy the
+% smooth-semantics niche that the STLCG++-compatible backend in \tool targets
+% for comparison.
 
 
 % ================================================================
