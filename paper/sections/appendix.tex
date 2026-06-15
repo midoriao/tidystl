@@ -438,36 +438,40 @@ exceeds memory on the 32\,GB host.}
 \section{Comparison with Other Tools}\label[appendix]{section:detailed_comparison}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Comparison of tools supporting robust STL monitoring. “DM-style” in the “Supported Explicit Semantics” column indicates semantics close to those used in~\cite{donze2010robust}. “RoSI-style” in the “Supported Explicit Semantics” column indicates semantics close to the RoSI semantics~\cite{deshmukh2017online}.
-
-
 %-----------------------------------------------------------
 \begin{table}[tp]
  \centering
- \caption{Comparison of tools supporting robust STL monitoring. ``DM-style'' in the ``Supported Explicit Semantics'' column indicates semantics based on~\cite{donze2010robust}. ``RoSI-style'' in the ``Supported Explicit Semantics'' column indicates semantics close to the RoSI semantics~\cite{deshmukh2017online}.}
+ \caption{Comparison of tools supporting monitoring of robustness of STL or related logics. In the ``Supported Nominal Semantics'' column, ``classical'' refers to the robust semantics based on~\cite{donze2010robust} or~\cite{fainekos2009robustness} and ``RoSI-style'' refers to semantics based on the RoSI semantics~\cite{deshmukh2017online}.}
  \label{table:detailed_tool_comparison}
  \footnotesize
  \begin{tabular}{ccc}
   \toprule
-  \multirow{2}{*}{Name} & Supported & Supported \\
-          & Logic         & Explicit Semantics    \\\midrule
-  Breach~\cite{donze2010breach}  & Future-time STL & DM-style \\
-  RTAMT~\cite{nickovic2024rtamt} & Future- and past-time STL & DM-style \\
-  STLCG++~\cite{kapoor2025stlcgpp} & Future-time STL & DM-style and smooth-semantics \\
-  SignalTemporalLogic.jl\footnote{https://github.com/sisl/SignalTemporalLogic.jl} & Future-time STL & DM-style and smooth-semantics \\
-  py-signal-temporal-logic~\cite{pyMTL} & Future-time STL & DM-style \\
-  mstlo~\cite{thomsen2026mstlo} & Future-time STL & DM-style and RoSI-style \\
-  Argus\footnote{\url{https://github.com/anand-bala/argus}}   & Future-time STL & DM-style \\
+  \multirow{2}{*}{Name} & \multirow{2}{*}{Supported Logic} & Supported \\
+          &       & Nominal Semantics    \\\midrule
+  Breach~\cite{donze2010breach}  & Future-time STL & classical \\
+  TaLiRo~\cite{annpureddy2011staliro}  & Future-time STL & classical \\
+  RTAMT~\cite{nickovic2024rtamt} & Future- and past-time STL & classical \\
+  STLCG++~\cite{kapoor2025stlcgpp} & Future-time STL & classical and smooth~\cite{levenberg2020stlcg,pant2017smooth} \\
+  SignalTemporalLogic.jl\footnote{https://github.com/sisl/SignalTemporalLogic.jl} & Future-time STL & classical and smooth~\cite{levenberg2020stlcg,pant2017smooth} \\
+  py-signal-temporal-logic~\cite{pyMTL} & Future-time STL & classical \\
+  mstlo~\cite{thomsen2026mstlo} & Future-time STL & classical and RoSI-style \\
+  Argus\footnote{\url{https://github.com/anand-bala/argus}}   & Future-time STL & classical \\
   STLRom~\footnote{\url{https://github.com/decyphir/STLRom}}  & Future-time STL & RoSI-style \\
   % Reelay~\cite{reelay}  & Past-time STL & Boolean \\
-  CauMon~\cite{CauMon}  & Future-time STL & Causation semantics~\cite{DBLP:conf/cav/ZhangAAH23} \\
-  MoonLight~\cite{bartocci2023moonlight} & STREL~\cite{DBLP:conf/memocode/BartocciBLN17} & DM-style \\
-  \multirow{2}{*}{TempLogic\footnote{\url{https://github.com/fran-penedo/templogic}}}  & Future-time STL, & \multirow{2}{*}{DM-style} \\
+  CauMon~\cite{CauMon}  & Future-time STL & causation semantics~\cite{DBLP:conf/cav/ZhangAAH23} \\
+  MoonLight~\cite{bartocci2023moonlight} & STREL~\cite{DBLP:conf/memocode/BartocciBLN17} & classical \\
+  \multirow{2}{*}{TempLogic\footnote{\url{https://github.com/fran-penedo/templogic}}}  & Future-time STL, & \multirow{2}{*}{classical} \\
   & TSSL~\cite{DBLP:journals/tcns/BartocciGHB18}, SpaTeL~\cite{DBLP:conf/hybrid/HaghighiJKBGB15} & \\\bottomrule
  \end{tabular}
 \end{table}
 %-----------------------------------------------------------
 
-\cref{table:detailed_tool_comparison} summarizes the explicit semantics employed in some tools for robust STL monitoring.
-Extending the compatibility backends of \tool{} to the tools supporting the DM-style semantics is a future work, which we expect to be straightforward, as we demonstrated in \cref{sec:implement-variations} for Breach, RTAMT, and STLCG++.
+\cref{table:detailed_tool_comparison} presents several tools that support monitoring the robustness of STL or related logics, along with the nominal semantics they support.
+The ``Supported Nominal Semantics'' column indicates the classification of the semantics supported by each tool.
+The ``classical'' semantics refers to the robust semantics defined by inductively aggregating the robustness of atomic predicates using $\min$ and $\max$, as in~\cite{donze2010robust} and~\cite{fainekos2009robustness}.
+``RoSI-style'' semantics refers to semantics based on robust satisfaction intervals (RoSI)~\cite{deshmukh2017online}, which indicate the range of robustness values that can be realized by extending the current trace with some suffix.
+
+Currently, \tool{} supports the classical and smooth semantics as the nominal semantics.
+Implementing compatibility backends of \tool{} for more tools supporting the classical semantics is a future work, which we expect to be straightforward, as we demonstrated in \cref{sec:implement-variations}.
 Extending \tool{} to support the RoSI-style semantics~\cite{deshmukh2017online} and the causation semantics~\cite{DBLP:conf/cav/ZhangAAH23} is also a future work.
+We believe that this can also be done by implementing appropriately compatibility backends.
