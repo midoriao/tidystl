@@ -20,8 +20,8 @@ downstream. A constructed falsification task shows a search succeeding
 reliably under one setting but much less reliably under another
 (\cref{fig:falsification}).
 Prior cross-tool studies reconciled such disagreements by post-hoc independent
-checking~\cite{ernst2021archcomp}; we instead make the responsible choice explicit
-and switchable before evaluation.
+checking~\cite{ernst2021archcomp}; our work is complementary, making the
+responsible choice explicit and switchable before evaluation.
 
 We present \tool,%
 \footnote{Artifact repository: \url{https://github.com/midoriao/tidystl}.}
@@ -43,7 +43,7 @@ This paper makes the following contributions.
   \item We present an architecture that represents these choices as explicit,
     swappable backends and makes their computations inspectable
     (\cref{sec:design}).
-  \item Building on it, we emulate Breach, RTAMT, and STLCG++ as compatibility backends
+  \item Building on it, we emulate Breach~\cite{donze2010breach}, TaLiRo~\cite{annpureddy2011staliro}, and RTAMT~\cite{nickovic2020rtamt} as compatibility backends
     and \emph{mechanically localize} their discrepancies to the responsible
     implicit choice and formula node (\cref{tab:divergence-matrix,sec:discrepancies}).
   \item We show that the architecture provides an extensible evaluator layer:
@@ -53,7 +53,7 @@ This paper makes the following contributions.
 \end{itemize}
 
 \paragraph{Related Work.}
-In this paper, we focus on the comparison of \tool{} with Breach, RTAMT, and STLCG++, which employ the quantitative STL semantics of Donz\'e and Maler~\cite{donze2010robust} as the explicit semantics.
+In this paper, we focus on the comparison of \tool{} with Breach, TaLiRo, and RTAMT, which employ the quantitative STL semantics of Donz\'e and Maler~\cite{donze2010robust} or Fainekos and Pappas~\cite{fainekos2009robustness} as their underlying theory.
 \cref{section:detailed_comparison} lists some other related tools.
 Extending \tool{} to support other quantitative STL semantics, such as the RoSI semantics~\cite{deshmukh2017online}, is an interesting future direction.
 
@@ -75,8 +75,11 @@ Appendix~\ref{sec:formal} further explores their scope.}
 
 
 We take the quantitative STL semantics of Donz\'e and
-Maler~\cite{donze2010robust} as the theoretical reference for
-evaluation. We recall here only the definitions needed to delimit where
+Maler~\cite{donze2010robust} as a representative theoretical reference.
+Together with the closely related framework by Fainekos and Pappas~\cite{fainekos2009robustness},
+it represents the practical setting used by existing STL monitoring and falsification tools~\cite{ernst2021archcomp};
+our focus is on evaluator-level variations within this setting.
+To fix the scope, we recall only the definitions needed to delimit where
 implicit semantic choices arise in evaluation.
 For completeness, Appendix~\ref{sec:formal}
 records the standard full inductive definition and further scope distinctions.
@@ -89,38 +92,37 @@ $\sigma \colon \mathbb{R}_{\geq 0} \to \mathbb{R}^{\mathbf{Var}}$.
 
 \begin{definition}[STL syntax]
 \label{def:stl}
-The set $\mathbf{Fml}$ of STL formulas is defined as follows:
+STL formulas $\varphi \in \mathbf{Fml}$ are given by:
 \[
-\begin{aligned}
-  \mathbf{Fml} \ni \varphi ::= {}&
+  \small
+  \mathbf{Fml} \ni \varphi ::= {}
     \top \mid f(\vec{x}) \geq 0
     \mid \neg\varphi \mid \varphi_1 \vee \varphi_2
-    \mid \varphi_1 \wedge \varphi_2 \\
-  &\mid \varphi_1 \mathbin{U_I} \varphi_2
+    \mid \varphi_1 \wedge \varphi_2
+  \mid \varphi_1 \mathbin{U_I} \varphi_2
     \mid \varphi_1 \mathbin{R_I} \varphi_2
     \mid \Diamond_I\varphi \mid \Box_I\varphi .
-\end{aligned}
 \]
-Here $f$ is a function symbol applied to variables from $\mathbf{Var}$, for example $f(x, y) = 4x - y - 3$, and $I$ is a non-singular interval in $\mathbb{R}_{\geq 0}$, for example $[2,5]$, $(1,3]$, or $[0,\infty)$.
+Here $f$ is a function symbol, for example $f(x, y) = 4x - y - 3$, and $I$ is a non-singular interval in $\mathbb{R}_{\geq 0}$, for example $[2,5]$, $(1,3]$, or $[0,\infty)$.
 \end{definition}
 
 \noindent
-Informally, the robust semantics~\cite{donze2010robust,fainekos2009robustness} $\rho(\varphi, \sigma, t)$ replaces the Boolean
-verdict with a signed margin
-(e.g., $\rho(x - 3 \geq 0, \sigma, t) = \sigma_x(t) - 3$),
-which the connectives and temporal operators aggregate by $\min$, $\max$, $\inf$, and $\sup$
-(e.g.,
+Informally, the robust semantics $\rho(\varphi, \sigma, t)$ replaces the Boolean
+verdict with a signed real-value,
+e.g., $\rho(x - 3 \geq 0, \sigma, t) = \sigma_x(t) - 3$,
+which the connectives and temporal operators aggregate by $\min$, $\max$, $\inf$, and $\sup$, e.g.,
 $\rho(\Box_{[0,2]}\,(x - 3 \geq 0), \sigma, t)
-  = \inf_{t' \in [t,\,t+2]} (\sigma_x(t') - 3)$).
+  = \inf_{t' \in [t,\,t+2]} (\sigma_x(t') - 3)$.
 
-This reference semantics is defined over an idealized signal, but what an evaluator
-receives is a finite \emph{timed state sequence}
-$(t_0, \vec{v}_0), \ldots, (t_n, \vec{v}_n)$ of timestamped samples. Reading this
-finite representation as a signal on $\mathbb{R}_{\geq 0}$ is left to the tool, and
-a formula and trace do not determine it on their own.
-More generally, we call an evaluator decision an \emph{implicit semantic choice}
-when it is not specified by the STL formula or finite input, but is fixed by
-adopting the evaluator and changes acceptance or reported robustness.
+We call an evaluator decision an \emph{implicit semantic choice} if
+it instantiates robustness evaluation in a way
+not determined by the formal definition together with the given formula and trace,
+and can change acceptance or reported robustness.
+For example, an evaluator often receives only a finite \emph{timed state sequence}
+$(t_0, \vec{v}_0), \ldots, (t_n, \vec{v}_n)$ of timestamped samples, whereas
+the reference semantics is defined over an idealized signal.
+How this finite representation is interpolated into a signal over $\mathbb{R}_{\geq 0}$ is
+therefore an implicit semantic choice.
 \Cref{tab:divergence} organizes the choices we consider.
 
 
@@ -183,7 +185,7 @@ signal representation, or calling convention.
 \centering
 \includegraphics[width=\textwidth]{figures/architecture.pdf}
 \caption{Architecture of \tool. The stable core keeps formula and signal
-inputs identical across comparisons; swappable backend lowering and DAG
+inputs identical across comparisons; swappable conversion rule and node
 interpretation make implicit choices explicit and their effects inspectable.}
 \label{fig:arch}
 \end{figure}
@@ -192,29 +194,21 @@ Internally, \tool separates a stable core from backend-specific evaluation logic
 The stable core is shared by every backend, and it does not decide how $(\varphi, \sigma)$ maps to a robustness value.
 Those decisions are delegated to the backend layer.
 
+This separation provides \emph{observability}.
 
-%\paragraph{Implicit choices vs.\ execution strategy.}
-In the backend layer, the \emph{implicit choices} fix what is computed:
-each backend resolves the implicit choices from
-\cref{tab:divergence} in a documented way. The
-\emph{execution strategy} fixes how it is computed, without changing those
-choices.
+Since intermediate outputs from two different backends are built
+on the same DAG representation,
+their intermediate outputs can be aligned at corresponding formula nodes.
+This makes it possible to identify the minimal divergent node
+and inspect the signal-processing operations responsible for it.
+\Cref{sec:discrepancies} demonstrates this diagnostic workflow.
 
-The shared formula representation and explicit computation DAG provide
-\emph{observability}: intermediate outputs from two backends can be aligned
-at shared formula nodes to identify the minimal divergent node and its backend
-operations. \Cref{sec:discrepancies} demonstrates this diagnostic workflow.
-
-A backend realizes its choices in two steps: it lowers the formula AST into
-a computation \emph{directed acyclic graph} (DAG) of typed primitive
-operations, and it interprets
-those operations into the chosen concrete signal-processing pipeline. The
-lowering fixes the implicit choices and the interpretation fixes the
-execution strategy, so semantics-preserving optimizations such as common
-subexpression elimination and caching of shared nodes stay on the executor
-side, never entangled with a semantic variant.
-\cref{fig:inspectable-dag} illustrates the lowering on an example formula
-with nested temporal operators.
+Each backend lowers the formula AST into a backend-specific computation DAG,
+and then interprets its typed primitive operations as a concrete signal-processing
+pipeline. This keeps signal-processing factors separate from the syntactic
+and recursive handling of STL formulas.
+\Cref{fig:inspectable-dag} illustrates
+such a lowering on an example formula with nested temporal operators.
 
 \begin{figure}[t]
 \centering
@@ -234,7 +228,7 @@ remain inspectable in the evaluation result.
 
 A backend consists of primitive operations, a lowering rule, and an executor.
 Extensions may introduce new primitive operations during lowering or override the interpretation of existing ones.
-For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations. In \cref{sec:implement-variations}, we demonstrate that emulating an existing tool's behavior requires only localized changes to the backend with small effort.
+For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations. In \cref{sec:implement-variations}, we demonstrate that emulating an existing tool's behavior only requires backend changes with small effort.
 Despite this explicit structure, our performance sanity check found its overhead to be negligible
 (Appendix~\ref{sec:app-eval}).
 
