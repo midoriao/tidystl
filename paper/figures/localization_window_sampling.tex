@@ -15,18 +15,18 @@
   [{$\wedge$}, diverge, name=root
     [{$\Box_{[0,3]}$}, diverge
       [{$\wedge$}, diverge
-        [{$\mathit{armed}\ge 0$}, agree]
+        [{$\mathit{mode}\ge 0$}, agree]
         [{$\Diamond_{[0,1]}$}, diverge
           [{$\wedge$}, diverge
-            [{$\mathit{ready}\ge 0$}, agree]
+            [{$\mathit{enable}\ge 0$}, agree]
             [{$\Box_{[1,2]}$}, origin, name=origin
-              [{$\mathit{level}\ge 0$}, agree]
+              [{$\mathit{signal}\ge 0$}, agree]
             ]
           ]
         ]
       ]
     ]
-    [{$\mathit{margin}\ge 0$}, agree]
+    [{$\mathit{safety\_margin}\ge 0$}, agree]
   ]
   \node[draw, dashed, rounded corners, fill=white, font=\tiny, align=left,
         anchor=west] (cl) at ([xshift=14mm]origin.east)

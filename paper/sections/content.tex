@@ -341,9 +341,9 @@ artifact's reproduction test suite (\cref{sec:app-eval}).
   robustness each tool reports ($\rho$, left/right tool), and the localized
   divergence (the single origin operator the localizer blames). The cases use
   \texttt{until\_boundary} $(x \ge 0)\,U_{[1,2]}\,(y \ge 0)$ and
-  \texttt{window\_sampling} $\Box_{[0,3]}\bigl((\mathit{armed} \ge 0) \wedge
-  \Diamond_{[0,1]}((\mathit{ready} \ge 0) \wedge \Box_{[1,2]}(\mathit{level}
-  \ge 0))\bigr) \wedge (\mathit{margin} \ge 0)$.}
+  \texttt{window\_sampling} $\Box_{[0,3]}\bigl((\mathit{mode} \ge 0) \wedge
+  \Diamond_{[0,1]}((\mathit{enable} \ge 0) \wedge \Box_{[1,2]}(\mathit{signal}
+  \ge 0))\bigr) \wedge (\mathit{safety\_margin} \ge 0)$.}
 \input{figures/localization_summary_table}
 \label{tab:e2-localization}
 \end{table}
@@ -354,40 +354,43 @@ its localizer compares a diverging pair node by node: every backend lowers the
 formula into one shared syntax tree with inspectable per-node outputs, so a
 single post-order walk reports the \emph{minimal divergent node}---the lowest
 node whose backend outputs disagree while all of its children still
-agree---together with the primitive operation each backend runs there (procedure
-in \cref{sec:app-eval}). We call this diagnostic capability \emph{divergence
-localization}. It applies even between real tools, where none is ground truth
-and the formula offers no hint (\cref{tab:e2-localization}).
+agree---together with the primitive operation each backend runs there
+(\cref{tab:e2-localization}).
 
 %\paragraph{Divergence without a verdict flip.}
 Consider the \texttt{window\_sampling} case of \cref{tab:e2-localization}, the
 conjunction
 \[
-  \Box_{[0,3]}\bigl((\mathit{armed} \ge 0) \wedge \Diamond_{[0,1]}((\mathit{ready}
-  \ge 0) \wedge \Box_{[1,2]}(\mathit{level} \ge 0))\bigr) \wedge (\mathit{margin}
-  \ge 0).
+  \Box_{[0,3]}\bigl((\mathit{mode} \ge 0) \wedge \Diamond_{[0,1]}((\mathit{enable}
+  \ge 0) \wedge \Box_{[1,2]}(\mathit{signal} \ge 0))\bigr) \wedge
+  (\mathit{safety\_margin} \ge 0).
 \]
-It reads as a layered guard: throughout the arming window $[0,3]$ the
-system must stay armed and, within $[0,1]$, become ready and then hold its level
-up across the following $[1,2]$ window, all under a standing margin. We evaluate
+It can be read as a small CPS-style monitoring requirement with a mode signal,
+an enabling signal, a monitored continuous signal, and a safety margin: during
+the window $[0,3]$, the system must remain in the required mode; within the
+initial window $[0,1]$, it must become enabled; once enabled, the monitored
+signal must stay above its threshold throughout the following $[1,2]$ window;
+and the run must maintain a nonnegative safety margin. We evaluate
 it on a non-uniform trace whose grid jumps from $t=0$ straight to $t=3$ (samples
-at $t = 0, 3, 4, \dots, 9$), with $\mathit{armed} = \mathit{ready} = 10$ and
-$\mathit{margin} = 9$ held constant and $\mathit{level} = [3, 0, 5, \dots, 5]$.
+at $t = 0, 3, 4, \dots, 9$), with $\mathit{mode} = \mathit{enable} = 10$ and
+$\mathit{safety\_margin} = 9$ held constant and
+$\mathit{signal} = [3, 0, 5, \dots, 5]$.
 Breach reports root robustness $+2.0$ and TaLiRo $+5.0$: both satisfy the spec,
 yet the values differ, so no flipped verdict betrays the divergence.
 
 The localizer pins the gap to the buried $\Box_{[1,2]}$, three temporal levels
-down. Evaluated at the first step, this operator reduces $\mathit{level}$ over
+down. Evaluated at the first step, this operator reduces $\mathit{signal}$ over
 the window $[1,2]$, which lies entirely inside the $0 \to 3$ grid gap and so
-contains no sample. Breach interpolates $\mathit{level}$ at the window start and
-returns $+2.0$; TaLiRo finds the window empty and returns the always-identity
+contains no sample. Breach interpolates $\mathit{signal}$ at the window start and
+returns $+2.0$ (because linear interpolation between the samples at $t=0$ and
+$t=3$ gives $\mathit{signal}(1)=2$); TaLiRo finds the window empty and returns
+the always-identity
 ($+\infty$), so that branch stops constraining the result. The
 two local readings propagate unchanged up the three nesting levels: at the root
 Breach's interpolated $+2.0$ stays binding, while TaLiRo's value rises to the
-next active constraint, $+5.0$.\footnote{RTAMT rejects the non-uniform grid
-outright, a coverage finding, so only the dense/sample-time tools apply here.}
-The cause lives entirely in how an off-grid temporal window is reduced; the
-appendix figure (\cref{fig:e2-window-sampling}) traces the same propagation path.
+next active constraint, $+5.0$.
+The cause lives entirely in how an off-grid temporal window is reduced; a more
+readable walkthrough of this example is given in Appendix~\ref{sec:app-eval}.
 
 %\paragraph{Localizing a discrepancy to its cause.}
 The verdict can also flip outright. On the bounded-until case
