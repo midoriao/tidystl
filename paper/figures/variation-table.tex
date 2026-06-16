@@ -1,19 +1,15 @@
-% AUTO-GENERATED from extra/artifacts/rv2026-eval/e3/variation.json
-% by extra/experiments/e3_emit_variation_tex.py (tidystl repo); do not hand-edit.
+% AUTO-GENERATED from extra/outputs/e3_variation/variation.json
+% by extra/experiments/e3_variation/aggregate.py (tidystl repo); do not hand-edit.
+% Tex variants: breach, taliro, rtamt (of 8 gathered).
 % LOC rule: variant-specific code only; blank/comment-only/docstring lines excluded; shared infrastructure excluded; attribution by top-level definition name (see script); Rust counted separately
-% Full suite: 181 passed, 0 failed.
+% Full suite: 103 passed, 0 failed.
 \setlength{\tabcolsep}{4pt}%
 \begin{tabular}{l l r r}
 \hline
 Variant & Layer changed & LOC & Tests \\
 \hline
-\multicolumn{4}{l}{\emph{Semantic variants (what is computed)}} \\
-\quad Breach-compatible & executor op overrides & 81 & 53 \\
-\quad RTAMT-compatible & own lowering + executor & 191 & 20 \\
-\quad STLCG++-compatible & own lowering + executor & 192 & 20 \\
-\hline
-\multicolumn{4}{l}{\emph{Computational variants (how it is computed)}} \\
-\quad STLCG++ Torch executor & executor only & 241 & 3 \\
-\quad Rust SIMD executor & executor only (native ext.) & 109 + 347 Rust & 26 \\
+Breach-compatible & executor op overrides & 85 & 41 \\
+TaLiRo-compatible & own lowering + executor & 167 & 54 \\
+RTAMT-compatible & own lowering + executor & 191 & 25 \\
 \hline
 \end{tabular}%

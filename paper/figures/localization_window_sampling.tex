@@ -3,25 +3,23 @@
 %   \usepackage[edges]{forest}
 %   \usepackage{amsmath}
 %   \usetikzlibrary{arrows.meta}
-\begin{figure}[t]
-\centering
 \begin{forest}
   for tree={
-    draw, rounded corners, align=center, inner sep=3.5pt,
-    font=\small, s sep=8mm, l sep=9mm,
+    draw, rounded corners, align=center, inner sep=2pt,
+    font=\footnotesize, s sep=5mm, l sep=6mm,
     parent anchor=south, child anchor=north, edge={-},
   },
   diverge/.style={fill=black!12},
   agree/.style={fill=white},
   origin/.style={fill=black!12, very thick, double, double distance=1.3pt},
   [{$\wedge$}, diverge, name=root
-    [{$G_{[0,3]}$}, diverge
+    [{$\Box_{[0,3]}$}, diverge
       [{$\wedge$}, diverge
         [{$\mathit{armed}\ge 0$}, agree]
-        [{$F_{[0,1]}$}, diverge
+        [{$\Diamond_{[0,1]}$}, diverge
           [{$\wedge$}, diverge
             [{$\mathit{ready}\ge 0$}, agree]
-            [{$G_{[1,2]}$}, origin, name=origin
+            [{$\Box_{[1,2]}$}, origin, name=origin
               [{$\mathit{level}\ge 0$}, agree]
             ]
           ]
@@ -30,27 +28,14 @@
     ]
     [{$\mathit{margin}\ge 0$}, agree]
   ]
-  \node[draw, dashed, rounded corners, fill=white, font=\scriptsize, align=left,
-        anchor=west] (cl) at ([xshift=18mm]origin.east)
-    {\textbf{divergence origin}\\[1pt]
-     window $[1,2]$ lies between samples\\[1pt]
+  \node[draw, dashed, rounded corners, fill=white, font=\tiny, align=left,
+        anchor=west] (cl) at ([xshift=14mm]origin.east)
+    {\textbf{divergence origin}\\[0.5pt]
+     window $[1,2]$ lies between samples\\[0.5pt]
      Breach interpolates at window start;\\
-     TaLiRo: empty window, vacuously true\\[1pt]
+     TaLiRo: empty window, vacuously true\\[0.5pt]
      $\rho_{\mathrm{breach}}=+2.0,\ \rho_{\mathrm{taliro}}=+\infty$};
   \draw[-{Latex[length=2mm]}, dashed] (cl.west) -- (origin.east);
-  \node[font=\scriptsize, anchor=west, align=left] at ([xshift=4mm]root.east)
+  \node[font=\scriptsize, anchor=west, align=left] at ([xshift=3mm]root.east)
     {$\rho_{\mathrm{breach}}=+2.0$ (SAT)\\ $\rho_{\mathrm{taliro}}=+5.0$ (SAT)};
 \end{forest}
-\caption{Tool-vs-tool divergence localization on \texttt{div\_window\_sampling}
-  (\textsc{Breach} vs.\ \textsc{TaLiRo}; no \textsc{native} baseline). On a
-  non-uniform grid with a wide segment $[0,3]$ the buried $G_{[1,2]}$ reduces
-  over a window lying entirely between samples. \textsc{Breach} uses the
-  interpolated predicate value at the window start; \textsc{TaLiRo} finds no
-  sample inside the closed window and returns the always-identity. The two
-  agree everywhere else (shaded nodes are the propagation path), so the
-  localizer reports the single origin $G_{[1,2]}$
-  ($\mathtt{WindowMin}$ vs.\ $\mathtt{SampleMin}$). Both \emph{satisfy} the
-  spec; the divergence is a value-only gap ($+2.0$ vs.\ $+5.0$), with no
-  syntactic giveaway in the formula.}
-\label{fig:e2-window-sampling}
-\end{figure}

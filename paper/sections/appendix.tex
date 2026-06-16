@@ -8,8 +8,8 @@ This appendix expands the implicit choices of
 \cref{tab:divergence} and organizes the sources of cross-tool
 difference. We first recall the reference robustness semantics, then detail
 finite-trace interpretation, coverage, and implementation-specific behavior.
-We finally distinguish explicit selection of advanced semantic
-extensions from implicit tool behavior around them.
+We then treat advanced semantic extensions, and close by stating what makes all
+of these choices implicit.
 
 % ------------------------------------------------
 \subsection{Standard Robustness}
@@ -49,64 +49,35 @@ form the finite-trace interpretation discussed in \cref{sec:app-open}.
 \subsection{Coverage and Implementation Deviations}
 \label{sec:app-corner}
 
-\paragraph{Support for until and release.}
-Few tools implement the full syntax of \cref{def:stl}. The until operator,
-with its nested $\inf$, is harder to implement and to vectorize than $\Box$
-and $\Diamond$, and release is often dropped together with it: some tools
-support only the box/diamond fragment, others support until under
-restricted interval forms. The effect is on coverage: a specification
-accepted by one tool is rejected by another before any robustness is
-computed. This is a syntax-coverage choice: adopting the tool implicitly
-selects which formulas can be evaluated.
+Several rows of \cref{tab:divergence} are \emph{coverage} choices: adopting a
+tool implicitly fixes which formulas it can evaluate at all, before any
+robustness is computed.
 
-\paragraph{Unbounded temporal operators.}
-\cref{def:stl} admits unbounded intervals such as $[0,\infty)$, so $\Box$,
-$\Diamond$, and until quantify over the whole remaining horizon. Many tools
-require a finite upper bound and reject the unbounded forms, or accept them
-only by silently truncating the window to the trace end. This too is a
-syntax-coverage choice: the logic fixes the construct, and an evaluator that
-omits it restricts to the bounded fragment.
+\paragraph{Logic fragment.}
+The until operator, with its nested $\inf$, is harder to vectorize than $\Box$
+and $\Diamond$, so some tools support only the box/diamond fragment and drop
+release with it. \cref{def:stl} also admits unbounded intervals such as
+$[0,\infty)$ and an arbitrary function symbol $f$; many tools require a finite
+upper bound and restrict predicates to threshold comparisons or linear
+arithmetic. Each omission restricts the accepted language.
 
-\paragraph{Range of expressible atomic predicates.}
-\cref{def:stl} permits an arbitrary function symbol $f$, but front ends
-restrict what is expressible: to threshold comparisons on single variables,
-to linear arithmetic, or to a fixed expression grammar. This is also a
-coverage choice.
-
-\paragraph{Open vs.\ closed interval endpoints.}
+\paragraph{Interval endpoints and sampling grid.}
 \cref{def:stl} admits open and half-open intervals such as $(1,3]$, but many
-front ends parse only closed ones. Where open intervals are accepted, their
-reading depends on the signal interpretation: under a continuous interpolant
-the $\inf$ over an open window coincides with that over its closure, so the
-difference is invisible, while under a discrete reading excluding an
-endpoint drops a sample and can change the aggregated value. Rejecting an
-open interval is a coverage choice; silently treating it as closed is an
-implementation deviation. Both are implicit because the formula does not
-announce how the evaluator will handle it.
-
-\paragraph{Sampling-grid constraints.}
-A discrete-time evaluator addresses time by integer sample index, so under an
-appropriate time scaling it admits only the integer-interval fragment: every
-temporal-interval bound must be an integer multiple of the sampling period
-(and the trace must be uniformly sampled). \tool's RTAMT- and
-STLCG++-compatible backends enforce this as a coverage restriction---they
-reject a non-uniform grid, and they reject a non-commensurate interval rather
-than silently snapping it. On an integer-time trace (step $1$), $\Box_{[1,2]}$
-is admitted but $\Box_{[0.5,1.5]}$ is rejected outright. Like the other
-fragment choices this is an input-acceptance effect; it manifests as the
-discrete tools' coverage entries (\mbox{--}) on the interpolation row of
-\cref{tab:divergence-profile}.
+front ends parse only closed ones; where open intervals are accepted, excluding
+an endpoint changes a discrete $\inf$/$\sup$ while leaving a continuous one
+unchanged. A discrete-time evaluator addresses time by integer index, so it
+admits only the integer-interval fragment: every bound must be an integer
+multiple of the sampling period and the trace must be uniform. \tool's
+RTAMT-compatible backend enforces this as a coverage restriction---on a
+step-$1$ trace $\Box_{[1,2]}$ is admitted but $\Box_{[0.5,1.5]}$ is rejected
+outright, and a non-uniform grid is rejected rather than silently snapped.
 
 \paragraph{Robustness of $\top$ and $\bot$.}
-The standard semantics assigns $\rho(\top,\sigma,t) = +\infty$ and
-$\rho(\bot,\sigma,t) = -\infty$. Tools differ in whether they admit infinite
-values at all: some propagate genuine infinities through the $\min$/$\max$
-aggregation, others substitute large finite sentinels, and a sentinel leaks
-into reported values once it is aggregated, scaled, or differentiated. Since
-the reference semantics fixes genuine infinities, a finite sentinel is an
-implementation deviation. It is nevertheless an implicit semantic choice in
-our taxonomy because adopting the evaluator silently selects this effective
-behavior.
+The reference semantics fixes $\rho(\top) = +\infty$ and $\rho(\bot) = -\infty$.
+Tools that substitute large finite sentinels deviate from it, and the sentinel
+leaks into reported values once it is aggregated, scaled, or differentiated. We
+record this as an implicit choice because adopting the evaluator silently
+selects the effective behavior.
 
 % ------------------------------------------------
 \subsection{Implicit Semantic Choices for Finite Inputs}
@@ -140,11 +111,9 @@ backend reduces over the in-window \emph{samples only} and never interpolates
 at an endpoint (pinned to Breach ground truth). Both backends are
 piecewise-linear, yet they disagree on any off-grid window: for
 $\Diamond_{[0.3,0.7]}(v \geq 5)$ the native backend reports $-0.2$ and the
-Breach-compatible one $-1.0$. This is less a principled semantic choice than a
-Breach implementation convention---the samples-only reduction merely omits the
-exact endpoint---so \tool records it among the evaluator-specific behaviors in
-\cref{tab:divergence} rather than as a primary finite-trace choice, even though
-it still shifts the reported robustness.
+Breach-compatible one $-1.0$. \tool records this among the evaluator-specific
+behaviors of \cref{tab:divergence}, as it reflects a Breach implementation
+convention rather than a primary finite-trace choice.
 
 The \emph{signal beyond horizon} and \emph{robustness at horizon} rows of
 \cref{tab:divergence} cover the next two choices: how a window reaching past
@@ -159,12 +128,7 @@ horizon or by leaving the past-end region \emph{empty}---the \emph{Extend} and
 sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. Under
 a \emph{pessimistic} rule (RTAMT discrete, TaLiRo) the out-of-range part contributes
 nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
-(the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$. A third rule,
-\emph{last-value extension} (STLCG++ with \texttt{padding=last}), repeats the
-final sample to fill a truncated window in index space; it agrees with clamp
-in spirit but is computed on the discrete grid. A fourth behavior,
-\emph{truncation} (py-MTL), drops the past-horizon region and returns an empty
-signal there rather than a value.
+(the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$.
 This is the \emph{signal beyond horizon} row of \cref{tab:divergence-profile},
 illustrated on a concrete trace in \cref{ex:verdict-flip}. It is a sign change
 in the robustness value, not a difference in input acceptance: both backends
@@ -198,90 +162,43 @@ involves several variables.
 \subsection{Advanced Semantic Extensions}
 \label{sec:app-ext}
 
-Applications genuinely demand more than \cref{def:stl} provides. The
-following extensions explicitly select a different language or evaluation
-problem. That selection is not implicit when exposed to the user; whether a
-tool supports the extension is an implicit coverage choice, and any
-tool-fixed behavior within the selected extension remains an implicit choice.
+Applications often demand more than \cref{def:stl} provides. The extensions
+below select a different language or evaluation problem; whether a tool supports
+one is itself a coverage choice.
 
 \paragraph{Equality predicates.}
 The equality $x = 0$ is absent from \cref{def:stl} yet common in practical
-specifications. Adding equality to the language is an explicit extension;
-once a tool accepts it, however, the assigned robustness is an implicit
-choice because the formula does not select one (the \emph{nonstandard
-predicates} row of \cref{tab:divergence}). Equality is satisfied only
-at the single value $x = 0$ and admits no single standard robustness; a
-common choice is $-|x|$, which is never positive, so even a satisfied
-equality reports non-positive robustness.
-Breach instead scores equality by a fixed-magnitude sign convention
-($\pm 10^4$), so the reported value carries no metric information at
-all---the \emph{equality predicate} row of \cref{tab:divergence-profile} shows the
-resulting cross-tool divergence on inputs every tool accepts.
+specifications. Once a tool accepts it the assigned robustness is an implicit
+choice (the \emph{nonstandard predicates} row of \cref{tab:divergence}): a
+common reading is $-|x|$, which is never positive, so even a satisfied equality
+reports non-positive robustness, while Breach uses a fixed-magnitude sign
+convention ($\pm 10^4$) that carries no metric information.
 
-\paragraph{Past-time operators.}
-Operators such as once and historically mirror the temporal modalities into
-the past. They change the direction in which an evaluator walks the trace,
-and tools either provide them (RTAMT) or not. The effect is on coverage.
-
-\paragraph{Differentiable robustness.}
-Gradient-based learning replaces the $\min$/$\max$ aggregations by smooth
-approximations~\cite{levenberg2020stlcg,pant2017smooth}. The smooth value
-deviates from the standard robustness by construction. Whether the deviation
-is exposed as a tunable parameter or buried in the tool determines its
-classification: explicitly selecting smooth robustness changes the evaluation
-problem, while a buried approximation is implicit implementation behavior.
-
-\paragraph{Online evaluation.}
-Online monitoring evaluates a growing prefix, so verdicts must be issued
-before the trace is complete~\cite{deshmukh2017online}. This forces a
-treatment of missing future information---three-valued verdicts, robustness
-intervals---that offline evaluation never confronts.
+\paragraph{Other extensions.}
+Past-time operators (once, historically), differentiable robustness that
+replaces $\min$/$\max$ by smooth
+approximations~\cite{levenberg2020stlcg,pant2017smooth}, and online evaluation
+over growing prefixes~\cite{deshmukh2017online} each change the language or the
+evaluation problem; \tool exposes the smooth case explicitly as a selectable
+backend.
 
 % ------------------------------------------------
-\subsection{Why ``Implicit''}
+\subsection{Why These Choices Are Implicit}
 
-The choices in \cref{tab:divergence} are implicit because they
-are absent from both the STL formula and the finite sampled input, yet are
-fixed by adopting the evaluator. Choosing a tool therefore silently chooses a
-combination of finite-trace conventions, scoring rules, coverage boundaries,
-and implementation behavior. ``Choice'' here names that effective behavior
-without judging whether it is deliberate. Two tools whose
-combinations differ can reject different inputs, report different robustness,
-or even produce opposite verdicts on identical input. The contribution of
-\tool is not to declare one combination correct, but to expose and diagnose
-the combination rather than leave it as a property buried in the tool.
-
-% ================================================================
-% ################################################################
-% ================================================================
-\section{The Tool Landscape in Detail}
-\label{sec:app-landscape}
-
-\cref{tab:landscape-detailed} compares representative tools along the axes
-on which their evaluators actually differ, expanding the summary in
-\cref{sec:background}.
-
-\begin{table}[ht]
-\centering
-\caption{How representative tools differ along the axes that shape their
-evaluators.}
-\label{tab:landscape-detailed}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lllllll}
-\hline
-Tool & Interface & Signal model & Online mode & Primary target & Auto-grad & Stack \\
-\hline
-Breach~\cite{donze2010breach,donze2013efficient} & API + DSL & piecewise-linear   & offline & falsification           & no  & MATLAB, mature \\
-RTAMT~\cite{nickovic2020rtamt,nickovic2024rtamt} & DSL + API & discrete (default) / dense & delayed & runtime verification    & no  & Python, heavy \\
-MoonLight~\cite{bartocci2023moonlight}           & DSL + API & spatial + temporal & partial & spatial RV              & no  & Java / CLI / Python \\
-STLCG++~\cite{kapoor2025stlcgpp}                 & API       & discrete (tensor)  & none    & differentiable learning & yes & PyTorch \\
-TaLiRo~\cite{annpureddy2011staliro}              & API + DSL & sampled (real-time) & offline & falsification          & no  & MATLAB \\
-py-MTL~\cite{pyMTL}                              & API       & dense (hold)       & none    & monitoring              & no  & Python, light \\
-% \tool     & DSL + API & piecewise-linear   & offline & evaluation              & no  & Python, light \\
-\hline
-\end{tabular}%
-}
-\end{table}
+Across the four groups of \cref{tab:divergence}---finite-trace interpretation,
+predicate semantics, logic fragment, and implementation-specific
+behavior---one property recurs: the choice is fixed not by the STL formula or
+the sampled trace, but by the act of adopting an evaluator. That is what makes
+it implicit and invisible at the specification level. The extensions of
+\cref{sec:app-ext} sharpen this boundary rather than crossing it: a user who
+explicitly selects, say, smooth robustness makes that choice visible, yet the
+tool's behavior around the extension---which inputs it admits and how it scores
+them---stays implicit. ``Choice'' here is descriptive, not a verdict on a tool's
+documentation or design: it names the effective behavior without judging whether
+a tool fixed it deliberately. The practical consequence is what
+\cref{sec:discrepancies} measures: two tools whose combinations differ can
+reject different inputs, report different robustness, or return opposite
+verdicts on identical input.
 
 % ================================================================
 \section{Experimental Details}
@@ -304,34 +221,27 @@ The profile of \cref{tab:divergence-profile} uses one diagnostic case per
 implicit choice, each a small formula and trace constructed so that only that
 choice can affect the reported robustness. Every case runs on each tool in its
 native environment---Breach (from a committed MATLAB cache), RTAMT in its
-discrete and dense modes, STLCG++, py-MTL, and TaLiRo
-(\texttt{dp\_taliro})---and we read the tool's per-timestep robustness at the
-marked readout sample and map it to the option that output reveals. The
-per-option robustness signature is predicted analytically and printed beside
-the observed value, so each attribution is auditable rather than asserted. Two
-rows additionally use a \tool reference to separate independent axes (the
-signal-model row to tell dense from discrete time, the interpolation row to
-tell piecewise-linear from piecewise-constant reconstruction). STLCG++ runs
-with exact $\min$/$\max$ aggregation---its default; smooth aggregation is
-opt-in---so its entries reflect its discrete-time semantics rather than
-smoothing. TaLiRo's \texttt{dp\_taliro} reports only a whole-trace scalar at
-$t=0$, so a choice that acts only on a later sample is marked \emph{n/o} (not
-observable) rather than guessed.
+discrete and dense modes, and TaLiRo (\texttt{dp\_taliro})---and we read the
+tool's per-timestep robustness at the marked readout sample and map it to the
+option that output reveals. The per-option robustness signature is predicted
+analytically and printed beside the observed value, so each attribution is
+auditable rather than asserted. TaLiRo's \texttt{dp\_taliro} reports only a
+whole-trace scalar at $t=0$, so a choice that acts only on a later sample is
+marked \emph{n/o} (not observable) rather than guessed.
 
 \paragraph{Compatibility validation.}
 Each \tool compatibility backend is validated separately against its tool's
 committed reference fixtures---real-tool robustness regenerated from Breach,
-RTAMT, STLCG++, py-MTL, and TaLiRo---by the artifact's per-tool reproduction
+RTAMT, and TaLiRo---by the artifact's per-tool reproduction
 test suite, which checks per-timestep agreement at absolute tolerance
 $10^{-6}$ on the operator-coverage regression suite. The backends implement
-each tool's \emph{documented} rules; the check verifies the implementations
-rather than defining them, and it is nontrivial: on the first live Breach run
-it exposed two fidelity bugs in our own Breach-compatible backend (the
-equality convention and the window-endpoint reduction), both fixed and
-re-verified before the reported numbers were produced. One deviation is
-deliberate: where real RTAMT silently reinterprets a non-uniform grid as
-uniformly indexed samples, the RTAMT-compatible backend rejects the input
-instead of reproducing the reinterpretation.
+each tool's \emph{documented} rules, so the check verifies the implementations
+rather than defining the rules. The one case where a backend departs from its
+reference tool is itself an implicit choice this paper aims to surface: where
+real RTAMT silently reinterprets a non-uniform grid as uniformly indexed
+samples, the RTAMT-compatible backend makes this an \emph{explicit} coverage
+rejection rather than reproducing the silent reinterpretation (cf.\ the
+coverage choices of \cref{sec:app-corner}).
 
 \paragraph{Localization procedure.}
 Across any pair of validated backends, the localizer exploits that \tool
@@ -356,6 +266,21 @@ shared syntax-tree level rather than between lowered representations;
 predicate-internal arithmetic is treated as a leaf, since none of the
 implicit choices studied here concerns its internal operations.
 
+\begin{figure}[ht]
+\centering
+\input{figures/localization_window_sampling}
+\caption{Tool-vs-tool localization on \texttt{div\_window\_sampling}
+  (\textsc{Breach} vs.\ \textsc{TaLiRo}, no ground truth; discussed in
+  \cref{sec:discrepancies}). The buried $\Box_{[1,2]}$ reduces over a window
+  lying entirely between samples on a non-uniform grid: \textsc{Breach}
+  interpolates at the window start while \textsc{TaLiRo} returns the
+  always-identity. Shaded nodes mark the divergence propagation path up to the
+  single origin $\Box_{[1,2]}$
+  ($\mathtt{WindowMin}$ vs.\ $\mathtt{SampleMin}$), annotated in the dashed box;
+  both satisfy the spec ($+2.0$ vs.\ $+5.0$).}
+\label{fig:e2-window-sampling}
+\end{figure}
+
 \paragraph{Trace-family construction.}
 A single constructed trace could sit on a knife edge, so each headline
 case is widened to a swept family of 201 traces whose final sample varies
@@ -370,16 +295,13 @@ extend-penultimate rules flip the final verdict on 100 of 201 traces and
 rank the trace oppositely against a fixed reference trace with an interior
 violation---the ranking signal a falsification search acts on---on 80 of
 201. These rates measure the width of the disagreement region within
-each controlled family---the divergences are not measure-zero
-coincidences---not a frequency claim about any particular workload.
+each controlled family, not a frequency claim about any particular workload.
 
 \paragraph{Variant accounting.}
 LOC in \cref{tab:variation} counts variant-specific code only: blank,
-comment-only, and docstring lines are excluded, shared infrastructure is
-excluded, and Rust is counted separately. The native backend is the
-baseline and has no row; the Rust SIMD executor ships as an optional
-native extension alongside the five backends. The full regression suite
-comprises 181 tests and passes with all variants installed.
+comment-only, and docstring lines are excluded, and shared infrastructure is
+excluded. The native backend is the baseline and has no row. The full
+regression suite comprises 103 tests and passes with all variants installed.
 
 \paragraph{Performance sanity check.}
 The benchmark in \cref{fig:scaling} compares \tool backends with real RTAMT and STLCG++ on
@@ -395,11 +317,10 @@ is not a primary evaluation claim.
 \begin{figure}[ht]
 \centering
 \input{figures/scaling-plot}
-\caption{Mean evaluation time on representative workloads, plotted on a
-log scale. All bars use the same formula
-$\Box_{[0,5]}((x>0)\wedge\Diamond_{[0,2]}(y>0))$; error bars show one
-standard deviation. RTAMT$^\dagger$ batch times are $N \times$ the
-measured per-trace time; missing STLCG++ bars exceed memory (OOM).}
+\caption{Mean evaluation time (log scale) on
+$\Box_{[0,5]}((x>0)\wedge\Diamond_{[0,2]}(y>0))$; error bars are one
+standard deviation. RTAMT$^\dagger$: batch time is $N \times$ per-trace time.
+Missing STLCG++ bars: OOM.}
 \label{fig:scaling}
 \end{figure}
 
@@ -408,13 +329,10 @@ measured per-trace time; missing STLCG++ bars exceed memory (OOM).}
 
 \begin{table}[ht]
 \centering
-\caption{Mean evaluation time (ms) $\pm$ std over a batch of $N$ traces of
-length $T$; identical workload
-$\Box_{[0,5]}((x>0)\wedge\Diamond_{[0,2]}(y>0))$ for every column. This is
-the data plotted in \cref{fig:scaling}. $\dagger$: RTAMT evaluates one
-trace per call, so batch times are $N \times$ the measured per-trace time
-(linearity checked at $N \in \{1,8\}$). OOM: window materialization
-exceeds memory on the 32\,GB host.}
+\caption{Mean evaluation time (ms) $\pm$ std on the same workload as
+\cref{fig:scaling}. $\dagger$: RTAMT is single-trace; batch times are
+$N \times$ per-trace (linearity checked at $N \in \{1,8\}$).
+OOM: window materialization exceeds memory on the 32\,GB host.}
 \label{tab:scaling}
 \input{figures/scaling-table}
 \end{table}
@@ -427,7 +345,9 @@ exceeds memory on the 32\,GB host.}
 %-----------------------------------------------------------
 \begin{table}[tp]
  \centering
- \caption{Comparison of tools supporting monitoring of robustness of STL or related logics. In the ``Supported Nominal Semantics'' column, ``classical'' refers to the robust semantics based on~\cite{donze2010robust} or~\cite{fainekos2009robustness} and ``RoSI-style'' refers to semantics based on the RoSI semantics~\cite{deshmukh2017online}.}
+ \caption{Tools supporting STL or related robustness monitoring.
+  ``classical'' semantics: \cite{donze2010robust} or \cite{fainekos2009robustness};
+  ``RoSI-style'': \cite{deshmukh2017online}.}
  \label{table:detailed_tool_comparison}
  \footnotesize
  \begin{tabular}{ccc}
@@ -452,12 +372,11 @@ exceeds memory on the 32\,GB host.}
 \end{table}
 %-----------------------------------------------------------
 
-\cref{table:detailed_tool_comparison} presents several tools that support monitoring the robustness of STL or related logics, along with the nominal semantics they support.
-The ``Supported Nominal Semantics'' column indicates the classification of the semantics supported by each tool.
-The ``classical'' semantics refers to the robust semantics defined by inductively aggregating the robustness of atomic predicates using $\min$ and $\max$, as in~\cite{donze2010robust} and~\cite{fainekos2009robustness}.
-``RoSI-style'' semantics refers to semantics based on robust satisfaction intervals (RoSI)~\cite{deshmukh2017online}, which indicate the range of robustness values that can be realized by extending the current trace with some suffix.
-
-Currently, \tool{} supports the classical and smooth semantics as the nominal semantics.
-Implementing compatibility backends of \tool{} for more tools supporting the classical semantics is a future work, which we expect to be straightforward, as we demonstrated in \cref{sec:implement-variations}.
-Extending \tool{} to support the RoSI-style semantics~\cite{deshmukh2017online} and the causation semantics~\cite{DBLP:conf/cav/ZhangAAH23} is also a future work.
-We believe that this can also be done by implementing appropriately compatibility backends.
+\cref{table:detailed_tool_comparison} lists further tools that monitor the
+robustness of STL or related logics, classified by their supported nominal
+semantics (defined in the caption). \tool{} currently supports the classical and
+smooth semantics; extending it with compatibility backends for further
+classical-semantics tools, and for the RoSI-style~\cite{deshmukh2017online} and
+causation~\cite{DBLP:conf/cav/ZhangAAH23} semantics, is future work that the
+modular structure of \cref{sec:implement-variations} should make
+straightforward.

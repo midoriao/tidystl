@@ -1,38 +1,27 @@
-% Summary of tool-vs-tool divergence-localization cases (no native baseline).
-% Preamble requirements: \usepackage{booktabs}
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}lllcl@{}}
+% AUTO-GENERATED from extra/outputs/e2_localization records by
+% extra/experiments/e2_localization/aggregate.py --emit-tex; do not hand-edit.
+% tabular only -- wrap in your own table float / caption.
+% Preamble: \usepackage{booktabs}.
+% 'l/r' columns follow the 'tools compared' order (left tool / right tool).
+%
+% formulas (tidystl syntax):
+%   until_boundary: (x >= 0) U[1,2] (y >= 0)
+%   window_sampling: G[0,3]( (armed >= 0) and F[0,1]( (ready >= 0) and G[1,2](level >= 0) ) ) and (margin >= 0)
+%
+% signals:
+%   until_boundary: t=[0, 1]; x=[5, -5]; y=[-1, 2]
+%   window_sampling: t=[0, 3, 4, 5, 6, 7, 8, 9]; armed=10 (const); ready=10 (const); margin=9 (const); level=[3, 0, 5, 5, 5, 5, 5, 5]
+\begin{tabular}{@{}llccl@{}}
 \toprule
-Case & tools compared & root robustness & effect & origin \\
+Case & tools compared & $|\phi|$/depth & $\rho$ (l/r) & divergence \\
 \midrule
-\texttt{until\_boundary}  & Breach vs.\ RTAMT  & $-5.0$ / $+2.0$ & verdict flip        & $U_{[1,2]}$ \\
-\texttt{window\_sampling} & Breach vs.\ TaLiRo & $+2.0$ / $+5.0$ & value gap (no flip) & $G_{[1,2]}$ \\
+\texttt{until\_boundary} & Breach vs.\ RTAMT & 3 / 1 & $-5$ / $+2$ & verdict flip on $U_{[1,2]}$ \\
+\texttt{window\_sampling} & Breach vs.\ TaLiRo & 10 / 3 & $+2$ / $+5$ & value gap on $\Box_{[1,2]}$ \\
 \bottomrule
 \end{tabular}
 
-\medskip
-
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-\texttt{until\_boundary} verdict & Breach & RTAMT & TaLiRo & STLCG++ \\
-\midrule
-$\rho$ at $t=0$ & $-5.0$ & $\mathbf{+2.0}$ & $-5.0$ & $-5.0$ \\
-\bottomrule
-\end{tabular}
-\caption{Mechanical divergence localization between pairs of real-tool semantics
-  (no \textsc{native} reference). Top: on a bounded \texttt{until}
-  (\texttt{(x>=0) U[1,2] (y>=0)}) Breach and RTAMT flip the verdict, and on a
-  between-samples window Breach and TaLiRo show a value-only gap; in both the
-  localizer reports exactly the listed operator and names the responsible
-  primitive ($\mathtt{BoundedUntilKernel}$ vs.\ $\mathtt{DiscreteBoundedUntil}$;
-  $\mathtt{WindowMin}$ vs.\ $\mathtt{SampleMin}$). Bottom: across all four tools,
-  RTAMT is the lone outlier on the bounded-\texttt{until} verdict --- its
-  discrete-time until composition disagrees with the three dense/sample-time
-  tools --- and the divergence localizes to the single $U_{[1,2]}$ operator in
-  every pairwise comparison. The cause is in the temporal semantics, not the
-  syntax.}
-\label{tab:e2-localization}
-\end{table}
+% kernels at origin -- until_boundary: $U_{[1,2]}$ Breach BoundedUntilKernel[1,2] vs.\ RTAMT DiscreteBoundedUntil[1,2]
+% kernels at origin -- window_sampling: $G_{[1,2]}$ Breach WindowMin[1,2] overridden by _sliding_min_breach vs.\ TaLiRo SampleMin[1,2]
+% div_until_boundary verdict at t=0 across tools: Breach -5, RTAMT +2 (outlier), TaLiRo -5, STLCG++ -5.
+% first-divergence step: div_until_boundary t-index 0; div_window_sampling t-index 0.
+% breach's window kernel here is the sliding-min variant (_sliding_min_breach).
