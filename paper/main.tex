@@ -1,7 +1,7 @@
 %%
 %%  Venue: RV 2026 tool demonstration track
 %%  CfP: https://rv2026.smithengineering.queensu.ca/cfp/
-%%  DL: 2026-6-14 AoE
+%%  DL: 2026-6-16 AoE
 
 \documentclass[runningheads]{llncs}
 
@@ -88,7 +88,9 @@ which can differ among tools and lead to different downstream
 consequences such as falsification outcomes.
 We present tidySTL, a diagnostic toolkit that makes such evaluator
 behavior explicit and exposes their computations through an inspectable DAG.
-Using a set of controlled cross-tool comparison cases, tidySTL identifies and localizes differences in implicit semantics among existing tools.
+By modeling existing STL evaluators as validated compatibility backends, tidySTL
+makes their discrepancies transparent and mechanically localizable
+to responsible formula nodes and operations.
 Its architecture also serves as an extensible evaluator layer: representative variations require only localized backend changes, while the formula, signal, and public interface remain fixed.
 \end{abstract}
 

@@ -475,6 +475,6 @@ signal layer, and user-facing interface are reused unchanged.
 \label{sec:conclusion}
 % ----------------------------------------------------------------
 % ================================================================
-\tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary.  By separating formula syntax, signal data, backend-specific lowering, and DAG interpretation, it exposes choices that are otherwise buried in tool internals and shows that they materially affect acceptance, verdicts, trace rankings, and falsification behavior across real, widely used tools---and that the choice responsible for a disagreement can be named mechanically.
+\tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary.  By separating formula syntax, signal data, backend-specific lowering, and DAG interpretation, it exposes choices that are otherwise buried in tool internals and shows that they materially affect acceptance, verdicts, and falsification behavior, and that the resulting discrepancies can be mechanically localized to minimal divergent formula nodes and responsible operations.
 
 The implementation supports the view of robustness evaluation as an extensible semantic layer rather than an implementation detail of a particular monitor, falsifier, or learning pipeline.  Future work will extend this layer to broader semantics, including online evaluation, and expand its validation suite.
