@@ -72,9 +72,9 @@ Appendix~\ref{sec:formal} further explores their scope.}
 
 
 We take the quantitative STL semantics of Donz\'e and
-Maler~\cite{donze2010robust} as a representative theoretical reference.
+Maler~\cite{donze2010robust} as the representative theoretical reference.
 Together with the closely related framework by Fainekos and Pappas~\cite{fainekos2009robustness},
-it represents the practical setting used by existing STL monitoring and falsification tools~\cite{ernst2021archcomp};
+it represents the practical setting used by most of the existing STL monitoring and falsification tools~\cite{ernst2021archcomp};
 our focus is on evaluator-level variations within this setting.
 To fix the scope, we recall only the definitions needed to delimit where
 implicit semantic choices arise in evaluation.
@@ -107,19 +107,17 @@ Here $f$ is a function symbol, for example $f(x, y) = 4x - y - 3$, and $I$ is a 
 Informally, the robust semantics $\rho(\varphi, \sigma, t)$ replaces the Boolean
 verdict with a signed real-value,
 e.g., $\rho(x - 3 \geq 0, \sigma, t) = \sigma_x(t) - 3$,
-which the connectives and temporal operators aggregate by $\min$, $\max$, $\inf$, and $\sup$, e.g.,
+which the connectives and temporal operators aggregate the robust semantics of the subformulas by $\min$, $\max$, $\inf$, and $\sup$, e.g.,
 $\rho(\Box_{[0,2]}\,(x - 3 \geq 0), \sigma, t)
   = \inf_{t' \in [t,\,t+2]} (\sigma_x(t') - 3)$.
 
-We call an evaluator decision an \emph{implicit semantic choice} if
-it instantiates robustness evaluation in a way
-not determined by the formal definition together with the given formula and trace,
-and can change acceptance or reported robustness.
+We call a design choice in a concrete evaluator's implementation an \emph{implicit semantic choice} if
+the choice can change the resulting robustness evaluation even for the same formula and trace.
 For example, an evaluator often receives only a finite \emph{timed state sequence}
 $(t_0, \vec{v}_0), \ldots, (t_n, \vec{v}_n)$ of timestamped samples, whereas
 the reference semantics is defined over an idealized signal.
 How this finite representation is interpolated into a signal over $\mathbb{R}_{\geq 0}$ is
-therefore an implicit semantic choice.
+an implicit semantic choice.
 \Cref{tab:divergence} organizes the choices we consider.
 
 \begin{example}[Verdict flip from one implicit choice]
@@ -129,14 +127,17 @@ For $\varphi = \Diamond_{[2,4]}(x \geq 0)$ evaluated at $t = 1$ on a trace
 ending at $T = 2$ with $x(T) = 3$, the window $[3,5]$ lies entirely past the
 trace. A clamping rule treats the last sample as persisting and reports $+3$
 (satisfied), while a pessimistic rule sees an empty window and reports
-$-\infty$ (violated): same formula, same samples, opposite verdicts.
+$-\infty$ (violated).
+Overall, an evaluator may produce an opposite Boolean verdict for the same formula and trace, depending on this choice.
 \end{example}
 
 This is not a knife-edge coincidence of one trace: swept over a family of
-inputs, the boundary- and terminal-step rules flip verdicts and reverse trace
-rankings across a wide band of values (Appendix~\ref{sec:app-eval}).
-The consequences compound when tools are compared. One tool's implicit choice
-can contaminate another tool's verdict: in the ARCH-COMP falsification
+inputs, the boundary- and terminal-step rules flip verdicts and change the order of robustness of a wide band of values (Appendix~\ref{sec:app-eval}).
+% ここの辺りの言いたいことがあんまり良くわからなかったのでguessして書いてみています
+% The consequences compound when tools are compared. 
+% One tool's implicit choice can contaminate another tool's verdict: 
+This inconsistency, due to each tool's implicit semantic choices, is particularly problematic when multiple tools are compared:
+in the ARCH-COMP falsification
 competition, a tool's implicit choice of temporal and input bounds invalidated
 the validation of \emph{other} tools' correct results, turning an implicit
 choice into a fairness problem for the comparison
@@ -153,11 +154,11 @@ itself~\cite{ernst2021archcomp}.
 \includegraphics[width=\textwidth]{figures/architecture.pdf}
 \caption{Architecture of \tool: a stable core shared by every backend and a
 swappable backend layer (lowering and node interpretation) that isolates the
-implicit choices.}
+implicit semantic choices.}
 \label{fig:arch}
 \end{figure}
 
-This section turns the implicit choices of \cref{sec:background} into
+This section turns the implicit semantic choices of \cref{sec:background} into
 inspectable implementation structure. \tool exposes robustness evaluation
 through a small interface, while placing choices that vary across evaluators
 behind a backend boundary.
@@ -169,7 +170,7 @@ behind a backend boundary.
 A \emph{formula} is a typed syntax tree, parsed from the textual STL front end.
 A \emph{signal} contains one or more named, batched value sequences over a shared time grid.
 
-An optional third input, the \emph{backend}, encapsulates the implicit
+An optional third input, the \emph{backend}, encapsulates the implicit semantic
 choices and the execution strategy. Evaluation takes the form
 \texttt{robustness(formula, signal, backend)} and returns an array of
 robustness values over time:
