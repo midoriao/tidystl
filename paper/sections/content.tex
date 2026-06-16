@@ -41,7 +41,7 @@ This paper makes the following contributions.
   \item We present an architecture that represents these choices as explicit,
     swappable backends and makes their computations inspectable
     (\cref{sec:design}).
-  \item Building on it, we emulate Breach~\cite{donze2010breach}, RTAMT~\cite{nickovic2020rtamt}, STLCG++~\cite{kapoor2025stlcgpp}, py-MTL~\cite{pyMTL}, and TaLiRo~\cite{annpureddy2011staliro} as compatibility backends
+  \item Building on it, we emulate Breach~\cite{donze2010breach}, RTAMT~\cite{nickovic2020rtamt}, and TaLiRo~\cite{annpureddy2011staliro} as compatibility backends
     and \emph{mechanically localize} their discrepancies to the responsible
     implicit choice and formula node (\cref{tab:divergence-profile,sec:discrepancies}).
   \item We show that the architecture provides an extensible evaluator layer:
@@ -51,7 +51,7 @@ This paper makes the following contributions.
 \end{itemize}
 
 \paragraph{Related Work.}
-In this paper, we focus on the comparison of \tool{} with Breach, RTAMT, STLCG++, py-MTL, and TaLiRo, which employ the quantitative STL semantics of Donz\'e and Maler~\cite{donze2010robust} or Fainekos and Pappas~\cite{fainekos2009robustness} as their underlying theory.
+In this paper, we focus on the comparison of \tool{} with Breach, RTAMT, and TaLiRo, which employ the quantitative STL semantics of Donz\'e and Maler~\cite{donze2010robust} or Fainekos and Pappas~\cite{fainekos2009robustness} as their underlying theory.
 \cref{section:detailed_comparison} lists some other related tools.
 Extending \tool{} to support other quantitative STL semantics, such as the RoSI semantics~\cite{deshmukh2017online}, is an interesting future direction.
 
@@ -63,8 +63,8 @@ Extending \tool{} to support other quantitative STL semantics, such as the RoSI 
 
 \begin{table}[t]
 \centering
-\caption{Representative \emph{implicit choices} in robustness evaluation~\cite{donze2010robust}.
-Each choice can affect \emph{robustness} (the reported value) or \emph{acceptance} (class of accepted inputs), given the same formula and trace.
+\caption{Representative \emph{implicit choices} in robustness evaluation~\cite{donze2010robust},
+each of which can alter the reported value or acceptance class.
 Appendix~\ref{sec:formal} further explores their scope.}
 \label{tab:divergence}
 
@@ -149,6 +149,15 @@ itself~\cite{ernst2021archcomp}.
 % ----------------------------------------------------------------
 % ================================================================
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/architecture.pdf}
+\caption{Architecture of \tool: a stable core shared by every backend and a
+swappable backend layer (lowering and node interpretation) that isolates the
+implicit choices.}
+\label{fig:arch}
+\end{figure}
+
 This section turns the implicit choices of \cref{sec:background} into
 inspectable implementation structure. \tool exposes robustness evaluation
 through a small interface, while placing choices that vary across evaluators
@@ -198,24 +207,13 @@ signal representation, or calling convention.
 % ------------------------------------------------
 \subsection{Architecture}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/architecture.pdf}
-\caption{Architecture of \tool. The stable core keeps formula and signal
-inputs identical across comparisons; swappable conversion rule and node
-interpretation make implicit choices explicit and their effects inspectable.}
-\label{fig:arch}
-\end{figure}
-
 Internally, \tool separates a stable core from backend-specific evaluation logic, as shown in \cref{fig:arch}.
 The stable core is shared by every backend, and it does not decide how $(\varphi, \sigma)$ maps to a robustness value.
 Those decisions are delegated to the backend layer.
 
-This separation provides \emph{observability}.
-
-Since intermediate outputs from two different backends are built
-on the same DAG representation,
-their intermediate outputs can be aligned at corresponding formula nodes.
+This separation provides \emph{observability}: because two backends build
+their intermediate outputs on the same DAG representation, those outputs can be
+aligned at corresponding formula nodes.
 This makes it possible to identify the minimal divergent node
 and inspect the signal-processing operations responsible for it.
 \Cref{sec:discrepancies} demonstrates this diagnostic workflow.
@@ -232,11 +230,10 @@ such a lowering on an example formula with nested temporal operators.
 \input{figures/inspectable-dag}
 \caption{
 Lowering of $\varphi :\equiv \Box_{[0,5]}\bigl((x \ge 0) \wedge
-\Diamond_{[0,2]}(y \ge 0)\bigr)$ from the formula AST (left) to a
-computation DAG (right). Nodes are typed primitive operations
-(\texttt{Min} is pointwise; \texttt{WMax}/\texttt{WMin} aggregate over the
-annotated window); edges carry the intermediate robustness signals, which
-remain inspectable in the evaluation result.
+\Diamond_{[0,2]}(y \ge 0)\bigr)$ from AST (left) to computation DAG (right).
+Each node is a primitive operation: the conjunction reduces pointwise while the
+temporal operators aggregate over their annotated window. Edges carry
+intermediate robustness signals that remain inspectable in the evaluation result.
 }
 \label{fig:inspectable-dag}
 \end{figure}
@@ -245,193 +242,163 @@ remain inspectable in the evaluation result.
 
 A backend consists of primitive operations, a lowering rule, and an executor.
 Extensions may introduce new primitive operations during lowering or override the interpretation of existing ones.
-For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations. In \cref{sec:implement-variations}, we demonstrate that emulating an existing tool's behavior only requires backend changes with small effort.
-Despite this explicit structure, our performance sanity check found its overhead to be negligible
+For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations. In \cref{sec:implement-variations}, we demonstrate that emulating an existing tool's behavior requires only backend changes with little effort.
+A performance sanity check finds the overhead of this structure negligible
 (Appendix~\ref{sec:app-eval}).
 
 \paragraph{Architectural byproducts.}
 The swappable architecture (\cref{fig:arch}) also supports capabilities outside
 the central scope of this paper.
 For example, it can accomodate advanced semantic extensions, such as smooth
-differentiable robustness~\cite{levenberg2020stlcg,pant2017smooth}, as well as
+differentiable robustness~\cite{kapoor2025stlcgpp}, as well as
 performance-optimized backends, all through the same interface.
 The codebase also contains differentiable and SIMD-optimized backends as instances of this extensibility.
-
 
 
 % ================================================================
 \section{Evaluation}
 \label{sec:evaluation}
 % ----------------------------------------------------------------
-%% Purpose of the section:
-%% Show that tidySTL is useful as an evaluator layer:
-%% (1) variations are modular backend changes and backends are faithful;
-%% (2) implicit choices cause observable discrepancies that tidySTL localizes.
-%% Experiment campaign plan: notes/eval-plan.md (experiments E1-E5).
 % ================================================================
+
+\begin{table}[t]
+\centering
+\caption{Implicit-choice profile across three finite-trace axes
+(cf.\ \cref{tab:divergence}) for Breach, TaLiRo, and RTAMT
+(discrete and dense modes). \emph{Top}: the three diagnostic input signals,
+named next to each row's test formula; samples are spaced evenly by index (the
+$t$-axis gives each sample's real time) and the orange ring marks the readout
+sample whose robustness the table reports. \emph{Bottom}: each row varies only
+the named choice; each cell gives the implicit choice revealed at the readout sample,
+with the observed value in parentheses. \emph{n/o}: choice not observable in
+TaLiRo's whole-trace scalar output.}
+\label{tab:divergence-profile}
+\input{figures/divergence-signals}
+
+\medskip
+
+\input{figures/divergence-profile}
+\end{table}
 
 We evaluate \tool in two steps.\footnote{The artifact repository provides reproduction instructions (\texttt{extra/experiments/}) for all experiments; Appendix~\ref{sec:app-eval} records supplementary protocol and setup details.}
 First, we show that realizing an implicit choice in \tool is a modular change
 confined to the backend layer, and that the resulting compatibility backends
 faithfully reproduce existing tools (\cref{sec:implement-variations}).
-Second, building on these validated backends, we show that implicit choices
-produce real cross-tool discrepancies that \tool mechanically localizes to the
-responsible choice and formula node (\cref{sec:discrepancies}).
+Second, building on these validated backends, we localize cross-tool discrepancies
+to the responsible choice and formula node (\cref{sec:discrepancies}).
+
+We fix a single set of reference tools throughout: Breach 1.11.4, RTAMT 0.3.5
+(discrete default and dense, $\mathrm{RTAMT}_d$), and TaLiRo (SVN revision 146).
+The implicit choices of \cref{sec:background}
+already produce discrepancies on those tools: \cref{tab:divergence-profile} profiles
+three finite-trace axes and every one splits the tools into at least two camps,
+with no tool wrong.
+
 
 % ================================================================
 \subsection{Implementing Evaluation Variations as Modular Changes}
 \label{sec:implement-variations}
 % ----------------------------------------------------------------
-%% Purpose:
-%% Show that tidySTL's layered design allows for semantic and computational variations
-%% under a common interface, with changes confined to the evaluator layer,
-%% and that the compatibility backends faithfully reproduce existing tools.
-%%
-%% Figure/table:
-%% - List of implemented variations with number of lines changed, regression tests. [E3]
-%% - Cross-tool divergence matrix; the baseline-agreement cells are the validation claim. [E1]
-%% - Performance sanity check is reported in the appendix.          [E4]
 % ================================================================
 
-% Appendix pointer:
-% Regression suite details and expected-output generation.
-% Tool-by-tool compatibility notes.
-% Backend implementation notes.
-% Additional benchmark results.
-
-We first measure the implementation cost of realizing an implicit choice in
-\tool: how much code changes below the stable interface.
 
 \begin{table}[t]
 \centering
-\caption{Implemented variations. The key column is the layer changed; LOC
-is reported only to make the modularity claim auditable, not as a quality
-metric. The full
-regression suite passes with all variants installed.}
+\caption{Implemented compatibility backends: layer changed and variant-specific
+LOC (blank/comment lines excluded) as an auditable size proxy. All 103
+regression tests pass with every variant installed.}
 \label{tab:variation}
 \footnotesize
 \input{figures/variation-table}
 \end{table}
 
-\paragraph{Implementation effort.}
-\cref{tab:variation} shows that the shipped variants change only
-backend-side components. Semantic variants change primitive operations,
-lowering rules, or executors below the stable core; computational variants
-keep the semantics fixed and change only execution. Thus modularity here
-means a boundary of modification: the parser, formula representation,
-signal layer, and user-facing interface are reused unchanged.
 
-\paragraph{Faithful compatibility backends.}
-\cref{tab:variation} accounts the three representative semantic variants
-(Breach, RTAMT with discrete and dense modes, STLCG++); the same
-backend-local mechanism yields two further compatibility backends used in the
-profile below, py-metric-temporal-logic~\cite{pyMTL} (py-MTL) and
-TaLiRo~\cite{annpureddy2011staliro}. Each reproduces its tool's per-timestep
-robustness on the operator-coverage regression suite, validated case by case
-against the tool's committed reference fixtures by the artifact's reproduction
-test suite, with a single documented exception (\cref{sec:app-eval}). These validated backends, together
-with the real tools' native outputs, are the instruments used in
-\cref{sec:discrepancies} to profile and localize cross-tool discrepancies.
+We first measure the implementation cost of realizing an implicit choice in
+\tool. \cref{tab:variation} shows that the shipped compatibility backends change only
+backend-side components, as illustrated in \cref{fig:arch}.
+Each backend implements primitive operations, lowering rules, and executors
+below the stable core.
 
-\begin{landscape}
-\begin{table}
-\centering
-\caption{Implicit-choice profile of six real STL tools. For each implicit
-choice (rows; cf.\ \cref{tab:divergence}) we run one diagnostic case,
-constructed to vary only that choice, on each tool, read its per-timestep
-robustness at the marked readout sample (orange ring in the signal
-sparkline), and map it to the option the output reveals; the observed
-robustness value is shown in parentheses. Tools: Breach 1.11.4, RTAMT 0.3.5
-(discrete default and dense, $\mathrm{RTAMT}_d$), STLCG++ 0.0.2, and
-py-metric-temporal-logic (py-MTL), with TaLiRo (dp\_taliro). \mbox{--}: the
-tool cannot express the case (coverage); \emph{n/o}: the choice is real but
-not observable in the tool's whole-trace scalar output (TaLiRo);
-\emph{truncate}: a dense bounded operator past the horizon returns an empty
-signal. The per-option prediction for each row is analytic (recorded in the
-artifact), so each attribution is auditable from the printed value rather
-than asserted.}
-\label{tab:divergence-profile}
-\resizebox{\linewidth}{!}{\input{figures/divergence-profile}}
-\end{table}
-\end{landscape}
+\paragraph{Compatibility validation.}
+Each reproduces
+its tool's per-timestep robustness on the operator-coverage regression suite,
+validated case by case against the tool's committed reference fixtures by the
+artifact's reproduction test suite (\cref{sec:app-eval}).
+
 
 % ================================================================
-\subsection{Robustness Discrepancies and Their Localization}
+\subsection{Localizing Cross-Tool Discrepancies}
 \label{sec:discrepancies}
 % ----------------------------------------------------------------
-%% Purpose:
-%% Demonstrate that implicit choices are not cosmetic, and that tidySTL
-%% mechanically localizes each discrepancy to the responsible choice/node.
-%%
-%% Figure/table:
-%% - Cross-tool divergence matrix (defined in sec:implement-variations) [E1]
-%% - Divergence localization listing ("first divergent op")        [E2]
-%% - Verdict-flip and falsification consequences are previewed in sec:background.
 % ================================================================
 
-Using the validated backends of \cref{sec:implement-variations}, we now show
-that the implicit choices listed in \cref{tab:divergence} produce observable
-cross-tool discrepancies, and that \tool localizes each discrepancy to the
-responsible choice. We call this diagnostic capability \emph{divergence
-localization}.
-
-\paragraph{Real-tool discrepancies.}
-We first profile the original tools directly. For each implicit choice we
-construct one diagnostic case that varies only that choice, run it on each
-real tool in its native environment, and read off the option the tool's
-robustness output reveals. \cref{tab:divergence-profile} reports the result
-across six tools: every implicit-choice axis splits the tools into at least
-two camps. On \emph{signal beyond horizon}, for instance, Breach, dense
-RTAMT, and STLCG++ clamp the last value ($+3$), discrete RTAMT and TaLiRo take
-the pessimistic reading ($-\infty$), and py-MTL truncates the past-horizon
-window entirely; this is the convention behind the verdict flip of
-\cref{ex:verdict-flip}. The other axes split similarly---dense vs.\
-discrete signal model, piecewise-linear vs.\ piecewise-constant
-interpolation, exact vs.\ copy-previous robustness at the horizon, signed
-vs.\ big-M equality, and signed vs.\ Euclidean distance. Because each row's
-per-option prediction is analytic and printed alongside the observed value,
-the attribution is auditable rather than asserted. The point is not that one
-tool is correct and another is wrong, but that the same nominal input induces
-different robustness behavior under different implicit choices.
-
-\paragraph{Divergence localization.}
-To inspect per-node outputs and to name the responsible implicit semantic
-choice mechanically, the validated compatibility backends expose every
-intermediate computation. On a diverging case, a localizer reports the
-lowest syntax-tree node whose outputs disagree: on the \emph{signal beyond
-horizon} case ($F_{[2,4]}$) it returns \texttt{WindowMax[2,4]} vs.\
-\texttt{DiscreteWindowMax[2,4]}, naming the responsible choice from
-\cref{sec:background} through the diagnostic architecture of
-\cref{sec:design}. Thus the compatibility backends both reproduce the
-observed outputs and expose the minimal divergent formula node and
-responsible backend operations---exactly the diagnostic the falsification
-community has lacked, where the contaminating bound choice noted in
-\cref{sec:background} was traced down only by manual
-investigation~\cite{ernst2021archcomp}.
-
-\paragraph{Localizing buried causes.}
-The same localizer applies to disagreements between real tools---with no
-native reference and no syntactic giveaway. On the bounded-until case
-$(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, Breach and RTAMT flip the verdict
-(root robustness $-5.0$ vs.\ $+2.0$); across four tools RTAMT is the lone
-outlier (Breach, TaLiRo, and STLCG++ all report $-5.0$), and the localizer
-pins every pairwise disagreement to the single $U_{[1,2]}$ operator
-(\texttt{BoundedUntilKernel} vs.\ \texttt{DiscreteBoundedUntil}), naming
-RTAMT's discrete-time until composition rather than anything in the syntax
-(\cref{tab:e2-localization}). Divergences need not flip the verdict.
-\Cref{fig:e2-window-sampling} shows a monitor three temporal levels deep on a
-non-uniform grid in which a buried $G_{[1,2]}$ reduces over a window lying
-entirely between samples: Breach interpolates at the window start while TaLiRo
-finds no in-window sample and returns the always-identity, so both satisfy the
-spec but differ in robustness ($+2.0$ vs.\ $+5.0$). The disagreement
-propagates up the nesting, yet the localizer still reports the single origin
-$G_{[1,2]}$ (\texttt{WindowMin} vs.\ \texttt{SampleMin}). (RTAMT and STLCG++
-reject the non-uniform grid outright---a coverage finding---so only the
-dense/sample-time tools apply.) In both cases the cause lives in the temporal
-semantics, which a reader cannot recover from the formula alone.
-
-\input{figures/localization_window_sampling}
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Tool-vs-tool divergence localization with no ground truth. Each
+  case lists the two tools compared, the formula size/operator depth, the root
+  robustness each tool reports ($\rho$, left/right tool), and the localized
+  divergence (the single origin operator the localizer blames). The cases use
+  \texttt{until\_boundary} $(x \ge 0)\,U_{[1,2]}\,(y \ge 0)$ and
+  \texttt{window\_sampling} $\Box_{[0,3]}\bigl((\mathit{armed} \ge 0) \wedge
+  \Diamond_{[0,1]}((\mathit{ready} \ge 0) \wedge \Box_{[1,2]}(\mathit{level}
+  \ge 0))\bigr) \wedge (\mathit{margin} \ge 0)$.}
 \input{figures/localization_summary_table}
+\label{tab:e2-localization}
+\end{table}
+
+The discrepancies of \cref{tab:divergence-profile} have a mechanical cause that
+\tool can name. Using the validated backends of \cref{sec:implement-variations},
+its localizer compares a diverging pair node by node: every backend lowers the
+formula into one shared syntax tree with inspectable per-node outputs, so a
+single post-order walk reports the \emph{minimal divergent node}---the lowest
+node whose backend outputs disagree while all of its children still
+agree---together with the primitive operation each backend runs there (procedure
+in \cref{sec:app-eval}). We call this diagnostic capability \emph{divergence
+localization}. It applies even between real tools, where none is ground truth
+and the formula offers no hint (\cref{tab:e2-localization}).
+
+%\paragraph{Divergence without a verdict flip.}
+Consider the \texttt{window\_sampling} case of \cref{tab:e2-localization}, the
+conjunction
+\[
+  \Box_{[0,3]}\bigl((\mathit{armed} \ge 0) \wedge \Diamond_{[0,1]}((\mathit{ready}
+  \ge 0) \wedge \Box_{[1,2]}(\mathit{level} \ge 0))\bigr) \wedge (\mathit{margin}
+  \ge 0).
+\]
+It reads as a layered guard: throughout the arming window $[0,3]$ the
+system must stay armed and, within $[0,1]$, become ready and then hold its level
+up across the following $[1,2]$ window, all under a standing margin. We evaluate
+it on a non-uniform trace whose grid jumps from $t=0$ straight to $t=3$ (samples
+at $t = 0, 3, 4, \dots, 9$), with $\mathit{armed} = \mathit{ready} = 10$ and
+$\mathit{margin} = 9$ held constant and $\mathit{level} = [3, 0, 5, \dots, 5]$.
+Breach reports root robustness $+2.0$ and TaLiRo $+5.0$: both satisfy the spec,
+yet the values differ, so no flipped verdict betrays the divergence.
+
+The localizer pins the gap to the buried $\Box_{[1,2]}$, three temporal levels
+down. Evaluated at the first step, this operator reduces $\mathit{level}$ over
+the window $[1,2]$, which lies entirely inside the $0 \to 3$ grid gap and so
+contains no sample. Breach interpolates $\mathit{level}$ at the window start and
+returns $+2.0$; TaLiRo finds the window empty and returns the always-identity
+($+\infty$), so that branch stops constraining the result. The
+two local readings propagate unchanged up the three nesting levels: at the root
+Breach's interpolated $+2.0$ stays binding, while TaLiRo's value rises to the
+next active constraint, $+5.0$.\footnote{RTAMT rejects the non-uniform grid
+outright, a coverage finding, so only the dense/sample-time tools apply here.}
+The cause lives entirely in how an off-grid temporal window is reduced; the
+appendix figure (\cref{fig:e2-window-sampling}) traces the same propagation path.
+
+%\paragraph{Localizing a discrepancy to its cause.}
+The verdict can also flip outright. On the bounded-until case
+$(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, Breach and RTAMT disagree on the root
+sign (robustness $-5.0$ vs.\ $+2.0$; across three tools RTAMT is the lone
+outlier), and the localizer pins every pairwise disagreement to the single
+$U_{[1,2]}$ node, i.e.\ RTAMT's discrete-time until composition. The analogous contamination in
+the ARCH-COMP competition, by contrast, was traced down only by manual
+investigation~\cite{ernst2021archcomp}. In both cases the cause lives in the
+temporal semantics, which a reader cannot recover from the formula alone.
+
 
 % % ================================================================
 % \section{Related Work}
@@ -480,6 +447,6 @@ semantics, which a reader cannot recover from the formula alone.
 \label{sec:conclusion}
 % ----------------------------------------------------------------
 % ================================================================
-\tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary.  By separating formula syntax, signal data, backend-specific lowering, and DAG interpretation, it exposes choices that are otherwise buried in tool internals and shows that they materially affect acceptance, verdicts, and rankings---with documented consequences for cross-tool falsification benchmarking---and that the resulting discrepancies can be mechanically localized to minimal divergent formula nodes and responsible operations.
+\tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary.  By separating formula syntax, signal data, backend-specific lowering, and DAG interpretation, it exposes choices that are otherwise buried in tool internals and mechanically localizes the resulting cross-tool discrepancies to minimal divergent formula nodes and responsible operations.
 
 The implementation supports the view of robustness evaluation as an extensible semantic layer rather than an implementation detail of a particular monitor, falsifier, or learning pipeline.  Future work will extend this layer to broader semantics, including online evaluation, and expand its validation suite.
