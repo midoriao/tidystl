@@ -93,8 +93,9 @@ STLCG++-compatible backends enforce this as a coverage restriction---they
 reject a non-uniform grid, and they reject a non-commensurate interval rather
 than silently snapping it. On an integer-time trace (step $1$), $\Box_{[1,2]}$
 is admitted but $\Box_{[0.5,1.5]}$ is rejected outright. Like the other
-fragment choices this is an input-acceptance effect, and it is the coverage
-finding marked in \cref{tab:divergence-matrix}.
+fragment choices this is an input-acceptance effect; it manifests as the
+discrete tools' coverage entries (\mbox{--}) on the interpolation row of
+\cref{tab:divergence-profile}.
 
 \paragraph{Robustness of $\top$ and $\bot$.}
 The standard semantics assigns $\rho(\top,\sigma,t) = +\infty$ and
@@ -156,23 +157,20 @@ rule supplies those values, either by \emph{extending} the signal past the
 horizon or by leaving the past-end region \emph{empty}---the \emph{Extend} and
 \emph{Empty} entries in \cref{tab:divergence}. Under \emph{clamp} (\tool, Breach) the last
 sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. Under
-a \emph{pessimistic} rule (RTAMT discrete) the out-of-range part contributes
+a \emph{pessimistic} rule (RTAMT discrete, TaLiRo) the out-of-range part contributes
 nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
 (the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$. A third rule,
 \emph{last-value extension} (STLCG++ with \texttt{padding=last}), repeats the
 final sample to fill a truncated window in index space; it agrees with clamp
-in spirit but is computed on the discrete grid.
-This is the boundary-rule row of the divergence block in
-\cref{tab:divergence-matrix}. For
-$\varphi = \Diamond_{[2,4]}(x \geq 0)$ evaluated at $t = 1$ on a trace that
-ends at $T = 2$ with $x(T) = 3$, the window $[3,5]$ lies entirely beyond the
-trace. Clamp sees the persisting value $3$ and reports $+3$ (satisfied);
-the pessimistic rule sees an empty window and reports $-\infty$ (violated).
-Same formula, same samples, same time point; opposite verdicts.
-This is a sign change in the robustness value, not a difference in input
-acceptance: both backends evaluate the formula, and only the reported
-value---and hence the verdict---differs. The \emph{signal beyond horizon} rule
-is therefore a robustness effect, like the signal model.
+in spirit but is computed on the discrete grid. A fourth behavior,
+\emph{truncation} (py-MTL), drops the past-horizon region and returns an empty
+signal there rather than a value.
+This is the \emph{signal beyond horizon} row of \cref{tab:divergence-profile},
+illustrated on a concrete trace in \cref{ex:verdict-flip}. It is a sign change
+in the robustness value, not a difference in input acceptance: both backends
+evaluate the formula, and only the reported value---and hence the
+verdict---differs. The \emph{signal beyond horizon} rule is therefore a
+robustness effect, like the signal model.
 
 \paragraph{Robustness at horizon (terminal-step rule).}
 At the final sample $t_N$ a tool may report the \emph{exact} robustness it
@@ -181,8 +179,7 @@ $t_{N-1}$---the \emph{Exact} and \emph{Copy-prev} entries in \cref{tab:divergenc
 Breach does the latter by default; RTAMT does the former. The two
 agree whenever the final and penultimate robustness coincide, so the choice is
 silent on most traces. It is not silent when they differ.
-This is the terminal-step row of the divergence block in
-\cref{tab:divergence-matrix}. For
+This is the \emph{robustness at horizon} row of \cref{tab:divergence-profile}. For
 $\varphi = (x \geq 0) \wedge (y \geq 0)$ on trace~A with $x = y = [5, 5, -3]$,
 the penultimate robustness is $+5$ and the final is $-3$. The standard rule
 reports $-3$; the extension rule copies the penultimate $+5$. Against a
@@ -218,8 +215,8 @@ common choice is $-|x|$, which is never positive, so even a satisfied
 equality reports non-positive robustness.
 Breach instead scores equality by a fixed-magnitude sign convention
 ($\pm 10^4$), so the reported value carries no metric information at
-all---the equality row of \cref{tab:divergence-matrix} shows the resulting
-cross-tool divergence on inputs every tool accepts.
+all---the \emph{equality predicate} row of \cref{tab:divergence-profile} shows the
+resulting cross-tool divergence on inputs every tool accepts.
 
 \paragraph{Past-time operators.}
 Operators such as once and historically mirror the temporal modalities into
@@ -278,6 +275,8 @@ Breach~\cite{donze2010breach,donze2013efficient} & API + DSL & piecewise-linear 
 RTAMT~\cite{nickovic2020rtamt,nickovic2024rtamt} & DSL + API & discrete (default) / dense & delayed & runtime verification    & no  & Python, heavy \\
 MoonLight~\cite{bartocci2023moonlight}           & DSL + API & spatial + temporal & partial & spatial RV              & no  & Java / CLI / Python \\
 STLCG++~\cite{kapoor2025stlcgpp}                 & API       & discrete (tensor)  & none    & differentiable learning & yes & PyTorch \\
+TaLiRo~\cite{annpureddy2011staliro}              & API + DSL & sampled (real-time) & offline & falsification          & no  & MATLAB \\
+py-MTL~\cite{pyMTL}                              & API       & dense (hold)       & none    & monitoring              & no  & Python, light \\
 % \tool     & DSL + API & piecewise-linear   & offline & evaluation              & no  & Python, light \\
 \hline
 \end{tabular}%
@@ -300,47 +299,58 @@ documents installation, backend semantics, and worked examples; the
 \href{https://github.com/midoriao/tidystl/blob/main/extra/experiments/README.md}{experiment guide}
 documents how to regenerate every evaluation record, table, and figure.
 
-\paragraph{Case set and comparison protocol.}
-The baseline block comprises 16 operator-coverage cases drawn from the
-regression suite; the divergence block adds five cases, each targeting one
-implicit choice from \cref{tab:divergence}. Each tool runs in
-its native environment (versions as in \cref{tab:divergence-matrix}).
-Outputs are normalized to per-timestep robustness vectors and compared
-pairwise at absolute tolerance $10^{-6}$ on mutually defined timesteps.
-STLCG++ runs with exact $\min$/$\max$ aggregation---its default
-configuration; smooth aggregation is opt-in---so its column reflects its
-discrete-time semantics rather than smoothing, which remains an
-advanced semantic extension not exercised here.
+\paragraph{Diagnostic case set and protocol.}
+The profile of \cref{tab:divergence-profile} uses one diagnostic case per
+implicit choice, each a small formula and trace constructed so that only that
+choice can affect the reported robustness. Every case runs on each tool in its
+native environment---Breach (from a committed MATLAB cache), RTAMT in its
+discrete and dense modes, STLCG++, py-MTL, and TaLiRo
+(\texttt{dp\_taliro})---and we read the tool's per-timestep robustness at the
+marked readout sample and map it to the option that output reveals. The
+per-option robustness signature is predicted analytically and printed beside
+the observed value, so each attribution is auditable rather than asserted. Two
+rows additionally use a \tool reference to separate independent axes (the
+signal-model row to tell dense from discrete time, the interpolation row to
+tell piecewise-linear from piecewise-constant reconstruction). STLCG++ runs
+with exact $\min$/$\max$ aggregation---its default; smooth aggregation is
+opt-in---so its entries reflect its discrete-time semantics rather than
+smoothing. TaLiRo's \texttt{dp\_taliro} reports only a whole-trace scalar at
+$t=0$, so a choice that acts only on a later sample is marked \emph{n/o} (not
+observable) rather than guessed.
 
 \paragraph{Compatibility validation.}
-Every tool column of \cref{tab:divergence-matrix} doubles as a validation
-check: on each case, the named compatibility backend must reproduce its
-tool's output per timestep at $10^{-6}$---21 cases $\times$ 3 tools, hence
-63 case--tool cells. The check passes on all 59 cells that carry values;
-three further cells match on coverage (backend and tool agree the case is
-inexpressible). The one mismatch is deliberate: where real RTAMT silently
-reinterprets a non-uniform grid as uniformly indexed samples, the
-RTAMT-compatible backend rejects the input instead of reproducing the
-reinterpretation. The backends implement each tool's \emph{documented}
-rules; the reproduction check verifies the implementations rather than
-defining them---and it is nontrivial: on the first live Breach run it
-exposed two fidelity bugs in our own Breach-compatible backend (the
+Each \tool compatibility backend is validated separately against its tool's
+committed reference fixtures---real-tool robustness regenerated from Breach,
+RTAMT, STLCG++, py-MTL, and TaLiRo---by the artifact's per-tool reproduction
+test suite, which checks per-timestep agreement at absolute tolerance
+$10^{-6}$ on the operator-coverage regression suite. The backends implement
+each tool's \emph{documented} rules; the check verifies the implementations
+rather than defining them, and it is nontrivial: on the first live Breach run
+it exposed two fidelity bugs in our own Breach-compatible backend (the
 equality convention and the window-endpoint reduction), both fixed and
-re-verified before the numbers reported here were produced.
+re-verified before the reported numbers were produced. One deviation is
+deliberate: where real RTAMT silently reinterprets a non-uniform grid as
+uniformly indexed samples, the RTAMT-compatible backend rejects the input
+instead of reproducing the reinterpretation.
 
 \paragraph{Localization procedure.}
-On the validated columns, the localizer exploits that \tool backends share
-one formula representation with inspectable per-node outputs: it walks the shared
-syntax tree in post-order and reports the \emph{minimal divergent
-node}---the lowest node whose outputs disagree while all its children
-agree---together with each backend's primitive operation at that node. On
-the two headline rows of \cref{tab:divergence-matrix}:
+Across any pair of validated backends, the localizer exploits that \tool
+backends share one formula representation with inspectable per-node outputs:
+it walks the shared syntax tree in post-order and reports the \emph{minimal
+divergent node}---the lowest node whose outputs disagree while all its children
+agree---together with each backend's primitive operation at that node. To
+illustrate the output format, on two minimal single-operator cases (the
+\emph{signal beyond horizon} and \emph{robustness at horizon} choices) the
+listing reads:
 \begin{lstlisting}[language={},keywordstyle={},basicstyle=\footnotesize\ttfamily]
 first divergent op at `F[2,4]`: WindowMax[2,4] vs
     DiscreteWindowMax[2,4] (t-index 1) -> boundary rule
 first divergent op at `and`: PointwiseMin vs PointwiseMin
     + terminal-step extension (t-index 2) -> terminal-step rule
 \end{lstlisting}
+The headline results are the tool-vs-tool localizations of
+\cref{sec:discrepancies} (\cref{tab:e2-localization,fig:e2-window-sampling}),
+where the same post-order walk pins a cause buried under several nesting levels.
 Backend pairs whose lowerings differ structurally are compared at the
 shared syntax-tree level rather than between lowered representations;
 predicate-internal arithmetic is treated as a leaf, since none of the
@@ -362,30 +372,6 @@ violation---the ranking signal a falsification search acts on---on 80 of
 201. These rates measure the width of the disagreement region within
 each controlled family---the divergences are not measure-zero
 coincidences---not a frequency claim about any particular workload.
-
-\paragraph{Falsification setup.}
-The system is a closed-form speed model $\dot v = K u(t) - c\,v$ with
-piecewise-constant throttle on four segments (a bounded $[0,1]^4$ search
-space; traces sampled exactly, no integrator); the specification is
-$(v \le 8.8) \wedge \Diamond_{[0.5,1.5]}(v \le 25)$, whose second conjunct
-never fails but carries the monitor horizon past the end of the trace. A
-fixed $(1{+}1)$-ES with random restarts minimizes the monitor-style
-objective $\min_t \rho(t)$; only the objective semantics varies across
-arms, and every claimed falsification is validated by an exact closed-form
-check of the system itself, so no backend acts as the verdict oracle. The
-configuration, seeds, and budget (50 seeded runs, 300 simulations each)
-were frozen before the runs.
-
-Per-arm results behind \cref{fig:falsification}: under the clamping
-boundary rule the search falsifies in 50/50 runs (median 26.5
-simulations); adding the terminal-step extension masks violations that
-appear only at the final sample, costing one run and roughly $1.5\times$
-the simulations (49/50, median 40). Under the pessimistic rule the
-out-of-range window makes the objective $-\infty$ for every input, so the
-search degenerates to blind sampling: 10/50 runs falsify (median 214), and
-14{,}027 candidate falsifications claimed across the campaign are rejected
-by the exact system-level check. The search runs to completion in every
-arm; the disagreement between the arms is silent.
 
 \paragraph{Variant accounting.}
 LOC in \cref{tab:variation} counts variant-specific code only: blank,

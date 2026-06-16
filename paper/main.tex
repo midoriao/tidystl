@@ -23,6 +23,8 @@
 % \resolved{...} addressed item kept for audit trail (green margin note)
 \newcommand{\mynote}[1]{\todo[color=yellow!40]{#1}}
 \newcommand{\resolved}[1]{\todo[color=green!25]{#1}}
+% \PH{...}       inline placeholder for unresolved numbers/refs (red brackets)
+\newcommand{\PH}[1]{\textcolor{red}{[#1]}}
 \usepackage{wasysym}
 \usepackage{xspace}
 \usepackage{listings}
@@ -55,7 +57,8 @@
   {\endminipage\endgraf\medskip}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
-\usetikzlibrary{positioning,fit}
+\usetikzlibrary{positioning,fit,arrows.meta}
+\usepackage[edges]{forest}
 \usepackage[capitalize]{cleveref}
 \crefformat{section}{\S#2#1#3}
 \Crefformat{section}{\S#2#1#3}
@@ -91,7 +94,7 @@ behavior explicit and exposes their computations through an inspectable DAG.
 By modeling existing STL evaluators as validated compatibility backends, tidySTL
 makes their discrepancies transparent and mechanically localizable
 to responsible formula nodes and operations.
-Its architecture also serves as an extensible evaluator layer: representative variations require only localized backend changes, while the formula, signal, and public interface remain fixed.
+Its architecture also serves as an extensible evaluator layer: representative variations require only modular backend changes, while the formula, signal, and public interface remain fixed.
 \end{abstract}
 
 \input{sections/content}
