@@ -129,6 +129,8 @@ sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. U
 a \emph{pessimistic} rule (RTAMT discrete, TaLiRo) the out-of-range part contributes
 nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
 (the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$.
+RTAMT's dense mode ($\mathrm{RTAMT}_d$), by contrast, extends the final sample,
+matching the clamp rule rather than the discrete mode's pessimistic one.
 This is the \emph{signal beyond horizon} row of \cref{tab:divergence-profile},
 illustrated on a concrete trace in \cref{ex:verdict-flip}. It is a sign change
 in the robustness value, not a difference in input acceptance: both backends
@@ -233,10 +235,11 @@ marked \emph{n/o} (not observable) rather than guessed.
 Each \tool compatibility backend is validated separately against its tool's
 committed reference fixtures---real-tool robustness regenerated from Breach,
 RTAMT, and TaLiRo---by the artifact's per-tool reproduction
-test suite, which checks per-timestep agreement at absolute tolerance
-$10^{-6}$ on the operator-coverage regression suite. The backends implement
-each tool's \emph{documented} rules, so the check verifies the implementations
-rather than defining the rules. The one case where a backend departs from its
+test suite at absolute tolerance $10^{-6}$ on the operator-coverage regression
+suite. The check is per-timestep for the Breach- and RTAMT-compatible backends;
+for TaLiRo it is at $t=0$ only, the single value \texttt{dp\_taliro} reports.
+The backends implement each tool's \emph{documented} rules, so the check
+verifies the implementations rather than defining the rules. The one case where a backend departs from its
 reference tool is itself an implicit choice this paper aims to surface: where
 real RTAMT silently reinterprets a non-uniform grid as uniformly indexed
 samples, the RTAMT-compatible backend makes this an \emph{explicit} coverage

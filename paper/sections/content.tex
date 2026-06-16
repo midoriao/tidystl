@@ -36,8 +36,7 @@ This paper makes the following contributions.
 \begin{itemize}
   \item We organize the implicit semantic choices in STL robustness
     evaluation and show that they materially affect acceptance, verdicts, and
-    rankings, with documented consequences for cross-tool falsification
-    benchmarking (\cref{sec:background,sec:discrepancies}).
+    rankings (\cref{sec:background,sec:discrepancies}).
   \item We present an architecture that represents these choices as explicit,
     swappable backends and makes their computations inspectable
     (\cref{sec:design}).
@@ -212,8 +211,8 @@ The stable core is shared by every backend, and it does not decide how $(\varphi
 Those decisions are delegated to the backend layer.
 
 This separation provides \emph{observability}: because two backends build
-their intermediate outputs on the same DAG representation, those outputs can be
-aligned at corresponding formula nodes.
+their intermediate outputs on the same shared formula (syntax-tree)
+representation, those outputs can be aligned at corresponding formula nodes.
 This makes it possible to identify the minimal divergent node
 and inspect the signal-processing operations responsible for it.
 \Cref{sec:discrepancies} demonstrates this diagnostic workflow.
@@ -320,10 +319,11 @@ Each backend implements primitive operations, lowering rules, and executors
 below the stable core.
 
 \paragraph{Compatibility validation.}
-Each reproduces
-its tool's per-timestep robustness on the operator-coverage regression suite,
-validated case by case against the tool's committed reference fixtures by the
-artifact's reproduction test suite (\cref{sec:app-eval}).
+Each reproduces its tool's robustness on the operator-coverage regression
+suite---per-timestep for the Breach- and RTAMT-compatible backends, and at
+$t=0$ only for TaLiRo, which reports just that value---validated case by case
+against the tool's committed reference fixtures by the artifact's reproduction
+test suite (\cref{sec:app-eval}).
 
 
 % ================================================================
