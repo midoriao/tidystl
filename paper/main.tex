@@ -86,16 +86,12 @@
 
 \begin{abstract}
 Robust semantics of Signal Temporal Logic (STL) provides a verdict, optimization objective, and training feedback across monitoring, falsification, and control.
-Evaluating a finite sampled trace, however, requires decisions that neither the STL formula nor the trace fully specify, such as interpolation and end-of-trace behavior.
-We call this behavior \emph{implicit semantics},
-which can differ among tools and lead to different downstream
-consequences such as falsification outcomes.
-We present tidySTL, a diagnostic toolkit that makes such evaluator
-behavior explicit and exposes their computations through an inspectable DAG.
-By modeling existing STL evaluators as validated compatibility backends, tidySTL
-makes their discrepancies transparent and mechanically localizable
-to responsible formula nodes and operations.
-Its architecture also serves as an extensible evaluator layer: representative variations require only modular backend changes, while the formula, signal, and public interface remain fixed.
+Evaluating a discretely sampled trace, however, requires decisions that neither the STL formula nor the samples fully specify, such as interpolation and end-of-trace behavior.
+We call these evaluator-level choices \emph{implicit semantics}; they can vary across tools, altering robustness values and downstream results.
+We present tidySTL, a diagnostic toolkit that lets users evaluate the same formula and sampled trace under named behaviors of existing STL tools.
+By aligning intermediate robustness values along the shared formula structure, tidySTL localizes where two tool behaviors first diverge.
+We demonstrate this localization with compatibility backends for existing STL tools.
+The same architecture also serves as an extensible evaluator layer: new evaluation algorithms or semantics require only modular backend changes, while keeping the formula, input trace, and public interface fixed.
 \end{abstract}
 
 \input{sections/content}

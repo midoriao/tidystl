@@ -107,11 +107,17 @@ endpoints fall between samples leaves a choice of which points the
 $\inf$/$\sup$ ranges over. \tool's native backend includes the interpolated
 values at the exact endpoints alongside the in-window samples, returning the
 true piecewise-linear extremum over the real interval. The Breach-compatible
-backend reduces over the in-window \emph{samples only} and never interpolates
-at an endpoint (pinned to Breach ground truth). Both backends are
-piecewise-linear, yet they disagree on any off-grid window: for
-$\Diamond_{[0.3,0.7]}(v \geq 5)$ the native backend reports $-0.2$ and the
-Breach-compatible one $-1.0$. \tool records this among the evaluator-specific
+backend, by contrast, reduces over the in-window \emph{samples only} whenever
+the window contains at least one sample, and does not add the interpolated
+endpoint values to that reduction. When the window falls entirely between two
+samples and so contains none, it instead reads a single value: the signal
+interpolated at the window start at the first evaluated step, or the current
+sample's value at later steps (both pinned to Breach ground truth). Both
+backends are piecewise-linear, yet they disagree on any off-grid window: for
+$\Diamond_{[0.3,0.7]}(v \geq 5)$, evaluated where the window lies between
+samples, the native backend takes the true extremum over the real interval and
+reports $-0.2$, while the Breach-compatible backend returns the window-start
+interpolant $-1.0$. \tool records this among the evaluator-specific
 behaviors of \cref{tab:divergence}, as it reflects a Breach implementation
 convention rather than a primary finite-trace choice.
 
@@ -133,10 +139,9 @@ RTAMT's dense mode ($\mathrm{RTAMT}_d$), by contrast, extends the final sample,
 matching the clamp rule rather than the discrete mode's pessimistic one.
 This is the \emph{signal beyond horizon} row of \cref{tab:divergence-profile},
 illustrated on a concrete trace in \cref{ex:verdict-flip}. It is a sign change
-in the robustness value, not a difference in input acceptance: both backends
-evaluate the formula, and only the reported value---and hence the
-verdict---differs. The \emph{signal beyond horizon} rule is therefore a
-robustness effect, like the signal model.
+in the reported value, not a difference in input acceptance---both backends
+evaluate the formula and only the verdict differs---so, like the signal model,
+it is a robustness effect.
 
 \paragraph{Robustness at horizon (terminal-step rule).}
 At the final sample $t_N$ a tool may report the \emph{exact} robustness it
@@ -144,13 +149,11 @@ computed there, or it may \emph{copy} the value from the penultimate sample
 $t_{N-1}$---the \emph{Exact} and \emph{Copy-prev} entries in \cref{tab:divergence}.
 Breach does the latter by default; RTAMT does the former. The two
 agree whenever the final and penultimate robustness coincide, so the choice is
-silent on most traces. It is not silent when they differ.
-This is the \emph{robustness at horizon} row of \cref{tab:divergence-profile}. For
-$\varphi = (x \geq 0) \wedge (y \geq 0)$ on trace~A with $x = y = [5, 5, -3]$,
-the penultimate robustness is $+5$ and the final is $-3$. The standard rule
-reports $-3$; the extension rule copies the penultimate $+5$. Against a
-trace~B that holds $+0.1$ throughout, this flips which trace looks better,
-reversing a ranking that a falsification search would act on.
+silent on most traces but not when they differ. The \emph{robustness at horizon}
+row of \cref{tab:divergence-profile} shows such a trace, where the penultimate
+$+5$ and final $-3$ part the two rules; against a constant $+0.1$ trace this even
+flips which trace looks better, reversing a ranking that a falsification search
+would act on.
 
 \paragraph{Robustness of atomic predicates.}
 Even for an accepted predicate, the evaluator must decide how it is scored
@@ -187,18 +190,15 @@ backend.
 % ------------------------------------------------
 \subsection{Why These Choices Are Implicit}
 
-Across the four groups of \cref{tab:divergence}---finite-trace interpretation,
-predicate semantics, logic fragment, and implementation-specific
-behavior---one property recurs: the choice is fixed not by the STL formula or
-the sampled trace, but by the act of adopting an evaluator. That is what makes
-it implicit and invisible at the specification level. The extensions of
-\cref{sec:app-ext} sharpen this boundary rather than crossing it: a user who
-explicitly selects, say, smooth robustness makes that choice visible, yet the
-tool's behavior around the extension---which inputs it admits and how it scores
-them---stays implicit. ``Choice'' here is descriptive, not a verdict on a tool's
-documentation or design: it names the effective behavior without judging whether
-a tool fixed it deliberately. The practical consequence is what
-\cref{sec:discrepancies} measures: two tools whose combinations differ can
+Across the four groups of \cref{tab:divergence}, one property recurs: each
+choice is fixed not by the STL formula or the sampled trace but by the act of
+adopting an evaluator, which is what makes it implicit and invisible at the
+specification level. The extensions of \cref{sec:app-ext} sharpen this boundary
+rather than crossing it---selecting, say, smooth robustness makes that one
+choice visible while the tool's surrounding behavior stays implicit.
+``Choice'' is descriptive: it names the effective behavior without judging
+whether a tool fixed it deliberately, and its practical consequence is what
+\cref{sec:discrepancies} measures---two tools whose combinations differ can
 reject different inputs, report different robustness, or return opposite
 verdicts on identical input.
 
@@ -213,7 +213,7 @@ reported in \cref{sec:evaluation}.
 \paragraph{Artifact and reproducibility.}
 The public \href{https://github.com/midoriao/tidystl}{artifact repository}
 contains the implementation, fixtures, and reference-tool adapters. The
-\href{https://github.com/midoriao/tidystl/blob/main/docs/usage.md}{user manual}
+\href{https://github.com/midoriao/tidystl/blob/main/packages/tidystl/docs/usage.md}{user manual}
 documents installation, backend semantics, and worked examples; the
 \href{https://github.com/midoriao/tidystl/blob/main/extra/experiments/README.md}{experiment guide}
 documents how to regenerate every evaluation record, table, and figure.
@@ -238,8 +238,10 @@ RTAMT, and TaLiRo---by the artifact's per-tool reproduction
 test suite at absolute tolerance $10^{-6}$ on the operator-coverage regression
 suite. The check is per-timestep for the Breach- and RTAMT-compatible backends;
 for TaLiRo it is at $t=0$ only, the single value \texttt{dp\_taliro} reports.
-The backends implement each tool's \emph{documented} rules, so the check
-verifies the implementations rather than defining the rules. The one case where a backend departs from its
+The backends implement each tool's \emph{documented} behavior where it is
+specified and, where it is not, the behavior pinned by these committed
+reference fixtures; the check therefore verifies the implementations rather than
+defining the rules. The one case where a backend departs from its
 reference tool is itself an implicit choice this paper aims to surface: where
 real RTAMT silently reinterprets a non-uniform grid as uniformly indexed
 samples, the RTAMT-compatible backend makes this an \emph{explicit} coverage
@@ -249,8 +251,8 @@ coverage choices of \cref{sec:app-corner}).
 \paragraph{Localization procedure.}
 Across any pair of validated backends, the localizer exploits that \tool
 backends share one formula representation with inspectable per-node outputs:
-it walks the shared syntax tree in post-order and reports the \emph{minimal
-divergent node}---the lowest node whose outputs disagree while all its children
+it walks the shared syntax tree in post-order and reports every \emph{minimal
+divergent node}---a node whose outputs disagree while all its children
 agree---together with each backend's primitive operation at that node. To
 illustrate the output format, on two minimal single-operator cases (the
 \emph{signal beyond horizon} and \emph{robustness at horizon} choices) the
