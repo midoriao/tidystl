@@ -252,7 +252,7 @@ The codebase also contains differentiable and SIMD-optimized backends as instanc
 
 
 % ================================================================
-\section{Evaluation}
+\section{Empirical Study}
 \label{sec:evaluation}
 % ----------------------------------------------------------------
 % ================================================================
@@ -276,7 +276,10 @@ TaLiRo's whole-trace scalar output.}
 \input{figures/divergence-profile}
 \end{table}
 
-We evaluate \tool in two steps.\footnote{The artifact repository provides reproduction instructions (\texttt{extra/experiments/}) for all experiments; Appendix~\ref{sec:app-eval} records supplementary protocol and setup details.}
+We evaluate \tool in two steps.\footnote{
+The artifact repository includes the implementation used in our
+empirical study, together with scripts and documentation (\texttt{extra/experiments/});
+Appendix~\ref{sec:app-eval} records supplementary protocol and setup details.}
 First, we show that realizing an implicit choice in \tool is a modular change
 confined to the backend layer, and that the resulting compatibility backends
 faithfully reproduce existing tools, up to one deliberately surfaced deviation
@@ -346,17 +349,14 @@ test suite (\cref{sec:app-eval}).
 \label{tab:e2-localization}
 \end{table}
 
-The discrepancies of \cref{tab:divergence-profile} have a mechanical cause that
-\tool can name. Using the validated backends of \cref{sec:implement-variations},
-its localizer---exposed as \toolpkg's public \texttt{localize} routine---compares
-a diverging pair node by node: every backend lowers the
+\tool localizes the discrepancies in \cref{tab:divergence-profile} to the point
+where the two aligned evaluations first diverge.
+Using the validated backends of \cref{sec:implement-variations}, the localizer
+compares a diverging pair node by node: every backend lowers the
 formula into one shared syntax tree with inspectable per-node outputs, so a
-single post-order walk reports every \emph{minimal divergent node}---a node
-whose backend outputs disagree while all of its children still agree, so the
-divergence originates there rather than below---together with the primitive
-operation each backend runs there (\cref{tab:e2-localization}). A walk can
-surface several such nodes, one per independent origin; both cases studied here
-have exactly one.
+single post-order walk reports a \emph{minimal divergent node}---a lowest node
+whose backend outputs disagree while all of its children still agree---and
+the backend primitive used to evaluate that node (\cref{tab:e2-localization}).
 
 %\paragraph{Divergence without a verdict flip.}
 Consider the \texttt{window\_sampling} case of \cref{tab:e2-localization}, the
