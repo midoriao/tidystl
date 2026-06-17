@@ -16,9 +16,11 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-import tidystl_compat  # noqa: F401,E402  -- registers the compat backends as a side effect
+import tidystl_compat  # noqa: E402
 
-from tidystl import Signal, parse, robustness  # noqa: E402
+from tidystl import Signal, parse, robustness, use  # noqa: E402
+
+use(tidystl_compat)
 
 
 def load_registry(path: Path, filter_csv: str | None) -> dict[str, Any]:
@@ -37,6 +39,13 @@ def load_registry(path: Path, filter_csv: str | None) -> dict[str, Any]:
 
 def evaluate(spec: dict[str, Any], signal: dict[str, Any], backend: str) -> dict[str, Any]:
     """One combination; never raises (status: ok / unsupported / error)."""
+    if backend == "tidystl_simd":
+        try:
+            import tidystl_simd  # type: ignore[import-not-found]
+        except ModuleNotFoundError as exc:
+            return {"status": "error", "reason": f"{type(exc).__name__}: {exc}"}
+        use(tidystl_simd)
+
     text = spec.get("tidystl")
     if text is None:
         return {"status": "unsupported", "reason": "no tidystl spec"}

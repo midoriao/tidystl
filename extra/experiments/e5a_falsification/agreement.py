@@ -20,9 +20,11 @@ sys.path.insert(0, Path(__file__).resolve().parents[1].as_posix())
 
 import models  # noqa: E402
 import specs  # noqa: E402
-import tidystl_compat  # noqa: F401,E402  -- registers compat backends
+import tidystl_compat  # noqa: E402
 
-from tidystl import Signal, parse, robustness  # noqa: E402
+from tidystl import Signal, parse, robustness, use  # noqa: E402
+
+use(tidystl_compat)
 
 BACKENDS = ("breach", "rtamt", "rtamt_dense", "pymtl", "taliro", "stlcgpp")
 REFERENCE = "breach"

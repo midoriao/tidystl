@@ -48,10 +48,13 @@ from extra.experiments.e6_fingerprint.decode import (  # noqa: E402
     observed_signature,
 )
 from extra.experiments.e6_fingerprint.openworld import best_match, total_residual  # noqa: E402
-from tidystl import Signal, evaluate, parse  # noqa: E402
+import tidystl_compat  # noqa: E402
+from tidystl import Signal, evaluate, parse, use  # noqa: E402
 from tidystl.core.nodes import Node  # noqa: E402
 from tidystl.diagnostics import localize_results  # noqa: E402
 from tidystl_compat import GenericBackend, GenericConfig  # noqa: E402
+
+use(tidystl_compat)
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)

@@ -41,10 +41,13 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+import tidystl_compat  # noqa: E402
 from tidystl_compat import GenericBackend, GenericConfig  # noqa: E402
 
-from tidystl import Signal, evaluate, parse  # noqa: E402
+from tidystl import Signal, evaluate, parse, use  # noqa: E402
 from tidystl.core.nodes import Node  # noqa: E402
+
+use(tidystl_compat)
 
 
 @cache

@@ -1,8 +1,8 @@
 """E6 exp 6 -- systematic divergence localization tests.
 
 Part of the e6_fingerprint experiment (run via `make test` in extra/experiments,
-not CI). Evaluates tool backends, which register on `import tidystl_compat` (done
-by the package conftest). Repo root is on the path so the `extra.experiments...`
+not CI). Evaluates tool backends registered by the package conftest. Repo root is
+on the path so the `extra.experiments...`
 imports resolve.
 """
 

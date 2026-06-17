@@ -19,9 +19,11 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-import tidystl_compat  # noqa: F401,E402  -- registers the compat backends
+import tidystl_compat  # noqa: E402
 
-from tidystl import Node, Signal, TorchSignal, list_backends, robustness  # noqa: E402
+from tidystl import Node, Signal, TorchSignal, list_backends, robustness, use  # noqa: E402
+
+use(tidystl_compat)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generator  # noqa: E402

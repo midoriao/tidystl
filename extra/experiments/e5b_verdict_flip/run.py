@@ -16,10 +16,12 @@ import tyro
 
 sys.path.insert(0, Path(__file__).resolve().parents[1].as_posix())
 
-import tidystl_compat  # noqa: F401,E402  -- registers the compat backends as a side effect
+import tidystl_compat  # noqa: E402
 from _lib.infra import Infra  # noqa: E402
 
-from tidystl import Signal, parse, robustness  # noqa: E402
+from tidystl import Signal, parse, robustness, use  # noqa: E402
+
+use(tidystl_compat)
 
 EXPERIMENT = "e5b_verdict_flip"
 

@@ -12,4 +12,8 @@ for p in (_HERE, _EXPERIMENTS):
     if p.as_posix() not in sys.path:
         sys.path.insert(0, p.as_posix())
 
-import tidystl_compat  # noqa: F401,E402  -- registers compat backends as a side effect
+import tidystl_compat  # noqa: E402
+
+from tidystl import use  # noqa: E402
+
+use(tidystl_compat)

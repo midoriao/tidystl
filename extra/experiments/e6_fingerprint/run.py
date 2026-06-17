@@ -20,10 +20,13 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+import tidystl_compat  # noqa: E402
 from tidystl_compat import GenericBackend, GenericConfig  # noqa: E402
 
 from extra.experiments._lib.infra import Infra  # noqa: E402
-from tidystl import Signal, evaluate, parse  # noqa: E402
+from tidystl import Signal, evaluate, parse, use  # noqa: E402
+
+use(tidystl_compat)
 
 EXPERIMENT = "e6_fingerprint"
 

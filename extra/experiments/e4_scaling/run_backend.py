@@ -16,9 +16,12 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "extra" / "experiments"))
 
-import tidystl_compat  # noqa: F401,E402  -- registers the compat backends as a side effect
+import tidystl_compat  # noqa: E402
+import tidystl  # noqa: E402
 from _lib.infra import Infra  # noqa: E402
 from _timing import make_values, time_with_repeat  # noqa: E402
+
+tidystl.use(tidystl_compat)
 
 EXPERIMENT = "e4_scaling"
 
@@ -71,11 +74,9 @@ class CaseResult:
 
 def runner(params: RunParams) -> RunResult:
     """Time one tidystl backend over the grid."""
-    import tidystl
-
     if params.backend == "tidystl_simd":
         try:
-            import tidystl_simd  # noqa: F401  -- registers the backend as a side effect
+            import tidystl_simd
         except ModuleNotFoundError as exc:  # pragma: no cover
             raise SystemExit(
                 "tidystl_simd backend selected but the extension is not available; "
@@ -83,6 +84,7 @@ def runner(params: RunParams) -> RunResult:
                 "`uv run --group experiments python run_backend.py --backend tidystl_simd` "
                 "(a Rust toolchain is required to compile it)"
             ) from exc
+        tidystl.use(tidystl_simd)
 
     total_cases = len(params.batch_grid) * len(params.timestep_grid)
     backend = params.backend

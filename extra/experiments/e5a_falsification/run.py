@@ -24,10 +24,12 @@ for _p in (_HERE, _EXPERIMENTS):
 
 import search  # noqa: E402
 import specs  # noqa: E402
-import tidystl_compat  # noqa: F401,E402  -- registers the compat backends as a side effect
+import tidystl_compat  # noqa: E402
 from _lib.infra import Infra  # noqa: E402
 
-from tidystl import parse  # noqa: E402
+from tidystl import parse, use  # noqa: E402
+
+use(tidystl_compat)
 
 EXPERIMENT = "e5a_falsification"
 

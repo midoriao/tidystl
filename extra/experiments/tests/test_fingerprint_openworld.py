@@ -2,8 +2,8 @@
 
 Part of the e6_fingerprint experiment, run via `make test` in extra/experiments
 (not CI). Residual matching enumerates generic configs and decodes tool
-observations, all needing the backends registered by `import tidystl_compat`
-(done by the package conftest). Repo root is on the path so the
+observations, all needing the backends registered by the package conftest.
+Repo root is on the path so the
 `extra.experiments...` import of the experiment source resolves.
 """
 

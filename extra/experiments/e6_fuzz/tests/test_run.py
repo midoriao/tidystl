@@ -50,7 +50,7 @@ def test_runner_small_is_deterministic_and_well_shaped():
     r1 = run.runner(params)
     r2 = run.runner(params)
     assert r1.backends == [
-        "breach", "native", "pymtl", "rtamt", "rtamt_dense",
+        "breach", "generic", "native", "pymtl", "rtamt", "rtamt_dense",
         "stlcgpp", "stlcgpp_torch", "taliro",
     ]
     assert len(r1.pairs) == 6

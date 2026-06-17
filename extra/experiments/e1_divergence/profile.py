@@ -37,9 +37,11 @@ from numpy.typing import NDArray
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-import tidystl_compat  # noqa: F401,E402 # pyright: ignore[reportUnusedImport] -- registers backends
+import tidystl_compat  # noqa: E402
 
-from tidystl import Signal, evaluate, parse  # noqa: E402
+from tidystl import Signal, evaluate, parse, use  # noqa: E402
+
+use(tidystl_compat)
 
 REG = REPO_ROOT / "extra/experiments/registry"
 CACHE = REPO_ROOT / "extra/experiments/e1_divergence/cache/breach_column"

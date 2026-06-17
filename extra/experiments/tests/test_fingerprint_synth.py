@@ -2,8 +2,8 @@
 
 Part of the e6_fingerprint experiment, run via `make test` in extra/experiments
 (not CI). They evaluate against the tool backends (via decode.observed_signature)
-and the generic backend, all of which register on `import tidystl_compat` (done
-by the package conftest). The repo root is put on the path to resolve the
+and the generic backend, all of which are registered by the package conftest.
+The repo root is put on the path to resolve the
 `extra.experiments...` import of the experiment source.
 
 The 192-config signature matrix is expensive to build, so it is a module-scoped
