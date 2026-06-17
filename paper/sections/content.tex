@@ -166,7 +166,7 @@ behind a backend boundary.
 % ------------------------------------------------
 \subsection{Evaluation Interface}
 
-\tool has two explicit inputs: formula and signal.
+\tool has two mandatory inputs: formula and signal.
 A \emph{formula} is a typed syntax tree, parsed from the textual STL front end.
 A \emph{signal} contains one or more named, batched value sequences over a shared time grid.
 
@@ -241,13 +241,13 @@ intermediate robustness signals that remain inspectable in the evaluation result
 \paragraph{Extension points.}
 
 A backend consists of primitive operations, a lowering rule, and an executor.
-Extensions may introduce new primitive operations during lowering or override the interpretation of existing ones.
+One can implement a new backend by introducing new primitive operations during lowering or override the interpretation of existing ones.
 For programming details, the artifact repository gives the user manual (\texttt{docs/usage.md}) and reference implementations. In \cref{sec:implement-variations}, we demonstrate that emulating an existing tool's behavior requires only backend changes with little effort.
 A performance sanity check finds the overhead of this structure negligible
 (Appendix~\ref{sec:app-eval}).
 
 \paragraph{Architectural byproducts.}
-The swappable architecture (\cref{fig:arch}) also supports capabilities outside
+One can utilize the swappable architecture (\cref{fig:arch}) for extensions outside
 the central scope of this paper.
 For example, it can accomodate advanced semantic extensions, such as smooth
 differentiable robustness~\cite{kapoor2025stlcgpp}, as well as
