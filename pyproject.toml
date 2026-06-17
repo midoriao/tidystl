@@ -1,98 +1,81 @@
 [project]
-name = "tidystl"
-version = "0.1.0"
-description = "STL robustness evaluation with explicit semantics."
-readme = "README.md"
-authors = [{ name = "Sota Sato" }]
+name = "tidystl-workspace"
+version = "0.0.0"
+description = "Repository workspace for tidystl packages, experiments, docs, and paper artifacts."
 requires-python = ">=3.11"
-license = "MIT"
-license-files = ["LICENSE"]
-keywords = [
-    "signal-temporal-logic",
-    "stl",
-    "robustness",
-    "monitoring",
-    "runtime-verification",
-    "falsification",
-]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: Developers",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Scientific/Engineering",
-    "Typing :: Typed",
-]
-dependencies = ["numpy>=1.24", "lark>=1.1"]
-
-[project.optional-dependencies]
-torch = ["torch>=2.0"]
-
-[project.urls]
-Homepage = "https://github.com/midoriao/tidystl"
-Repository = "https://github.com/midoriao/tidystl"
-Issues = "https://github.com/midoriao/tidystl/issues"
+dependencies = []
 
 [dependency-groups]
 dev = [
+    "tidystl",
+    "tidystl-compat",
     "matplotlib>=3.9",
     "pytest>=7.0",
     "ruff>=0.1.0",
     "pyright>=1.1",
-    "jupyterlab>=4.5.7",
-    "maturin>=1.13.3",
-    "tyro>=1.0.13",
 ]
 
-experiments = ["stlcgpp==0.0.2", "rtamt==0.3.5", "tyro>=1.0.13", "tidystl-simd"]
+experiments = [
+    "tidystl",
+    "tidystl-compat",
+    "tidystl-simd",
+    "stlcgpp==0.0.2",
+    "rtamt==0.3.5",
+    "tyro>=1.0.13",
+    "metric-temporal-logic>=0.4.1",
+    "scipy>=1.13",
+    "cma>=3.3",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+    "packages/tidystl",
+    "packages/tidystl-compat",
+    "packages/tidystl-simd",
+]
 
 [tool.uv.sources]
-tidystl-simd = { path = "extra/tidystl_simd", editable = true }
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/tidystl"]
-
-[tool.hatch.build.targets.sdist]
-# Explicit allowlist so the sdist is deterministic and never sweeps in
-# untracked local-only directories (editor/IDE/agent config, build caches,
-# worktrees) that happen to sit in the working tree at build time.
-include = [
-    "src",
-    "tests",
-    "README.md",
-    "LICENSE",
-    "CITATION.cff",
-    "pyproject.toml",
-]
+tidystl = { workspace = true }
+tidystl-compat = { workspace = true }
+tidystl-simd = { workspace = true }
 
 [tool.pyright]
 pythonVersion = "3.11"
 typeCheckingMode = "strict"
 venvPath = "."
 venv = ".venv"
-include = ["src", "tests", "examples"]
-ignore = ["src/tidystl/backends/stlcgpp.py"]
+include = [
+    "packages/tidystl/src",
+    "packages/tidystl/tests",
+    "packages/tidystl-compat/tidystl_compat",
+    "packages/tidystl-compat/tests",
+    "examples",
+]
+ignore = ["packages/tidystl-compat/tidystl_compat/stlcgpp.py"]
+extraPaths = [".", "packages/tidystl/src", "packages/tidystl-compat"]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+extend-exclude = ["extra/experiments", "extra/other_tools"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "N", "UP", "B", "C4", "SIM"]
 ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tidystl", "tidystl_compat", "tidystl_simd", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"packages/tidystl-simd/tests/test_simd_correctness.py" = ["N802"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["packages/tidystl/tests"]
 addopts = ["-v", "--strict-markers", "--tb=short", "--import-mode=importlib"]

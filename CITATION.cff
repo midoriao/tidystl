@@ -9,7 +9,7 @@ authors:
     # orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX"
 repository-code: "https://github.com/midoriao/tidystl"
 license: MIT
-version: 0.1.0
+version: 0.2.0
 date-released: "2026-06-05"
 keywords:
   - signal temporal logic

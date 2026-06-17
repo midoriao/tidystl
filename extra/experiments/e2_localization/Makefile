@@ -3,14 +3,21 @@ export UV_PYTHON := 3.12
 export UV_NO_SYNC := true
 export OUTPUTS_ROOT := ../../outputs
 
-.PHONY: all run report smoke
+.PHONY: all run report emit-ref smoke
 all: run report
 
 run:
 	./batch.sh
 
 report:
-	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e2_localization"
+	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e2_localization" \
+	  --emit-tex "$(OUTPUTS_ROOT)/e2_localization/localization_summary_table.tex"
+
+# Refresh the committed emitter-output reference (figs/), the table the paper
+# mirrors. Run intentionally when the localization output legitimately changes.
+emit-ref:
+	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e2_localization" \
+	  --emit-tex figs/localization_summary_table.tex
 
 smoke:
 	OUTPUTS_ROOT=/tmp/smoke \

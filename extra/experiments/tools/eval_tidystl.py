@@ -16,6 +16,8 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+import tidystl_compat  # noqa: F401,E402  -- registers the compat backends as a side effect
+
 from tidystl import Signal, parse, robustness  # noqa: E402
 
 

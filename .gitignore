@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 *.egg-info/
+.pytest_cache/
 .venv/
 .venv-*/
 dist/
@@ -18,8 +19,3 @@ build/
 
 # Experiment outputs (regeneratable from the e*/ runners)
 extra/outputs/
-
-# Rust/maturin
-extra/tidystl_simd/target/
-extra/tidystl_simd/tidystl_simd/*.so
-extra/tidystl_simd/tidystl_simd/*.pyd

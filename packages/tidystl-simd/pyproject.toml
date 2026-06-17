@@ -1,0 +1,16 @@
+[project]
+name = "tidystl-simd"
+version = "0.1.0"
+description = "Experimental implementation of Rust/SIMD backend for tidystl."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["tidystl>=0.2", "numpy>=1.24"]
+
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+module-name = "tidystl_simd._ext"

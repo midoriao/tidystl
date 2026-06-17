@@ -1,0 +1,26 @@
+% AUTO-GENERATED from extra/outputs/e2_localization records by
+% extra/experiments/e2_localization/aggregate.py --emit-tex; do not hand-edit.
+% tabular only -- wrap in your own table float / caption.
+% Preamble: \usepackage{booktabs}.
+% 'l/r' columns follow the 'tools compared' order (left tool / right tool).
+%
+% formulas (tidystl syntax):
+%   until_boundary: (x >= 0) U[1,2] (y >= 0)
+%   window_sampling: G[0,3]( (armed >= 0) and F[0,1]( (ready >= 0) and G[1,2](level >= 0) ) ) and (margin >= 0)
+%
+% signals:
+%   until_boundary: t=[0, 1]; x=[5, -5]; y=[-1, 2]
+%   window_sampling: t=[0, 3, 4, 5, 6, 7, 8, 9]; armed=10 (const); ready=10 (const); margin=9 (const); level=[3, 0, 5, 5, 5, 5, 5, 5]
+\begin{tabular}{@{}llccl@{}}
+\toprule
+Case & tools compared & $|\phi|$/depth & $\rho$ (l/r) & divergence \\
+\midrule
+\texttt{until\_boundary} & Breach vs.\ RTAMT & 3 / 1 & $-5$ / $+2$ & verdict flip on $U_{[1,2]}$ \\
+\texttt{window\_sampling} & Breach vs.\ TaLiRo & 10 / 3 & $+2$ / $+5$ & value gap on $G_{[1,2]}$ \\
+\bottomrule
+\end{tabular}
+
+% kernels at origin -- until_boundary: $U_{[1,2]}$ Breach BoundedUntilKernel[1,2] vs.\ RTAMT DiscreteBoundedUntil[1,2]
+% kernels at origin -- window_sampling: $G_{[1,2]}$ Breach WindowMin[1,2] vs.\ TaLiRo SampleMin[1,2]
+% div_until_boundary verdict at t=0 across tools: Breach -5, RTAMT +2 (outlier), TaLiRo -5, STLCG++ -5.
+% first-divergence step: div_until_boundary t-index 0; div_window_sampling t-index 0.

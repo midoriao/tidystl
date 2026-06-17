@@ -3,7 +3,7 @@ export UV_PYTHON := 3.12
 export UV_NO_SYNC := true
 export OUTPUTS_ROOT := ../../outputs
 
-.PHONY: all run report smoke
+.PHONY: all run report profile smoke
 all: run report
 
 run:
@@ -11,6 +11,12 @@ run:
 
 report:
 	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e1_divergence" --emit-tex "$(OUTPUTS_ROOT)/e1_divergence/divergence.tex"
+
+# Emit the paper's tab:divergence-profile. Reads the columns produced by `run`,
+# so run that first (`make run profile`). Separate from the supplementary
+# divergence-matrix that `report` emits.
+profile:
+	uv run python profile.py
 
 smoke:
 	uv sync --frozen --group experiments

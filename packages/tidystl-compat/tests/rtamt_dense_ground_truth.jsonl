@@ -1,0 +1,21 @@
+{"name": "always_boundary", "time": [0.0, 1.0], "robustness": [1.0, 4.0]}
+{"name": "always_sliding", "time": [0.0, 1.0, 4.0], "robustness": [2.0, 1.0, 6.0]}
+{"name": "and_two", "time": [0.0, 1.0, 3.0, 4.0], "robustness": [1.0, -1.0, 3.0, -2.0]}
+{"name": "arith_difference", "time": [0.0, 1.0, 3.0], "robustness": [2.0, -1.0, 4.0]}
+{"name": "arith_sum", "time": [0.0, 1.0, 2.0, 3.0], "robustness": [3.0, 1.0, 2.0, 1.0]}
+{"name": "combined_and_or", "time": [0.0, 1.0, 3.0, 4.0], "robustness": [1.0, -1.0, 5.0, -1.0]}
+{"name": "eventually_boundary", "time": [0.0], "robustness": [4.0]}
+{"name": "eventually_offset", "time": [0.0, 3.0], "robustness": [8.0, 7.0]}
+{"name": "eventually_sliding", "time": [0.0, 1.0, 4.0], "robustness": [5.0, 8.0, 3.0]}
+{"name": "nested_always_always", "time": [0.0, 3.0, 5.0], "robustness": [-1.0, 1.0, 4.0]}
+{"name": "nested_always_eventually", "time": [0.0, 1.0, 2.0, 4.0], "robustness": [1.0, 3.0, 2.0, -3.0]}
+{"name": "nested_always_until", "time": [0.0, 1.0, 3.0, 4.0], "robustness": [1.0, -1.0, 1.0, -1.0]}
+{"name": "nested_eventually_always", "time": [0.0, 1.0, 2.0, 4.0], "robustness": [1.0, -1.0, 3.0, -2.0]}
+{"name": "nested_eventually_eventually", "time": [0.0, 3.0], "robustness": [1.0, 2.0]}
+{"name": "not_simple", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [-3.0, 1.0, -2.0, 4.0, -5.0]}
+{"name": "or_two", "time": [0.0, 1.0, 3.0, 4.0], "robustness": [3.0, 2.0, 4.0, 5.0]}
+{"name": "predicate_gte", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [2.0, -1.0, 1.0, -2.0, 3.0]}
+{"name": "until_basic", "time": [0.0, 1.0], "robustness": [1.0, 1.0]}
+{"name": "until_boundary", "time": [0.0], "robustness": [-5.0]}
+{"name": "until_never_sat", "time": [0.0], "robustness": [-1.0]}
+{"name": "until_tight", "time": [0.0, 2.0], "robustness": [1.0, -1.0]}

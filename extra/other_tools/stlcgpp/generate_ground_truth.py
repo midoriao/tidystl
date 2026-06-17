@@ -1,13 +1,13 @@
-"""Generate STLCG++ ground-truth CSV files from the shared test cases.
+"""Generate STLCG++ ground-truth JSONL from the shared test cases.
 
 ``stlcgpp`` (and ``lark``) ship in the ``experiments`` dependency group, so
 run this with:
 
     uv run --only-group experiments python extra/other_tools/stlcgpp/generate_ground_truth.py
 
-It evaluates every case in ``tests/_helpers/stlcgpp_cases.py`` with the real
-STLCG++ engine and writes one ``<case>.csv`` per case into
-``tests/stlcgpp_ground_truth/``.
+It evaluates every case in ``packages/tidystl-compat/tests/_helpers/stlcgpp_cases.py`` with the real
+STLCG++ engine and writes a single ``stlcgpp_ground_truth.jsonl`` file into
+``packages/tidystl-compat/tests/``.
 
 Notes:
 
@@ -19,7 +19,7 @@ Notes:
 
 from __future__ import annotations
 
-import csv
+# ruff: noqa: E402
 import sys
 from pathlib import Path
 
@@ -28,14 +28,15 @@ import torch
 from stlcgpp.formula import Always, And, Equal, Eventually, Negation, Or, Predicate, Until
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT / "src"))
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "packages" / "tidystl" / "src"))
+sys.path.insert(0, str(REPO_ROOT / "packages" / "tidystl-compat"))
 
-from tests._helpers.stlcgpp_cases import STLCGPP_CASES
-from tidystl import parse
-from tidystl.core.nodes import Node
+from tests._helpers.jsonl_io import write_jsonl  # noqa: E402
+from tests._helpers.stlcgpp_cases import STLCGPP_CASES  # noqa: E402
+from tidystl import parse  # noqa: E402
+from tidystl.core.nodes import Node  # noqa: E402
 
-OUT_DIR = REPO_ROOT / "tests" / "stlcgpp_ground_truth"
+OUT_FILE = REPO_ROOT / "packages" / "tidystl-compat" / "tests" / "stlcgpp_ground_truth.jsonl"
 PADDING_MODE = "last"
 
 
@@ -172,16 +173,18 @@ def _evaluate_case(formula_text: str, values: dict[str, tuple[float, ...]]) -> n
 
 
 def main() -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-
+    records = []
     for case in STLCGPP_CASES:
         robustness = _evaluate_case(case.tidystl_formula, case.values)
-        out_path = OUT_DIR / f"{case.name}.csv"
-        with out_path.open("w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(("time", "robustness"))
-            writer.writerows(zip(case.times, robustness, strict=True))
-        print(f"wrote {out_path}")
+        records.append(
+            {
+                "name": case.name,
+                "time": [float(t) for t in case.times],
+                "robustness": [float(r) for r in robustness],
+            }
+        )
+    write_jsonl(OUT_FILE, records)
+    print(f"wrote {OUT_FILE} ({len(records)} cases)")
 
 
 if __name__ == "__main__":

@@ -30,5 +30,50 @@
     "breach": "x[t] == 3",
     "stlcgpp": "x == 3",
     "notes": "Robustness of an equality predicate. Verified 2026-06-05: RTAMT 0.3.5 and STLCG++ 0.0.2 (Equal) both yield -|x-3|, matching tidystl on these samples. Re-verified on the live Breach run (1.11.4, MATLAB R2022b): contrary to the Day-2 assumption, Breach PARSES 'x[t] == 3' and returns BigM sign semantics (+/-10000), not a distance -- the cell is a genuine value divergence on the equality-predicate decision point, not a coverage gap."
+  },
+  "pc_signalmodel": {
+    "tidystl": "G[0,2](x >= 0)",
+    "rtamt": "always[0:2](x >= 0)",
+    "stlcgpp": "G[0,2](x >= 0)",
+    "pymtl": "G[0,2] x"
+  },
+  "pc_boundary": {
+    "tidystl": "F[2,4](x >= 0)",
+    "rtamt": "eventually[2:4](x >= 0)",
+    "stlcgpp": "F[2,4](x >= 0)",
+    "pymtl": "F[2,4] x"
+  },
+  "pc_terminal": {
+    "tidystl": "(x >= 0) and (y >= 0)",
+    "rtamt": "(x >= 0) and (y >= 0)",
+    "stlcgpp": "(x >= 0) and (y >= 0)",
+    "pymtl": "(x & y)"
+  },
+  "pc_equality": {
+    "tidystl": "x == 3",
+    "rtamt": "x == 3",
+    "stlcgpp": "x == 3"
+  },
+  "pc_metric": {
+    "tidystl": "x - y >= 1",
+    "rtamt": "x - y >= 1",
+    "stlcgpp": "x - y >= 1"
+  },
+  "pc_window": {
+    "tidystl": "G[0.5,1.5](x > 0)",
+    "rtamt_dense": "always[0.5:1.5](x >= 0)",
+    "pymtl": "G[0.5,1.5] x"
+  },
+  "div_until_boundary": {
+    "tidystl": "(x >= 0) U[1,2] (y >= 0)",
+    "rtamt": "((x >= 0) until[1:2] (y >= 0))",
+    "breach": "(x[t] > 0) until_[1,2] (y[t] > 0)",
+    "stlcgpp": "(x >= 0) U[1,2] (y >= 0)",
+    "notes": "Tool-vs-tool divergence on a bounded until (= the E1 matrix cell until_boundary). On the 2-sample trace x=[5,-5], y=[-1,2], RTAMT reports +2 (SATISFIED) while Breach, TaLiRo, and STLCG++ all report -5 (VIOLATED): RTAMT is the lone outlier. The cause is RTAMT's discrete bounded-until composition at the trace boundary (the [1,2] window runs past the final sample), not anything visible in the syntax. The localizer pins every pairwise disagreement to the single U[1,2] operator (BoundedUntilKernel vs DiscreteBoundedUntil). No native baseline involved. Pure-numpy via tidystl_compat; no MATLAB / recorded CSV."
+  },
+  "div_window_sampling": {
+    "tidystl": "G[0,3]( (armed >= 0) and F[0,1]( (ready >= 0) and G[1,2](level >= 0) ) ) and (margin >= 0)",
+    "breach": "alw_[0,3] ((armed[t] > 0) and ev_[0,1] ((ready[t] > 0) and alw_[1,2] (level[t] > 0))) and (margin[t] > 0)",
+    "notes": "Tool-vs-tool divergence buried at temporal nesting depth 3 (G[0,3] > F[0,1] > G[1,2]) on a NON-UNIFORM grid with a wide first segment [0,3] (samples only at t=0 and t=3). The buried G[1,2](level >= 0) reduces over a window lying entirely BETWEEN samples. Breach uses the interpolated predicate value at the window start -> +2; TaLiRo finds no sample inside the closed window and returns the always-identity (vacuously satisfied) -> the branch stays high. Both SATISFY the spec, but the root robustness differs: Breach +2.0 vs TaLiRo +5.0 -- a subtle value-only gap, no verdict flip, with no syntactic giveaway. The localizer isolates the single responsible operator G[1,2]. RTAMT and STLCG++ cannot run here (both reject non-uniform grids) -- itself a coverage finding; only the dense-time tools (Breach, TaLiRo) apply. No native baseline involved. Pure-numpy via tidystl_compat; no MATLAB / recorded CSV."
   }
 }

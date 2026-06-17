@@ -1,0 +1,39 @@
+% Tool-vs-tool divergence localization on div_window_sampling (Breach vs TaLiRo).
+% forest only -- wrap in your own figure float / caption.
+% Preamble: \usepackage[edges]{forest}  \usepackage{amsmath}  \usetikzlibrary{arrows.meta}
+\begin{forest}
+  for tree={
+    draw, rounded corners, align=center, inner sep=3.5pt,
+    font=\small, s sep=8mm, l sep=9mm,
+    parent anchor=south, child anchor=north, edge={-},
+  },
+  diverge/.style={fill=black!12},
+  agree/.style={fill=white},
+  origin/.style={fill=black!12, very thick, double, double distance=1.3pt},
+  [{$\wedge$}, diverge, name=root
+    [{$G_{[0,3]}$}, diverge
+      [{$\wedge$}, diverge
+        [{$\mathit{armed}\ge 0$}, agree]
+        [{$F_{[0,1]}$}, diverge
+          [{$\wedge$}, diverge
+            [{$\mathit{ready}\ge 0$}, agree]
+            [{$G_{[1,2]}$}, origin, name=origin
+              [{$\mathit{level}\ge 0$}, agree]
+            ]
+          ]
+        ]
+      ]
+    ]
+    [{$\mathit{margin}\ge 0$}, agree]
+  ]
+  \node[draw, dashed, rounded corners, fill=white, font=\scriptsize, align=left,
+        anchor=west] (cl) at ([xshift=18mm]origin.east)
+    {\textbf{divergence origin}\\[1pt]
+     window $[1,2]$ lies between samples\\[1pt]
+     Breach interpolates at window start;\\
+     TaLiRo: empty window, vacuously true\\[1pt]
+     $\rho_{\mathrm{breach}}=+2.0,\ \rho_{\mathrm{taliro}}=+\infty$};
+  \draw[-{Latex[length=2mm]}, dashed] (cl.west) -- (origin.east);
+  \node[font=\scriptsize, anchor=west, align=left] at ([xshift=4mm]root.east)
+    {$\rho_{\mathrm{breach}}=+2.0$ (SAT)\\ $\rho_{\mathrm{taliro}}=+5.0$ (SAT)};
+\end{forest}

@@ -1,0 +1,18 @@
+{
+  "axes": {
+    "signal_model": {"options": ["pl_interp", "pl_samples", "zoh", "discrete"], "activated_by": "always"},
+    "boundary": {"options": ["clamp", "pessimistic"], "activated_by": "window past trace end"},
+    "terminal": {"options": ["none", "extend_penultimate"], "activated_by": "top-level and/or"},
+    "predicate": {"options": ["signed", "euclidean"], "activated_by": "any predicate"},
+    "equality": {"options": ["signed", "bigm", "epsilon"], "activated_by": "== predicate"},
+    "until_prefix": {"options": ["inclusive", "exclusive"], "activated_by": "bounded until"}
+  },
+  "tool_configs": {
+    "native": {"signal_model": "pl_interp", "boundary": "clamp", "terminal": "none", "predicate": "signed", "equality": "signed", "until_prefix": "inclusive"},
+    "breach": {"signal_model": "pl_samples", "boundary": "clamp", "terminal": "extend_penultimate", "predicate": "signed", "equality": "bigm", "until_prefix": "inclusive"},
+    "rtamt": {"signal_model": "discrete", "boundary": "pessimistic", "terminal": "none", "predicate": "signed", "equality": "signed", "until_prefix": "exclusive"},
+    "stlcgpp": {"signal_model": "discrete", "boundary": "clamp", "terminal": "none", "predicate": "signed", "equality": "signed", "until_prefix": "inclusive"},
+    "taliro": {"signal_model": "pl_samples", "boundary": "pessimistic", "terminal": "none", "predicate": "euclidean", "equality": "signed", "until_prefix": "inclusive"},
+    "pymtl": {"signal_model": "zoh", "boundary": "clamp", "terminal": "none", "predicate": "signed", "equality": "signed", "until_prefix": "inclusive"}
+  }
+}

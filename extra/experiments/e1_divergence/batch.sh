@@ -27,3 +27,14 @@ for t in rtamt stlcgpp; do
       --output "$OUT/tool_${t}_${blk}.json"
   done
 done
+
+# rtamt_dense + py-mtl share rtamt's antlr4 pin, which needs Python 3.12
+# (typing.io was removed in 3.13; see other_tools/rtamt/generate_ground_truth.py).
+for t in rtamt_dense pymtl; do
+  for blk in baseline div; do
+    uv run --python 3.12 --only-group experiments \
+      python ../tools/eval_external_tools.py --tool "$t" \
+      --specs "$REG/specs_$blk.json" --signals "$REG/signals_$blk.json" \
+      --output "$OUT/tool_${t}_${blk}.json"
+  done
+done

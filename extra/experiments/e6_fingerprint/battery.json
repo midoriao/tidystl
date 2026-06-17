@@ -1,0 +1,44 @@
+{
+  "div_boundary_F24": {
+    "formula": "F[2,4](x >= 0)",
+    "times": [0.0, 1.0, 2.0],
+    "values": {"x": [-5.0, -1.0, 3.0]},
+    "notes": "Window runs past trace end -> activates boundary (clamp vs pessimistic)."
+  },
+  "div_terminal_and": {
+    "formula": "(x >= 0) and (y >= 0)",
+    "times": [0.0, 1.0, 2.0],
+    "values": {"x": [5.0, 5.0, -3.0], "y": [5.0, 5.0, -3.0]},
+    "notes": "Top-level and violated only at final sample -> activates terminal (extend_penultimate)."
+  },
+  "interp_window": {
+    "formula": "G[0.5,1.5](x > 0)",
+    "times": [0.0, 1.0, 2.0, 3.0],
+    "values": {"x": [1.0, -2.0, 3.0, 1.0]},
+    "notes": "Window [t+0.5,t+1.5] covers a sample at each anchor on a uniform grid -> separates signal models (pl_interp vs pl_samples vs zoh; non-integer bounds make discrete raise). Unlike div_interp_sparse, the window is NOT empty, so it avoids Breach's mixed window-endpoint fallback (the documented exp-1 factorization gap that no generic config reproduces)."
+  },
+  "div_nonuniform_always": {
+    "formula": "G[0,1](x > 0)",
+    "times": [0.0, 0.5, 1.5, 3.0, 4.0],
+    "values": {"x": [0.0, 3.0, 1.0, -2.0, 2.0]},
+    "notes": "Non-uniform grid -> discrete model reads index semantics / rejects, separating signal models."
+  },
+  "div_equality": {
+    "formula": "x == 3",
+    "times": [0.0, 1.0, 2.0, 3.0, 4.0],
+    "values": {"x": [3.0, 2.0, 4.0, 3.0, 1.0]},
+    "notes": "Equality predicate -> activates equality (signed vs bigm vs epsilon) and the euclidean-vs-signed predicate path."
+  },
+  "until_window": {
+    "formula": "(x >= 0) U[2,4] (y >= 0)",
+    "times": [0.0, 1.0, 2.0, 3.0, 4.0],
+    "values": {"x": [1.0, 1.0, -1.0, 1.0, 1.0], "y": [-1.0, -1.0, 1.0, 1.0, -1.0]},
+    "notes": "Bounded until on a uniform 5-sample grid -> activates until_prefix (inclusive vs exclusive) and discrete boundary."
+  },
+  "multivar_affine": {
+    "formula": "G[0,2](x + y >= 0)",
+    "times": [0.0, 1.0, 2.0],
+    "values": {"x": [1.0, -0.5, 2.0], "y": [1.0, -0.5, 2.0]},
+    "notes": "Multi-variable affine predicate (||A||=sqrt(2)) -> activates predicate (signed vs euclidean normalization)."
+  }
+}

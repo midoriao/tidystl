@@ -1,0 +1,14 @@
+{"name": "always_non_uniform", "time": [0.0, 0.5, 2.5, 3.0], "robustness": [-2.0, -2.0, -1.0, -1.0]}
+{"name": "always_offset", "time": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], "robustness": [2.0, 1.0, 1.0, 4.0, 4.0, 9.0]}
+{"name": "always_sliding", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [2.0, 2.0, 1.0, 1.0, 6.0]}
+{"name": "and_two", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [1.0, -1.0, -1.0, 3.0, -2.0]}
+{"name": "eventually_non_uniform", "time": [0.0, 0.5, 2.5, 3.0], "robustness": [1.0, -2.0, 3.0, -1.0]}
+{"name": "eventually_offset", "time": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0], "robustness": [5.0, 8.0, 8.0, 3.0, 7.0, 7.0]}
+{"name": "eventually_sliding", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [1.0, 3.0, 3.0, 0.5, 0.5]}
+{"name": "not_simple", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [-3.0, 1.0, -2.0, 4.0, -5.0]}
+{"name": "or_two", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [3.0, 2.0, 2.0, 4.0, 5.0]}
+{"name": "predicate", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [5.0, -2.0, 4.0, -1.0, 6.0]}
+{"name": "until_basic", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [1.0, 1.0, 1.0, -1.0, -1.0]}
+{"name": "until_never_sat", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [-1.0, -1.0, -1.0, -1.0, -1.0]}
+{"name": "until_non_uniform", "time": [0.0, 0.5, 1.5, 2.5, 3.0], "robustness": [1.0, 1.0, 1.0, -1.0, -1.0]}
+{"name": "until_tight", "time": [0.0, 1.0, 2.0, 3.0, 4.0], "robustness": [-1.0, 1.0, 1.0, -1.0, -1.0]}

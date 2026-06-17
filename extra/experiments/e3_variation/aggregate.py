@@ -57,15 +57,25 @@ def gather_facts(result_dir: Path) -> list[RunRecord]:
 # The full-suite check is reported separately, not as a row. Must stay
 # in sync with the VARIANT_CATALOG order in run.py and the batch.sh
 # sweep. Layer cells are deliberately terse; the prose paragraph carries
-# the detail.
+# the detail. ``gather_facts``/``assemble_product`` cover EVERY entry here
+# (all compatibility backends); which of them land in the emitted tex
+# table is selected separately (see ``DEFAULT_TEX_VARIANTS`` / ``--tex-variants``).
 VARIANTS = (
     ("breach", "Breach-compatible", "executor op overrides"),
     ("rtamt", "RTAMT-compatible", "own lowering + executor"),
+    ("rtamt_dense", "RTAMT dense-time", "own lowering + executor"),
+    ("pymtl", "py-MTL-compatible", "own lowering + executor"),
+    ("taliro", "TaLiRo-compatible", "own lowering + executor"),
     ("stlcgpp", "STLCG++-compatible", "own lowering + executor"),
     ("stlcgpp_torch", "STLCG++ Torch executor", "executor only"),
     ("tidystl_simd", "Rust SIMD executor", "executor only (native ext.)"),
 )
 SUITE_VARIANT = "full_suite"
+
+# Which variants are rendered into the paper tex table, in table order.
+# Data is gathered for all of VARIANTS; this is purely the display subset.
+# Override on the command line with ``--tex-variants breach taliro rtamt``.
+DEFAULT_TEX_VARIANTS = ("breach", "taliro", "rtamt")
 
 # Display groups of the tex table, keyed by the records' ``kind`` field.
 GROUPS = (
@@ -118,32 +128,60 @@ def loc_cell(row: dict[str, Any]) -> str:
     return str(row["python_loc"])
 
 
-def emit_tex(product: dict[str, Any]) -> str:
-    """Render the ``tab:variation`` tabular body from the product."""
+def emit_tex(
+    product: dict[str, Any],
+    tex_variants: tuple[str, ...],
+    *,
+    include_tests: bool = False,
+) -> str:
+    """Render the ``tab:variation`` tabular body for the selected variants.
+
+    ``tex_variants`` is the display subset, in table order; only these rows
+    are emitted (the product still holds every gathered variant). Rows are
+    grouped by ``kind`` per ``GROUPS``; empty groups are skipped.
+
+    The Tests column is omitted by default to match the paper table, which
+    reports only Variant/Layer/LOC; pass ``include_tests=True`` to add it back
+    (the full-suite count stays in the console output and ``variation.json``).
+    """
     rows = {r["variant"]: r for r in product["rows"]}
+    meta = {variant: (name, layer) for variant, name, layer in VARIANTS}
+    unknown = [v for v in tex_variants if v not in rows]
+    if unknown:
+        available = ", ".join(v for v, _, _ in VARIANTS)
+        raise SystemExit(f"unknown tex variant(s): {', '.join(unknown)}; available: {available}")
+
+    selected = list(tex_variants)
+    ncols = 4 if include_tests else 3
+    colspec = "l l r r" if include_tests else "l l r"
+    header = (
+        "Variant & Layer changed & LOC & Tests \\\\"
+        if include_tests
+        else "Variant & Layer changed & LOC \\\\"
+    )
+    # Bare tabular fragment only: no table float, no caption, no comment header
+    # and no tabcolsep tweak -- the paper wraps it in its own table environment
+    # and controls spacing/caption.
     lines = [
-        "% AUTO-GENERATED from extra/outputs/e3_variation/variation.json",
-        "% by extra/experiments/e3_variation/aggregate.py (tidystl repo); do not hand-edit.",
-        f"% LOC rule: {product['loc_rule']}",
-        f"% Full suite: {product['full_suite']['passed']} passed, "
-        f"{product['full_suite']['failed']} failed.",
-        "\\setlength{\\tabcolsep}{4pt}%",
-        "\\begin{tabular}{l l r r}",
+        f"\\begin{{tabular}}{{{colspec}}}",
         "\\hline",
-        "Variant & Layer changed & LOC & Tests \\\\",
+        header,
         "\\hline",
     ]
     for kind, label in GROUPS:
-        lines.append(f"\\multicolumn{{4}}{{l}}{{\\emph{{{label}}}}} \\\\")
-        for variant, name, layer in VARIANTS:
+        group = [v for v in selected if rows[v]["kind"] == kind]
+        if not group:
+            continue
+        lines.append(f"\\multicolumn{{{ncols}}}{{l}}{{\\emph{{{label}}}}} \\\\")
+        for variant in group:
             row = rows[variant]
-            if row["kind"] != kind:
-                continue
+            name, layer = meta[variant]
             if not row["tests"]["ok"]:
                 raise SystemExit(f"{variant}: variant tests not green; refusing to emit")
-            lines.append(
-                f"\\quad {name} & {layer} & {loc_cell(row)} & {row['tests']['passed']} \\\\"
-            )
+            cells = f"\\quad {name} & {layer} & {loc_cell(row)}"
+            if include_tests:
+                cells += f" & {row['tests']['passed']}"
+            lines.append(f"{cells} \\\\")
         lines.append("\\hline")
     lines.append("\\end{tabular}%")
     return "\n".join(lines) + "\n"
@@ -153,6 +191,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--result-dir", type=Path, required=True)
     parser.add_argument("--emit-tex", type=Path, default=None, metavar="PATH")
+    parser.add_argument(
+        "--tex-variants",
+        nargs="+",
+        default=list(DEFAULT_TEX_VARIANTS),
+        metavar="VARIANT",
+        help=(
+            "variants to render into the tex table, in table order "
+            f"(default: {' '.join(DEFAULT_TEX_VARIANTS)}); data is gathered for all variants regardless"
+        ),
+    )
+    parser.add_argument(
+        "--tex-tests",
+        action="store_true",
+        help="include the Tests column in the emitted tex table (omitted by default)",
+    )
     args = parser.parse_args()
 
     product = assemble_product(select_records(args.result_dir))
@@ -162,7 +215,7 @@ def main() -> None:
     product_path.write_text(json.dumps(product, indent=2) + "\n")
     print(f"\nwrote {product_path}")
 
-    body = emit_tex(product)
+    body = emit_tex(product, tuple(args.tex_variants), include_tests=args.tex_tests)
     if args.emit_tex is None:
         print("\n" + body, end="")
     else:

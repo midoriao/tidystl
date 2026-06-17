@@ -14,7 +14,7 @@ def main() -> None:
     velocity = (10.0 + 4.0 * np.sin(times))[np.newaxis, :]
     signal = Signal.from_dict(times=times, values={"velocity": velocity})
     formula = parse(spec)
-    rho = robustness(formula, signal, backend="breach")
+    rho = robustness(formula, signal, backend="native")
 
     print("rho shape:", rho.shape)
     print("rho(t=0):", float(rho[0, 0]))

@@ -8,7 +8,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -94,27 +93,28 @@ ANNOTATIONS: dict[str, tuple[str, str]] = {
     "div_equality": ("equality predicates", "tab:divergence"),
 }
 
-#: Fallback recorded CSVs under ``tests/breach_ground_truth/`` (used only
-#: when ``cache/breach_column/<name>.csv`` is absent); the curated usable
-#: subset, migrated from the pairs module. These baseline CSVs match the
-#: pair's trace data and a robustness-equivalent spec (verified against
-#: generate_ground_truth.m, 2026-06-05). NOT usable despite a shared name:
-#: always_boundary, arith_sum, arith_difference (different specs/traces);
+#: Fallback recorded cases in ``packages/tidystl-compat/tests/breach_ground_truth.jsonl``
+#: (used only when ``cache/breach_column/<name>.csv`` is absent); the curated
+#: usable subset, migrated from the pairs module. These baseline traces match
+#: the pair's trace data and a robustness-equivalent spec (verified against
+#: generate_ground_truth.m, 2026-06-05). Values map a matrix name to the
+#: record name (``name`` key) in the JSONL fixture. NOT usable despite a shared
+#: name: always_boundary, arith_sum, arith_difference (different specs/traces);
 #: absent from the Breach set: eventually_boundary, until_boundary.
-BREACH_RECORDED_CSV = {
-    "predicate_gte": "predicate_gte.csv",
-    "not_simple": "not_simple.csv",
-    "and_two": "and_two.csv",
-    "or_two": "or_two.csv",
-    "combined_and_or": "combined_and_or.csv",
-    "always_sliding": "always_sliding.csv",
-    "eventually_sliding": "eventually_sliding.csv",
-    "eventually_offset": "eventually_offset.csv",
-    "until_basic": "until_basic.csv",
-    "until_tight": "until_tight.csv",
-    "until_never_sat": "until_never_sat.csv",
+BREACH_RECORDED = {
+    "predicate_gte": "predicate_gte",
+    "not_simple": "not_simple",
+    "and_two": "and_two",
+    "or_two": "or_two",
+    "combined_and_or": "combined_and_or",
+    "always_sliding": "always_sliding",
+    "eventually_sliding": "eventually_sliding",
+    "eventually_offset": "eventually_offset",
+    "until_basic": "until_basic",
+    "until_tight": "until_tight",
+    "until_never_sat": "until_never_sat",
     # div block: reuses the recorded Breach case interp_sparse (identical data).
-    "div_interp_sparse": "interp_sparse.csv",
+    "div_interp_sparse": "interp_sparse",
 }
 
 #: Registry file stem -> matrix block label. The order of ``SPECS``/
@@ -226,12 +226,29 @@ def _csv_rows(path: Path) -> list[list[float]]:
     return [[float(c) for c in line.split(",")] for line in lines]
 
 
-def breach_case(name: str, spec: dict[str, Any], recorded_csv: dict[str, str]) -> dict[str, Any]:
+BREACH_RECORDED_JSONL = (
+    REPO_ROOT / "packages" / "tidystl-compat" / "tests" / "breach_ground_truth.jsonl"
+)
+
+
+def _jsonl_rows(record_name: str) -> list[list[float]] | None:
+    """Return (time, robustness) rows for ``record_name`` in the breach JSONL fixture."""
+    for line in BREACH_RECORDED_JSONL.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        rec = json.loads(line)
+        if rec["name"] == record_name:
+            return [[t, r] for t, r in zip(rec["time"], rec["robustness"], strict=True)]
+    return None
+
+
+def breach_case(name: str, spec: dict[str, Any], recorded_map: dict[str, str]) -> dict[str, Any]:
     """Real-Breach facts for one name, by provenance precedence.
 
     Precedence: ``cache/breach_column/<name>.csv`` (the live MATLAB run)
-    -> the recorded regression CSV under ``tests/breach_ground_truth/``
-    (``BREACH_RECORDED_CSV``) -> ``unsupported`` if the spec
+    -> the recorded regression case in ``packages/tidystl-compat/tests/breach_ground_truth.jsonl``
+    (``BREACH_RECORDED``) -> ``unsupported`` if the spec
     entry has no ``breach`` key (a-priori inexpressible) -> ``pending``
     (awaiting the MATLAB run). RAW (time, robustness) rows are recorded;
     alignment to the signal grid happens below.
@@ -239,12 +256,12 @@ def breach_case(name: str, spec: dict[str, Any], recorded_csv: dict[str, str]) -
     live = CACHE_DIR / "breach_column" / f"{name}.csv"
     if live.exists():
         return {"status": "ok", "rows": _csv_rows(live), "source": f"matlab-run:{live.name}"}
-    recorded = recorded_csv.get(name)
-    if recorded is not None:
-        path = REPO_ROOT / "tests" / "breach_ground_truth" / recorded
-        if path.exists():
-            return {"status": "ok", "rows": _csv_rows(path), "source": f"recorded:{recorded}"}
-        return {"status": "error", "reason": f"recorded CSV missing: {path.name}"}
+    record_name = recorded_map.get(name)
+    if record_name is not None:
+        rows = _jsonl_rows(record_name)
+        if rows is not None:
+            return {"status": "ok", "rows": rows, "source": f"recorded:{record_name}"}
+        return {"status": "error", "reason": f"recorded record missing: {record_name}"}
     if "breach" not in spec:
         return {
             "status": "unsupported",
@@ -561,7 +578,7 @@ def main() -> None:
     real_tools: list[str] = list(REAL_TOOLS)
     expected_backend: dict[str, str] = EXPECTED_BACKEND
     annotations: dict[str, Any] = ANNOTATIONS
-    recorded_csv: dict[str, str] = BREACH_RECORDED_CSV
+    recorded_map: dict[str, str] = BREACH_RECORDED
 
     spec_paths = [REPO_ROOT / p for p in SPECS]
     signal_paths = [REPO_ROOT / p for p in SIGNALS]
@@ -582,7 +599,7 @@ def main() -> None:
         real_cols: dict[str, dict[str, Any]] = {}
         for tool in real_tools:
             if tool == "breach":
-                case = breach_case(name, meta["spec"], recorded_csv)
+                case = breach_case(name, meta["spec"], recorded_map)
             else:
                 case = venv_columns[tool][name]
             real_cols[tool] = real_tool_column(times, case, atol=atol)

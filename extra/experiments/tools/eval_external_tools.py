@@ -55,6 +55,65 @@ def eval_rtamt(spec: dict[str, Any], signal: dict[str, Any]) -> dict[str, Any]:
         return {"status": "unsupported" if is_rejection else "error", "reason": f"{kind}: {exc}"}
 
 
+def eval_rtamt_dense(spec: dict[str, Any], signal: dict[str, Any]) -> dict[str, Any]:
+    """RTAMT dense-time (PWC) semantics. Reuses the ``rtamt`` spec text unless a
+    dedicated ``rtamt_dense`` key is given (e.g. an off-grid window the discrete
+    grammar omits). Output is RTAMT's PWC breakpoints (``rows`` = (time, robustness))."""
+    import rtamt
+
+    text = spec.get("rtamt_dense") or spec.get("rtamt")
+    if text is None:
+        return {"status": "unsupported", "reason": "no rtamt/rtamt_dense spec"}
+    try:
+        rt_spec = rtamt.StlDenseTimeSpecification()
+        for name in signal["values"]:
+            rt_spec.declare_var(name, "float")
+        rt_spec.spec = text
+        rt_spec.parse()
+        args = [
+            [name, [[float(t), float(v)] for t, v in zip(signal["times"], vals, strict=True)]]
+            for name, vals in signal["values"].items()
+        ]
+        rows = rt_spec.evaluate(*args)
+        return {"status": "ok", "rows": [[float(t), float(rho)] for t, rho in rows]}
+    except Exception as exc:  # noqa: BLE001 - record, never abort the sweep
+        kind = type(exc).__name__
+        is_rejection = "Exception" in kind or isinstance(exc, ValueError)
+        return {"status": "unsupported" if is_rejection else "error", "reason": f"{kind}: {exc}"}
+
+
+def eval_pymtl(spec: dict[str, Any], signal: dict[str, Any]) -> dict[str, Any]:
+    """py-metric-temporal-logic (``mtl``). Atoms ARE the signal value (no arithmetic
+    or equality), so only ``>= 0``-threshold predicates are expressible; cases without
+    a ``pymtl`` key are inexpressible. Output is mtl's PWC breakpoints (held from the
+    left, right-continuous); a bounded operator whose window runs past the trace end
+    yields an empty signal (mtl truncates its output domain rather than padding)."""
+    import mtl
+
+    text = spec.get("pymtl")
+    if text is None:
+        return {"status": "unsupported", "reason": "no pymtl spec (a-priori inexpressible)"}
+    try:
+        phi = mtl.parse(text)
+        trace = {
+            name: list(zip(signal["times"], vals, strict=True))
+            for name, vals in signal["values"].items()
+        }
+        out = [[float(t), float(v)] for t, v in phi(trace, time=None, quantitative=True, dt=0.1)]
+        # mtl emits a breakpoint only where the PWC value changes, so the leading segment
+        # (held from the trace start) can be missing -- e.g. a windowed formula whose first
+        # breakpoint sits past t0. Anchor the trace start so the t=0 readout is the real value.
+        t0 = float(signal["times"][0])
+        if out and out[0][0] > t0 + 1e-9:
+            v0 = float(phi(trace, time=t0, quantitative=True, dt=0.1))
+            out.insert(0, [t0, v0])
+        return {"status": "ok", "rows": out}
+    except Exception as exc:  # noqa: BLE001 - record, never abort the sweep
+        kind = type(exc).__name__
+        is_rejection = isinstance(exc, (ValueError, NotImplementedError, KeyError))
+        return {"status": "unsupported" if is_rejection else "error", "reason": f"{kind}: {exc}"}
+
+
 def eval_stlcgpp(spec: dict[str, Any], signal: dict[str, Any]) -> dict[str, Any]:
     import numpy as np
     import torch
@@ -81,7 +140,14 @@ def eval_stlcgpp(spec: dict[str, Any], signal: dict[str, Any]) -> dict[str, Any]
         return {"status": "unsupported" if is_rejection else "error", "reason": f"{kind}: {exc}"}
 
 
-EVALUATORS = {"rtamt": eval_rtamt, "stlcgpp": eval_stlcgpp}
+EVALUATORS = {
+    "rtamt": eval_rtamt,
+    "rtamt_dense": eval_rtamt_dense,
+    "pymtl": eval_pymtl,
+    "stlcgpp": eval_stlcgpp,
+}
+# Tool key -> installed distribution name, where they differ (for version provenance).
+DISTRIBUTION = {"rtamt_dense": "rtamt", "pymtl": "metric-temporal-logic"}
 
 
 def main() -> None:
@@ -96,9 +162,11 @@ def main() -> None:
     parser.add_argument("--filter-signals", default=None, metavar="NAMES")
     args = parser.parse_args()
 
-    # stlcgpp's adapter imports tidystl from src/.
+    # stlcgpp's adapter imports tidystl from the workspace source tree.
     if args.tool == "stlcgpp":
-        sys.path.insert(0, str(REPO_ROOT / "src"))
+        sys.path.insert(0, str(REPO_ROOT / "packages" / "tidystl" / "src"))
+
+    distribution = DISTRIBUTION.get(args.tool, args.tool)
 
     specs = load_registry(args.specs, args.filter_specs)
     signals = load_registry(args.signals, args.filter_signals)
@@ -110,7 +178,7 @@ def main() -> None:
     ]
     payload = {
         "tool": args.tool,
-        "version": importlib.metadata.version(args.tool),
+        "version": importlib.metadata.version(distribution),
         "python": sys.version.split()[0],
         "specs": str(args.specs),
         "signals": str(args.signals),

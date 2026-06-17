@@ -1,0 +1,55 @@
+[project]
+name = "tidystl"
+version = "0.2.0"
+description = "STL robustness evaluation with explicit semantics."
+readme = "README.md"
+authors = [{ name = "Sota Sato" }]
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = [
+    "signal-temporal-logic",
+    "stl",
+    "robustness",
+    "monitoring",
+    "runtime-verification",
+    "falsification",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+dependencies = ["numpy>=1.24", "lark>=1.1"]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0"]
+
+[project.urls]
+Homepage = "https://github.com/midoriao/tidystl"
+Repository = "https://github.com/midoriao/tidystl"
+Issues = "https://github.com/midoriao/tidystl/issues"
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tidystl"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src",
+    "tests",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]

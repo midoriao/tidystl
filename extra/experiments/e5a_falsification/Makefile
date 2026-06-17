@@ -10,10 +10,14 @@ run:
 	./batch.sh
 
 report:
-	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e5a_falsification" --output "$(OUTPUTS_ROOT)/e5a_falsification/falsification_ecdf.pdf"
+	uv run --no-sync python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e5a_falsification" \
+	  --ecdf "$(OUTPUTS_ROOT)/e5a_falsification/falsification_ecdf.pdf" \
+	  --difficulty "$(OUTPUTS_ROOT)/e5a_falsification/difficulty_sweep.pdf"
+	uv run --no-sync python agreement.py --n-samples 500 \
+	  --output "$(OUTPUTS_ROOT)/e5a_falsification/agreement_table.tex"
 
 smoke:
-	OUTPUTS_ROOT=/tmp/smoke \
-	  uv run \
-	  python run.py --backend native --n_repetitions=3 --eval_budget=60
+	OUTPUTS_ROOT=.tmp/smoke \
+	  uv run --no-sync \
+	  python run.py --backend rtamt --benchmark m2_mass_spring --optimizer anneal --n_repetitions=3 --eval_budget=60
 

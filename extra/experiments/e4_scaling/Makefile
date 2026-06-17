@@ -10,7 +10,9 @@ run:
 	./batch.sh
 
 report:
-	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e4_scaling" --emit-tex "$(OUTPUTS_ROOT)/e4_scaling/scaling.tex"
+	uv run python aggregate.py --result-dir "$(OUTPUTS_ROOT)/e4_scaling" \
+	  --tex-columns native breach rtamt tidystl_simd rtamt-real stlcgpp-real \
+	  --emit-tex "$(OUTPUTS_ROOT)/e4_scaling/scaling.tex"
 
 smoke:
 	OUTPUTS_ROOT=/tmp/smoke \

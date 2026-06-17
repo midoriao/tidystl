@@ -16,6 +16,7 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT / "extra" / "experiments"))
 
+import tidystl_compat  # noqa: F401,E402  -- registers the compat backends as a side effect
 from _lib.infra import Infra  # noqa: E402
 from _timing import make_values, time_with_repeat  # noqa: E402
 

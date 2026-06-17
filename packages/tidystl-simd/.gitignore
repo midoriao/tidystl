@@ -1,0 +1,3 @@
+target/
+tidystl_simd/*.so
+tidystl_simd/*.pyd

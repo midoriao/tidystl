@@ -47,26 +47,62 @@ VARIANT_CATALOG: list[dict[str, Any]] = [
         "kind": "semantic",
         "layer": "op-override on the shared PL executor (+ documented terminal-step post-step)",
         "trace_support": True,
-        "test_targets": ["tests/test_breach_compat.py", "tests/test_backends.py"],
-        "python": [{"file": "src/tidystl/backends/breach.py"}],
+        "test_targets": [
+            "packages/tidystl-compat/tests/test_breach_compat.py",
+            "packages/tidystl/tests/test_backends.py",
+        ],
+        "python": [{"file": "packages/tidystl-compat/tidystl_compat/breach.py"}],
     },
     {
         "variant": "rtamt",
         "kind": "semantic",
         "layer": "own lowering + executor (discrete-time ops)",
         "trace_support": True,
-        "test_targets": ["tests/test_rtamt_compat.py", "tests/test_rtamt_backend.py"],
-        "python": [{"file": "src/tidystl/backends/rtamt.py"}],
+        "test_targets": ["packages/tidystl-compat/tests/test_rtamt_compat.py", "packages/tidystl-compat/tests/test_rtamt_backend.py"],
+        "python": [{"file": "packages/tidystl-compat/tidystl_compat/rtamt.py"}],
+    },
+    {
+        "variant": "rtamt_dense",
+        "kind": "semantic",
+        "layer": "own lowering + executor (dense-time PWC / sample-and-hold)",
+        "trace_support": True,
+        "test_targets": [
+            "packages/tidystl-compat/tests/test_rtamt_dense_backend.py",
+            "packages/tidystl-compat/tests/test_rtamt_dense_fixtures.py",
+        ],
+        "python": [{"file": "packages/tidystl-compat/tidystl_compat/rtamt_dense.py"}],
+    },
+    {
+        "variant": "pymtl",
+        "kind": "semantic",
+        "layer": "own lowering + executor (PWC/ZOH, dt pivot grid)",
+        "trace_support": True,
+        "test_targets": [
+            "packages/tidystl-compat/tests/test_pymtl_compat.py",
+            "packages/tidystl-compat/tests/test_pymtl_backend.py",
+        ],
+        "python": [{"file": "packages/tidystl-compat/tidystl_compat/pymtl.py"}],
+    },
+    {
+        "variant": "taliro",
+        "kind": "semantic",
+        "layer": "own lowering + executor (real-time windows, half-space distance)",
+        "trace_support": True,
+        "test_targets": [
+            "packages/tidystl-compat/tests/test_taliro_compat.py",
+            "packages/tidystl-compat/tests/test_taliro_backend.py",
+        ],
+        "python": [{"file": "packages/tidystl-compat/tidystl_compat/taliro.py"}],
     },
     {
         "variant": "stlcgpp",
         "kind": "semantic",
         "layer": "own lowering + executor (discrete ops, hard min/max)",
         "trace_support": True,
-        "test_targets": ["tests/test_stlcgpp_compat.py", "tests/test_stlcgpp_backend.py"],
+        "test_targets": ["packages/tidystl-compat/tests/test_stlcgpp_compat.py", "packages/tidystl-compat/tests/test_stlcgpp_backend.py"],
         "python": [
             {
-                "file": "src/tidystl/backends/stlcgpp.py",
+                "file": "packages/tidystl-compat/tidystl_compat/stlcgpp.py",
                 "exclude": [
                     "_torch_maxish",
                     "_torch_minish",
@@ -87,10 +123,10 @@ VARIANT_CATALOG: list[dict[str, Any]] = [
             "approx); semantics unchanged"
         ),
         "trace_support": True,
-        "test_targets": ["tests/test_stlcgpp_torch_backend.py"],
+        "test_targets": ["packages/tidystl-compat/tests/test_stlcgpp_torch_backend.py"],
         "python": [
             {
-                "file": "src/tidystl/backends/stlcgpp.py",
+                "file": "packages/tidystl-compat/tidystl_compat/stlcgpp.py",
                 "include_only": [
                     "_torch_maxish",
                     "_torch_minish",
@@ -102,7 +138,7 @@ VARIANT_CATALOG: list[dict[str, Any]] = [
                 ],
             },
             {
-                "file": "src/tidystl/backends/helper.py",
+                "file": "packages/tidystl/src/tidystl/backends/helper.py",
                 "include_only": ["TorchArithmeticOpEvaluator"],
             },
         ],
@@ -112,11 +148,11 @@ VARIANT_CATALOG: list[dict[str, Any]] = [
         "kind": "computational",
         "layer": "native-extension executor (Rust SIMD); semantics of native; no trace support",
         "trace_support": False,
-        "test_targets": ["extra/tidystl_simd/tests"],
-        "rust_globs": ["extra/tidystl_simd/src/*.rs"],
+        "test_targets": ["packages/tidystl-simd/tests"],
+        "rust_globs": ["packages/tidystl-simd/src/*.rs"],
         "python": [
-            {"file": "extra/tidystl_simd/tidystl_simd/backend.py"},
-            {"file": "extra/tidystl_simd/tidystl_simd/__init__.py"},
+            {"file": "packages/tidystl-simd/tidystl_simd/backend.py"},
+            {"file": "packages/tidystl-simd/tidystl_simd/__init__.py"},
         ],
     },
     {
@@ -124,7 +160,7 @@ VARIANT_CATALOG: list[dict[str, Any]] = [
         "kind": "suite",
         "layer": "(whole library)",
         "trace_support": False,
-        "test_targets": ["tests/"],
+        "test_targets": ["packages/tidystl/tests/"],
         "python": [],
     },
 ]

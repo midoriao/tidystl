@@ -17,20 +17,63 @@ sys.path.insert(0, str(REPO_ROOT))
 
 EXPERIMENT = "e4_scaling"
 
-#: Canonical column order of the merged results.
-BACKEND_ORDER = ["native", "breach", "rtamt", "tidystl_simd", "rtamt-real", "stlcgpp-real"]
+#: Canonical column order of the merged results: every backend/tool the batch
+#: collects, in display order. ``merge`` gathers ALL collected columns (any not
+#: listed here are appended); which of them reach the tex table is a separate,
+#: configurable selection (see ``COLUMN_LABELS`` / ``--tex-columns``).
+BACKEND_ORDER = [
+    "native",
+    "breach",
+    "rtamt",
+    "rtamt_dense",
+    "pymtl",
+    "stlcgpp",
+    "taliro",
+    "tidystl_simd",
+    "rtamt-real",
+    "pymtl-real",
+    "stlcgpp-real",
+]
 
 #: (N, T) rows shown in the paper table (layout free to change per the
 #: 2026-06-05 decision; full grid lives in the merged JSON).
 TEX_ROWS = [(1, 101), (1, 1001), (64, 501), (64, 5001), (256, 501), (256, 5001)]
-TEX_COLUMNS = [
-    ("native", "Native"),
-    ("breach", "Breach-c."),
-    ("rtamt", "RTAMT-c."),
-    ("tidystl_simd", "SIMD"),
-    ("rtamt-real", "RTAMT"),
-    ("stlcgpp-real", "STLCG++"),
+
+#: Tex column key -> header label, for every column that CAN be rendered.
+#: Data is merged for all collected backends; this maps the ones a table may
+#: display to their short headers. ``-c.`` marks a tidystl compatibility
+#: backend; bare names are the real external tools.
+COLUMN_LABELS = {
+    "native": "Native",
+    "breach": "Breach-c.",
+    "rtamt": "RTAMT-c.",
+    "rtamt_dense": "RTAMT-dense-c.",
+    "pymtl": "py-MTL-c.",
+    "stlcgpp": "STLCG++-c.",
+    "stlcgpp_torch": "STLCG++-torch",
+    "taliro": "TaLiRo-c.",
+    "tidystl_simd": "SIMD",
+    "breach-real": "Breach",
+    "rtamt-real": "RTAMT",
+    "pymtl-real": "py-MTL",
+    "stlcgpp-real": "STLCG++",
+}
+
+#: Columns rendered into the paper tex table by default, in table order.
+#: Override on the command line with ``--tex-columns native breach rtamt ...``.
+DEFAULT_TEX_COLUMNS = [
+    "breach",
+    "taliro",
+    "rtamt",
+    "rtamt-real",
+    "pymtl",
+    "pymtl-real",
+    "tidystl_simd",
 ]
+
+#: Real tools timed single-trace (batch is a loop); larger-N cells extrapolate
+#: linearly from the measured per-trace cost and are marked with a dagger.
+SINGLE_TRACE_REAL = ("rtamt-real", "pymtl-real", "breach-real")
 
 FAIRNESS_NOTES = {
     "construction": "real-tool spec construction and input "
@@ -169,38 +212,57 @@ def _tex_cell(
     t: int,
 ) -> str:
     row = index.get((backend, n, t))
-    if row is None and backend == "rtamt-real":
-        base = index.get((backend, 8, t)) or index.get((backend, 1, t))
+    if row is None and backend in SINGLE_TRACE_REAL:
+        # Per-trace cost is N-independent; extrapolate from an OK base, preferring
+        # the larger measured batch (N=8 over N=1) but falling back if it was
+        # capped (timeout) / missing.
+        base = index.get((backend, 8, t))
+        if base is None or base["status"] != "ok":
+            base = index.get((backend, 1, t))
         if base is not None and base["status"] == "ok":
             return f"${n * base['per_trace_ms']:.0f}^\\dagger$"
         return "--"
     if row is None:
         return "--"
     if row["status"] != "ok":
-        return "OOM" if row["status"] in ("skipped", "oom-killed") else "--"
+        if row["status"] in ("skipped", "oom-killed"):
+            return "OOM"
+        if row["status"] == "timeout":
+            return "t/o"
+        return "--"
     mean, std = row["mean_ms"], row["std_ms"]
     if mean >= 100:
         return f"${mean:.0f} \\pm {std:.0f}$"
     return f"${mean:.2f} \\pm {std:.2f}$"
 
 
-def emit_tex(merged: dict[str, Any]) -> str:
+def emit_tex(merged: dict[str, Any], tex_columns: list[str]) -> str:
+    """Render ``tab:scaling`` for the selected columns, in the given order.
+
+    ``tex_columns`` is the display subset (keys into ``COLUMN_LABELS``); the
+    merged data still holds every collected backend. A selected column with no
+    merged rows simply prints ``--`` in every cell.
+    """
+    unknown = [c for c in tex_columns if c not in COLUMN_LABELS]
+    if unknown:
+        available = ", ".join(COLUMN_LABELS)
+        raise SystemExit(f"unknown tex column(s): {', '.join(unknown)}; available: {available}")
+
+    columns = [(c, COLUMN_LABELS[c]) for c in tex_columns]
     index = _index(merged)
+    # Bare tabular fragment only: no table/figure float, no caption, no comment
+    # header -- the paper wraps it in its own table environment and supplies the
+    # caption/legend. Cell conventions for that legend: dagger = N x per-trace
+    # extrapolation for single-trace real tools; OOM = window materialization
+    # over the host memory budget; t/o = py-MTL hit the per-cell wall-clock cap.
     lines = [
-        "% AUTO-GENERATED from extra/outputs/e4_scaling/scaling_merged.json",
-        "% by extra/experiments/e4_scaling/aggregate.py (tidystl repo); do not hand-edit.",
-        "% Times in ms, mean +- std over repeats, identical workload "
-        "G[0,5]((x>0) and F[0,2](y>0)).",
-        "% dagger: N x measured per-trace time (RTAMT is single-trace; its",
-        "% batching model is a loop, linearity measured at N in {1,8}).",
-        "% OOM: window materialization exceeds memory on the 31 GiB host.",
-        "\\begin{tabular}{rr " + " ".join(["r"] * len(TEX_COLUMNS)) + "}",
+        "\\begin{tabular}{rr " + " ".join(["r"] * len(columns)) + "}",
         "\\hline",
-        "$N$ & $T$ & " + " & ".join(label for _, label in TEX_COLUMNS) + " \\\\",
+        "$N$ & $T$ & " + " & ".join(label for _, label in columns) + " \\\\",
         "\\hline",
     ]
     for n, t in TEX_ROWS:
-        cells = [_tex_cell(index, backend, n, t) for backend, _ in TEX_COLUMNS]
+        cells = [_tex_cell(index, backend, n, t) for backend, _ in columns]
         lines.append(f"{n:>4} & {t:>5} & " + " & ".join(cells) + " \\\\")
     lines += ["\\hline", "\\end{tabular}%", ""]
     return "\n".join(lines)
@@ -210,6 +272,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--result-dir", type=Path, required=True)
     parser.add_argument("--emit-tex", type=Path, default=None, metavar="PATH")
+    parser.add_argument(
+        "--tex-columns",
+        nargs="+",
+        default=list(DEFAULT_TEX_COLUMNS),
+        metavar="COLUMN",
+        help=(
+            "columns to render into the tex table, in table order "
+            f"(default: {' '.join(DEFAULT_TEX_COLUMNS)}); choices: {', '.join(COLUMN_LABELS)}. "
+            "Data is merged for all collected backends regardless"
+        ),
+    )
     args = parser.parse_args()
 
     merged = merge(args.result_dir)
@@ -218,11 +291,12 @@ def main() -> None:
     out_path.write_text(json.dumps(merged, indent=2) + "\n")
     print(f"wrote {out_path} ({len(merged['results'])} rows)")
 
+    body = emit_tex(merged, list(args.tex_columns))
     if args.emit_tex is not None:
-        args.emit_tex.write_text(emit_tex(merged))
+        args.emit_tex.write_text(body)
         print(f"wrote {args.emit_tex}")
     else:
-        print("\n" + emit_tex(merged))
+        print("\n" + body)
 
 
 if __name__ == "__main__":
