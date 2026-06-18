@@ -20,9 +20,10 @@ Because these choices are often embedded inside each tool, two STL tools
 can report different robustness values or Boolean satisfaction verdicts for
 the same formula and trace.
 Such discrepancies have appeared in practice: in the ARCH-COMP 2021
-falsification-tool competition~\cite{ernst2021archcomp}, post-hoc validation
-identified differences related to tool-specific evaluation choices.
-These cases show that cross-tool discrepancies are not only a matter of
+falsification-tool competition~\cite{ernst2021archcomp}, one tool's implicit
+evaluation choice invalidated the validation of \emph{other} tools' correct
+results, turning an implicit choice into a fairness problem for the comparison
+itself. These cases show that cross-tool discrepancies are not only a matter of
 agreement, but also of diagnosis.
 
 To make such discrepancies actionable, we compare evaluator behaviors not only
@@ -128,12 +129,9 @@ Consider the \emph{signal beyond horizon} choice of \cref{tab:divergence}.
 Let $\varphi = \Diamond_{[2,4]}(x \geq 0)$ be evaluated at $t = 0$ on a trace ending at $T = 1$ with $x(T) = 3$. The temporal window $[2,4]$ lies entirely beyond the trace. A clamping rule treats the last sample as persisting and reports $+3$ (satisfied), while a pessimistic rule treats the window as unavailable and reports $-\infty$ (violated). Thus, the same formula and trace can receive an opposite Boolean verdict depending on this choice.
 \end{example}
 
-This inconsistency, due to each tool's implicit semantic choices, is
-particularly problematic when multiple tools are compared: in the ARCH-COMP
-falsification competition, a tool's implicit choice of temporal and input bounds
-invalidated the validation of \emph{other} tools' correct results, turning an
-implicit choice into a fairness problem for the comparison
-itself~\cite{ernst2021archcomp}.
+Crucially, no tool is wrong here: each rule is a defensible reading of the
+finite trace, so a cross-tool discrepancy cannot be settled by a reference
+answer and must instead be localized to the implicit choice responsible for it.
 
 % ================================================================
 \section{Design and Implementation}
@@ -213,7 +211,7 @@ such a lowering on an example formula with nested temporal operators.
 
 \begin{figure}[t]
 \centering
-\input{figures/inspectable-dag}
+\scalebox{0.85}{\input{figures/inspectable-dag}}
 \caption{
 Lowering of $\varphi :\equiv \Box_{[0,5]}\bigl((x \ge 0) \wedge
 \Diamond_{[0,2]}(y \ge 0)\bigr)$ from AST (left) to computation DAG (right).
@@ -330,9 +328,9 @@ suite (\cref{sec:app-eval}).
   robustness each tool reports ($\rho$, left/right tool), and the localized
   divergence (the single origin operator the localizer blames). The two cases are
   \texttt{until\_boundary}, $(x \ge 0)\mathbin{\mathcal{U}_{[1,2]}}(y \ge 0)$, and
-  \texttt{window\_sampling}, $\Box_{[0,3]}\bigl((\mathit{mode} \ge 0) \wedge
-  \Diamond_{[0,1]}((\mathit{enable} \ge 0) \wedge \Box_{[1,2]}(\mathit{signal}
-  \ge 0))\bigr) \wedge (\mathit{safety\_margin} \ge 0)$.}
+  \texttt{window\_sampling}, $\Box_{[0,3]}\bigl((\mathtt{mode} \ge 0) \wedge
+  \Diamond_{[0,1]}((\mathtt{enable} \ge 0) \wedge \Box_{[1,2]}(\mathtt{signal}
+  \ge 0))\bigr) \wedge (\mathtt{safety\_margin} \ge 0)$.}
 \input{figures/localization_summary_table}
 \label{tab:e2-localization}
 \end{table}
@@ -350,9 +348,10 @@ primitive used to evaluate that node (\cref{tab:e2-localization}).
 Consider the \texttt{window\_sampling} case of \cref{tab:e2-localization}, the
 conjunction
 \[
-  \Box_{[0,3]}\bigl((\mathit{mode} \ge 0) \wedge \Diamond_{[0,1]}((\mathit{enable}
-  \ge 0) \wedge \Box_{[1,2]}(\mathit{signal} \ge 0))\bigr) \wedge
-  (\mathit{safety\_margin} \ge 0).
+  \resizebox{\linewidth}{!}{$\displaystyle
+  \Box_{[0,3]}\Bigl((\mathtt{mode} \ge 0) \wedge \Diamond_{[0,1]}\bigl((\mathtt{enable}
+  \ge 0) \wedge \Box_{[1,2]}(\mathtt{signal} \ge 0)\bigr)\Bigr) \wedge
+  (\mathtt{safety\_margin} \ge 0).$}
 \]
 It can be read as a small CPS-style monitoring requirement with a mode signal,
 an enabling signal, a monitored continuous signal, and a safety margin: during
@@ -361,24 +360,24 @@ initial window $[0,1]$, it must become enabled; once enabled, the monitored
 signal must stay above its threshold throughout the following $[1,2]$ window;
 and the run must maintain a nonnegative safety margin. We evaluate
 it on a non-uniform trace whose grid jumps from $t=0$ straight to $t=3$ (samples
-at $t = 0, 3, 4, \dots, 9$), with $\mathit{mode} = \mathit{enable} = 10$ and
-$\mathit{safety\_margin} = 9$ held constant and
-$\mathit{signal} = [3, 0, 5, \dots, 5]$.
+at $t = 0, 3, 4, \dots, 9$), with $\mathtt{mode} = \mathtt{enable} = 10$ and
+$\mathtt{safety\_margin} = 9$ held constant and
+$\mathtt{signal} = [3, 0, 5, \dots, 5]$.
 Breach reports root robustness $+2.0$ and TaLiRo $+5.0$: both satisfy the spec,
 yet the values differ, so no flipped verdict betrays the divergence.
 
 The localizer pins the gap to the buried $\Box_{[1,2]}$, three temporal levels
-down. Evaluated at the first step, this operator reduces $\mathit{signal}$ over
+down. Evaluated at the first step, this operator reduces $\mathtt{signal}$ over
 the window $[1,2]$, which lies entirely inside the $0 \to 3$ grid gap and so
-contains no sample. Breach interpolates $\mathit{signal}$ at the window start and
+contains no sample. Breach interpolates $\mathtt{signal}$ at the window start and
 returns $+2.0$ (because linear interpolation between the samples at $t=0$ and
-$t=3$ gives $\mathit{signal}(1)=2$); TaLiRo finds the window empty and returns
+$t=3$ gives $\mathtt{signal}(1)=2$); TaLiRo finds the window empty and returns
 the always-identity ($+\infty$), so that branch stops constraining the result.
 These two local readings then drive the root through the three nesting levels
 above: Breach's interpolated $+2.0$ propagates unchanged and stays binding at the
 root, whereas TaLiRo's $+\infty$ makes that branch vacuous, so its root value is
 instead set by the next active constraint one $\Box_{[0,3]}$ step over---the
-window $[4,5]$, where $\mathit{signal}=5$---giving $+5.0$.
+window $[4,5]$, where $\mathtt{signal}=5$---giving $+5.0$.
 The cause lives entirely in how an off-grid temporal window is reduced;
 a more readable walkthrough of this example is given in Appendix~\ref{sec:app-eval}.
 
