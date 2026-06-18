@@ -45,7 +45,7 @@ This paper makes the following contributions.
   \item We propose \tool, with a common interface and representation for STL evaluator behavior, allowing both existing tools and new evaluator variants to share a single formula-and-trace front end (\cref{sec:design,fig:arch}).
   \item We turn cross-tool discrepancies into diagnosable evaluation differences by localizing
   where two evaluator behaviors first diverge.
-  We demonstrate this with compatibility backends for existing tools, including Breach~\cite{donze2010breach}, TaLiRo~\cite{annpureddy2011staliro}, and RTAMT~\cite{nickovic2020rtamt}
+  We demonstrate this with compatibility backends for Breach~\cite{donze2010breach}, TaLiRo~\cite{annpureddy2011staliro}, and RTAMT~\cite{nickovic2020rtamt}
     (\cref{sec:discrepancies,tab:e2-localization}).
 \end{itemize}
 
@@ -128,11 +128,6 @@ Consider the \emph{signal beyond horizon} choice of \cref{tab:divergence}.
 Let $\varphi = \Diamond_{[2,4]}(x \geq 0)$ be evaluated at $t = 0$ on a trace ending at $T = 1$ with $x(T) = 3$. The temporal window $[2,4]$ lies entirely beyond the trace. A clamping rule treats the last sample as persisting and reports $+3$ (satisfied), while a pessimistic rule treats the window as unavailable and reports $-\infty$ (violated). Thus, the same formula and trace can receive an opposite Boolean verdict depending on this choice.
 \end{example}
 
-This is not a knife-edge coincidence of one trace: swept over a controlled
-family of 201 traces whose final sample ranges over $[-5,5]$, the boundary rule
-flips the verdict on 101 of them and the terminal-step rule on 100, with the
-latter also reversing a falsification-relevant ranking on 80 (full protocol in
-Appendix~\ref{sec:app-eval}).
 This inconsistency, due to each tool's implicit semantic choices, is
 particularly problematic when multiple tools are compared: in the ARCH-COMP
 falsification competition, a tool's implicit choice of temporal and input bounds
@@ -168,9 +163,9 @@ A \emph{formula} is a typed syntax tree, parsed from the textual STL front end.
 A \emph{signal} contains one or more named, batched value sequences over a shared time grid.
 
 An optional third input, the \emph{backend}, encapsulates the implicit semantic
-choices and the execution strategy. Evaluation takes the form
-\texttt{robustness(formula, signal, backend)} and returns an array of robustness values
-over time:
+choices and the execution strategy. The call
+\texttt{robustness(formula, signal, backend)} returns an array of robustness
+values over time:
 
 \begin{pycode}
 from tidystl import Signal, parse, robustness
@@ -388,8 +383,9 @@ The cause lives entirely in how an off-grid temporal window is reduced;
 a more readable walkthrough of this example is given in Appendix~\ref{sec:app-eval}.
 
 %\paragraph{Localizing a discrepancy to its cause.}
-The verdict can also flip outright. On the bounded-until case
-$(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, Breach and RTAMT disagree on the root
+The verdict can also flip outright. On the \texttt{until\_boundary} case, the
+bounded-until formula $(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, Breach and RTAMT
+disagree on the root
 sign ($-5.0$ vs.\ $+2.0$; RTAMT is the lone outlier, with Breach and TaLiRo both
 reporting $-5.0$), and the localizer pins every pairwise disagreement to the
 single $U_{[1,2]}$ node---RTAMT's discrete-time until composition. The analogous contamination in ARCH-COMP, by contrast, was traced
