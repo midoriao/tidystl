@@ -1,6 +1,6 @@
 [project]
 name = "tidystl-compat"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Compatibility backends for tidystl (Breach, TaLiRo, RTAMT, and other tools)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,8 +12,17 @@ dependencies = ["tidystl>=0.2", "numpy>=1.24"]
 torch = ["torch>=2.0"]
 
 [build-system]
-requires = ["hatchling>=1.27.0"]
+requires = ["hatchling>=1.27.0", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+# search_parent_directories: the git root is above this package dir (monorepo).
+# no-guess-dev: don't presume the next release version between tags.
+[tool.hatch.version.raw-options]
+search_parent_directories = true
+version_scheme = "no-guess-dev"
 
 [tool.hatch.build.targets.wheel]
 packages = ["tidystl_compat"]

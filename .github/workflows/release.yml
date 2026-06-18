@@ -1,23 +1,51 @@
 name: Release
 
+# Push a v<version> tag to release every workspace package at that version.
+# hatch-vcs derives versions from the tag; tidystl-simd is excluded.
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
+
+env:
+  PACKAGES: "tidystl tidystl-compat"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # hatch-vcs needs tags to derive the version
       - uses: astral-sh/setup-uv@v4
-      # Gate the release on the same checks as CI: never publish a red build
-      # (PyPI uploads are immutable and cannot be re-released for a version).
+
       - run: uv sync --all-packages --all-groups
+
+      # Gate on the same checks as CI; PyPI uploads are immutable.
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pyright
       - run: uv run --package tidystl pytest packages/tidystl/tests
-      - run: uv build --package tidystl
+      - run: uv run --package tidystl-compat pytest packages/tidystl-compat/tests
+
+      - name: Build distributions
+        run: |
+          for pkg in $PACKAGES; do
+            uv build --no-sources --package "$pkg" --out-dir "dist/$pkg"
+          done
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/*/* \
+            --draft \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -28,10 +56,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
-      id-token: write  # PyPI trusted publishing (OIDC); no API token needed
+      id-token: write
     steps:
+      - uses: astral-sh/setup-uv@v4
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish to PyPI
+        run: |
+          for pkg in $PACKAGES; do
+            uv publish --trusted-publishing always "dist/$pkg"/*
+          done
