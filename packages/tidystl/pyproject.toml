@@ -1,6 +1,6 @@
 [project]
 name = "tidystl"
-version = "0.2.0"
+dynamic = ["version"]
 description = "STL robustness evaluation with explicit semantics."
 readme = "README.md"
 authors = [{ name = "Sota Sato" }]
@@ -38,8 +38,17 @@ Repository = "https://github.com/midoriao/tidystl"
 Issues = "https://github.com/midoriao/tidystl/issues"
 
 [build-system]
-requires = ["hatchling>=1.27.0"]
+requires = ["hatchling>=1.27.0", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+# search_parent_directories: the git root is above this package dir (monorepo).
+# no-guess-dev: don't presume the next release version between tags.
+[tool.hatch.version.raw-options]
+search_parent_directories = true
+version_scheme = "no-guess-dev"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tidystl"]
