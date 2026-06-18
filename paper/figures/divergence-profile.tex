@@ -14,7 +14,7 @@
 \makecell[l]{\textbf{Implicit choice}\\\textbf{\small(test formula \& signal)}} & {\small Breach} & {\small TaLiRo} & {\small RTAMT} & {\small RTAMT$_d$} \\
 \midrule
 \ccell{Signal model}{G[0,2](x>=0)}{i} & \dcell{dense}{(1)} & \dcell{dense}{(1)} & \dcell{discrete}{(-9)} & \dcell{dense}{(1)} \\
-\ccell{Signal beyond horizon}{F[2,4](x>=0)}{ii} & \dcell{extend}{(3)} & \dcell{empty}{(-\infty)} & \dcell{empty}{(-\infty)} & \dcell{extend}{(3)} \\
+\ccell{Signal beyond horizon}{F[2,4](x>=0)}{ii} & \dcell{clamp}{(3)} & \dcell{pessimistic}{(-\infty)} & \dcell{pessimistic}{(-\infty)} & \dcell{clamp}{(3)} \\
 \ccell{Robustness at horizon}{(x>=0) and (y>=0)}{iii} & \dcell{copy-prev}{(5)} & \makecell{\textit{n/o}} & \dcell{exact}{(-3)} & \dcell{exact}{(-3)} \\
 \bottomrule
 \end{tabular}}

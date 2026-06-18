@@ -26,15 +26,15 @@ inductively:
   \rho(\neg\varphi,\sigma,t) &= -\rho(\varphi,\sigma,t) \\
   \rho(\varphi_1 \vee \varphi_2, \sigma, t) &= \max(\rho(\varphi_1,\sigma,t),\,\rho(\varphi_2,\sigma,t)) \\
   \rho(\varphi_1 \wedge \varphi_2, \sigma, t) &= \min(\rho(\varphi_1,\sigma,t),\,\rho(\varphi_2,\sigma,t)) \\
-  \rho(\varphi_1 \mathbin{U_I} \varphi_2, \sigma, t) &= \sup_{t' \in t + I} \min\Bigl(\rho(\varphi_2,\sigma,t'),\, \inf_{t'' \in [t,\,t')} \rho(\varphi_1,\sigma,t'')\Bigr) \\
+  \rho(\varphi_1 \mathbin{\mathcal{U}_I} \varphi_2, \sigma, t) &= \sup_{t' \in t + I} \min\Bigl(\rho(\varphi_2,\sigma,t'),\, \inf_{t'' \in [t,\,t')} \rho(\varphi_1,\sigma,t'')\Bigr) \\
   \rho(\Diamond_I\varphi, \sigma, t) &= \sup_{t' \in t + I} \rho(\varphi,\sigma,t') \\
   \rho(\Box_I\varphi, \sigma, t) &= \inf_{t' \in t + I} \rho(\varphi,\sigma,t'),
 \end{align*}
 where $t + I = \{t + s \mid s \in I\}$ and $f(\sigma_{\vec{x}}(t))$ applies
 $f$ to the values of the variables $\vec{x}$ at time $t$. The release
 operator is defined by duality,
-$\varphi_1 \mathbin{R_I} \varphi_2 :\equiv
- \neg(\neg\varphi_1 \mathbin{U_I} \neg\varphi_2)$,
+$\varphi_1 \mathbin{\mathcal{R}_I} \varphi_2 :\equiv
+ \neg(\neg\varphi_1 \mathbin{\mathcal{U}_I} \neg\varphi_2)$,
 and the constant $\bot :\equiv \neg\top$ has
 $\rho(\bot,\sigma,t) = -\infty$.
 
@@ -128,9 +128,9 @@ the trace end is filled, and how the final sample is reported.
 \paragraph{Signal beyond horizon (boundary rule).}
 When a window $[t+a,\,t+b]$ reaches past the end of the trace at $T$, the
 $\sup$ or $\inf$ ranges in part over times where no sample exists. The boundary
-rule supplies those values, either by \emph{extending} the signal past the
-horizon or by leaving the past-end region \emph{empty}---the \emph{Extend} and
-\emph{Empty} entries in \cref{tab:divergence}. Under \emph{clamp} (\tool, Breach) the last
+rule supplies those values, either by \emph{clamping} the last sample past the
+horizon or by treating the past-end region as \emph{empty}---the \emph{Clamp} and
+\emph{Pessimistic} entries in \cref{tab:divergence}. Under \emph{clamp} (\tool, Breach) the last
 sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. Under
 a \emph{pessimistic} rule (RTAMT discrete, TaLiRo) the out-of-range part contributes
 nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
@@ -295,8 +295,8 @@ construction. For the boundary-rule family ($\Diamond_{[2,4]}(x \ge 0)$,
 window past the trace end), the clamping and pessimistic rules return
 opposite verdicts at the divergence timestep on exactly those traces whose
 final sample is non-negative (101 of 201). The terminal-step family is a
-conjunction violated only at the final sample; the as-is and
-extend-penultimate rules flip the final verdict on 100 of 201 traces and
+conjunction violated only at the final sample; the exact and
+copy-prev rules flip the final verdict on 100 of 201 traces and
 rank the trace oppositely against a fixed reference trace with an interior
 violation---the ranking signal a falsification search acts on---on 80 of
 201. These rates measure the width of the disagreement region within

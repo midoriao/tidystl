@@ -98,8 +98,8 @@ STL formulas $\varphi \in \mathbf{Fml}$ are given by:
     \top \mid f(\vec{x}) \geq 0
     \mid \neg\varphi \mid \varphi_1 \vee \varphi_2
     \mid \varphi_1 \wedge \varphi_2
-  \mid \varphi_1 \mathbin{U_I} \varphi_2
-    \mid \varphi_1 \mathbin{R_I} \varphi_2
+  \mid \varphi_1 \mathbin{\mathcal{U}_I} \varphi_2
+    \mid \varphi_1 \mathbin{\mathcal{R}_I} \varphi_2
     \mid \Diamond_I\varphi \mid \Box_I\varphi .
 \]
 Here $f$ is a function symbol, for example $f(x, y) = 4x - y - 3$, and $I$ is a non-singular interval in $\mathbb{R}_{\geq 0}$, for example $[2,5]$, $(1,3]$, or $[0,\infty)$.
@@ -329,7 +329,7 @@ suite (\cref{sec:app-eval}).
   case lists the two tools compared, the formula size/operator depth, the root
   robustness each tool reports ($\rho$, left/right tool), and the localized
   divergence (the single origin operator the localizer blames). The two cases are
-  \texttt{until\_boundary}, $(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, and
+  \texttt{until\_boundary}, $(x \ge 0)\mathbin{\mathcal{U}_{[1,2]}}(y \ge 0)$, and
   \texttt{window\_sampling}, $\Box_{[0,3]}\bigl((\mathit{mode} \ge 0) \wedge
   \Diamond_{[0,1]}((\mathit{enable} \ge 0) \wedge \Box_{[1,2]}(\mathit{signal}
   \ge 0))\bigr) \wedge (\mathit{safety\_margin} \ge 0)$.}
@@ -384,11 +384,11 @@ a more readable walkthrough of this example is given in Appendix~\ref{sec:app-ev
 
 %\paragraph{Localizing a discrepancy to its cause.}
 The verdict can also flip outright. On the \texttt{until\_boundary} case, the
-bounded-until formula $(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, Breach and RTAMT
+bounded-until formula $(x \ge 0)\mathbin{\mathcal{U}_{[1,2]}}(y \ge 0)$, Breach and RTAMT
 disagree on the root
 sign ($-5.0$ vs.\ $+2.0$; RTAMT is the lone outlier, with Breach and TaLiRo both
 reporting $-5.0$), and the localizer pins every pairwise disagreement to the
-single $U_{[1,2]}$ node---RTAMT's discrete-time until composition. The analogous contamination in ARCH-COMP, by contrast, was traced
+single $\mathcal{U}_{[1,2]}$ node---RTAMT's discrete-time until composition. The analogous contamination in ARCH-COMP, by contrast, was traced
 down only by manual investigation~\cite{ernst2021archcomp}; in both cases the
 cause lives in the temporal semantics, which a reader cannot recover from the
 formula alone.
