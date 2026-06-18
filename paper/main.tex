@@ -53,9 +53,9 @@
 % Page-break-proof code listing (minipage keeps the snippet on one page).
 % NB: no literal \par in the args (\lstnewenvironment is non-\long); \endgraf is its alias.
 \lstnewenvironment{pycode}%
-  {\endgraf\medskip\noindent\minipage{\linewidth}%
+  {\endgraf\bigskip\noindent\minipage{\linewidth}%
    \lstset{aboveskip=0pt,belowskip=0pt}}%
-  {\endminipage\endgraf\medskip}
+  {\endminipage\endgraf\bigskip}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{positioning,fit,arrows.meta}

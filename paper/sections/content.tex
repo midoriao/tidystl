@@ -130,8 +130,10 @@ Let $\varphi = \Eventually_{[2,4]}(x \geq 0)$ be evaluated at $t = 0$ on a trace
 \end{example}
 
 Crucially, no tool is wrong here: each rule is a defensible reading of the
-finite trace, so a cross-tool discrepancy cannot be settled by a reference
-answer and must instead be localized to the implicit choice responsible for it.
+finite trace, which under-determines the idealized signal the reference
+semantics scores. With no ground-truth robustness to appeal to, a cross-tool
+discrepancy cannot be settled by declaring a correct value; it can only be
+diagnosed, by localizing it to the implicit choice responsible for it.
 
 % ================================================================
 \section{Design and Implementation}
@@ -211,7 +213,7 @@ such a lowering on an example formula with nested temporal operators.
 
 \begin{figure}[t]
 \centering
-\scalebox{0.85}{\input{figures/inspectable-dag}}
+\scalebox{0.9}{\input{figures/inspectable-dag}}
 \caption{
 Lowering of $\varphi :\equiv \Always_{[0,5]}\bigl((x \ge 0) \wedge
 \Eventually_{[0,2]}(y \ge 0)\bigr)$ from AST (left) to computation DAG (right).
@@ -359,9 +361,9 @@ the window $[0,3]$, the system must remain in the required mode; within the
 initial window $[0,1]$, it must become enabled; once enabled, the monitored
 signal must stay above its threshold throughout the following $[1,2]$ window;
 and the run must maintain a nonnegative safety margin. We evaluate
-it on a non-uniform trace whose grid jumps from $t=0$ straight to $t=3$ (samples
-at $t = 0, 3, 4, \dots, 9$), with $\mathtt{mode} = \mathtt{enable} = 10$ and
-$\mathtt{safety\_margin} = 9$ held constant and
+it on non-uniform timestamps $t = 0, 3, 4, \dots, 9$ (skipping $t = 1, 2$),
+with constant $\mathtt{mode}(t) = \mathtt{enable}(t) = 10$ and
+$\mathtt{safety\_margin}(t) = 9$, and a varying
 $\mathtt{signal} = [3, 0, 5, \dots, 5]$.
 Breach reports root robustness $+2.0$ and TaLiRo $+5.0$: both satisfy the spec,
 yet the values differ, so no flipped verdict betrays the divergence.
@@ -377,7 +379,7 @@ These two local readings then drive the root through the three nesting levels
 above: Breach's interpolated $+2.0$ propagates unchanged and stays binding at the
 root, whereas TaLiRo's $+\infty$ makes that branch vacuous, so its root value is
 instead set by the next active constraint one $\Always_{[0,3]}$ step over---the
-window $[4,5]$, where $\mathtt{signal}=5$---giving $+5.0$.
+window $[4,5]$, where $\mathtt{signal}(4)=5$---giving $+5.0$.
 The cause lives entirely in how an off-grid temporal window is reduced;
 a more readable walkthrough of this example is given in Appendix~\ref{sec:app-eval}.
 
