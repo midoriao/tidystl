@@ -63,7 +63,7 @@ Extending \tool{} to support other quantitative STL semantics, such as the RoSI 
 
 \begin{table}[t]
 \centering
-\caption{Representative \emph{implicit choices} in robustness evaluation~\cite{donze2010robust}.
+\caption{Representative \emph{implicit choices} in implementing STL robustness evaluation.
 These choices can affect both reported
 robustness values and the accepted class of formula-trace inputs.
 Appendix~\ref{sec:formal} further explores their scope.}
@@ -129,11 +129,7 @@ Consider the \emph{signal beyond horizon} choice of \cref{tab:divergence}.
 Let $\varphi = \Eventually_{[2,4]}(x \geq 0)$ be evaluated at $t = 0$ on a trace ending at $T = 1$ with $x(T) = 3$. The temporal window $[2,4]$ lies entirely beyond the trace. A clamping rule treats the last sample as persisting and reports $+3$ (satisfied), while a pessimistic rule treats the window as unavailable and reports $-\infty$ (violated). Thus, the same formula and trace can receive an opposite Boolean verdict depending on this choice.
 \end{example}
 
-Crucially, no tool is wrong here: each rule is a defensible reading of the
-finite trace, which under-determines the idealized signal the reference
-semantics scores. With no ground-truth robustness to appeal to, a cross-tool
-discrepancy cannot be settled by declaring a correct value; it can only be
-diagnosed, by localizing it to the implicit choice responsible for it.
+Crucially, neither rule is intrinsically wrong: each is a defensible reading of a finite trace, which under-determines the idealized signal scored by the reference semantics. Thus, a cross-tool discrepancy need not be settled by declaring one value correct; it can instead be diagnosed by localizing the implicit choice responsible for it.
 
 % ================================================================
 \section{Design and Implementation}
@@ -213,7 +209,7 @@ such a lowering on an example formula with nested temporal operators.
 
 \begin{figure}[t]
 \centering
-\scalebox{0.9}{\input{figures/inspectable-dag}}
+\scalebox{0.85}{\input{figures/inspectable-dag}}
 \caption{
 Lowering of $\varphi :\equiv \Always_{[0,5]}\bigl((x \ge 0) \wedge
 \Eventually_{[0,2]}(y \ge 0)\bigr)$ from AST (left) to computation DAG (right).
@@ -228,7 +224,7 @@ intermediate robustness signals that remain inspectable in the evaluation result
 
 A backend consists of primitive operations, a lowering rule, and an executor;
 extensions may add new primitives during lowering or override existing ones.
-The artifact repository gives the user manual (\texttt{docs/usage.md}) and
+The artifact repository includes the user manual (\texttt{docs/usage.md}) and
 reference implementations. In \cref{sec:implement-variations} we show that
 emulating an existing tool requires only backend changes with little effort; a
 performance sanity check finds the overhead of this structure negligible
@@ -259,10 +255,10 @@ the named choice; each cell gives the implicit choice revealed at the readout sa
 with the observed value in parentheses. \emph{n/o}: choice not observable in
 TaLiRo's whole-trace scalar output.}
 \label{tab:divergence-profile}
-\input{figures/divergence-signals}
+
+\scalebox{0.95}{\input{figures/divergence-signals}}
 
 \medskip
-
 \input{figures/divergence-profile}
 \end{table}
 
@@ -280,8 +276,7 @@ discrepancies to the responsible choice and formula node (\cref{sec:discrepancie
 We fix a single set of reference tools throughout: Breach 1.11.4, RTAMT 0.3.5
 (discrete default and dense, $\mathrm{RTAMT}_d$), and TaLiRo (SVN revision 146).
 The implicit choices of \cref{sec:background} already produce discrepancies on
-them: \cref{tab:divergence-profile} profiles three finite-trace axes, and every
-one splits the tools into at least two camps, with no tool wrong.
+them: \cref{tab:divergence-profile} profiles three finite-trace axes using diagnostic cases that isolate one choice at a time, and each axis splits the tools into at least two observable behaviors.
 
 
 % ================================================================
@@ -294,8 +289,7 @@ one splits the tools into at least two camps, with no tool wrong.
 \begin{table}[t]
 \centering
 \caption{Implemented compatibility backends: layer changed and variant-specific
-LOC (blank/comment lines excluded) as an auditable size proxy. All 103
-regression tests pass with every variant installed.}
+LOC (blank/comment lines excluded) as an auditable size proxy.}
 \label{tab:variation}
 \footnotesize
 \input{figures/variation-table}
@@ -360,8 +354,9 @@ an enabling signal, a monitored continuous signal, and a safety margin: during
 the window $[0,3]$, the system must remain in the required mode; within the
 initial window $[0,1]$, it must become enabled; once enabled, the monitored
 signal must stay above its threshold throughout the following $[1,2]$ window;
-and the run must maintain a nonnegative safety margin. We evaluate
-it on non-uniform timestamps $t = 0, 3, 4, \dots, 9$ (skipping $t = 1, 2$),
+and the run must maintain a nonnegative safety margin.
+
+We evaluate it on non-uniform timestamps $t = 0, 3, 4, \dots, 9$ (skipping $t = 1, 2$),
 with constant $\mathtt{mode}(t) = \mathtt{enable}(t) = 10$ and
 $\mathtt{safety\_margin}(t) = 9$, and a varying
 $\mathtt{signal} = [3, 0, 5, \dots, 5]$.
@@ -375,6 +370,7 @@ contains no sample. Breach interpolates $\mathtt{signal}$ at the window start an
 returns $+2.0$ (because linear interpolation between the samples at $t=0$ and
 $t=3$ gives $\mathtt{signal}(1)=2$); TaLiRo finds the window empty and returns
 the always-identity ($+\infty$), so that branch stops constraining the result.
+
 These two local readings then drive the root through the three nesting levels
 above: Breach's interpolated $+2.0$ propagates unchanged and stays binding at the
 root, whereas TaLiRo's $+\infty$ makes that branch vacuous, so its root value is
