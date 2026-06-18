@@ -279,8 +279,8 @@ First, we show that realizing an implicit choice is a modular change confined to
 the backend layer, and that the resulting compatibility backends faithfully
 reproduce existing tools, up to one deliberately surfaced deviation
 (\cref{sec:implement-variations}).
-Second, on these validated backends, we localize cross-tool discrepancies to the
-responsible choice and formula node (\cref{sec:discrepancies}).
+Second, building on these validated backends, we localize cross-tool
+discrepancies to the responsible choice and formula node (\cref{sec:discrepancies}).
 
 We fix a single set of reference tools throughout: Breach 1.11.4, RTAMT 0.3.5
 (discrete default and dense, $\mathrm{RTAMT}_d$), and TaLiRo (SVN revision 146).
@@ -314,9 +314,10 @@ rules, and executors below the stable core.
 
 \paragraph{Compatibility validation.}
 Each reproduces its tool's robustness on the operator-coverage regression
-suite---per-timestep for the Breach- and RTAMT-compatible backends, at $t=0$
-only for TaLiRo---validated case by case against the tool's committed reference
-fixtures (\cref{sec:app-eval}).
+suite---per-timestep for the Breach- and RTAMT-compatible backends, and at $t=0$
+only for TaLiRo, which reports just that value---validated case by case against
+the tool's committed reference fixtures by the artifact's reproduction test
+suite (\cref{sec:app-eval}).
 
 
 % ================================================================
@@ -332,20 +333,23 @@ fixtures (\cref{sec:app-eval}).
 \caption{Tool-vs-tool divergence localization with no ground truth. Each
   case lists the two tools compared, the formula size/operator depth, the root
   robustness each tool reports ($\rho$, left/right tool), and the localized
-  divergence (the single origin operator the localizer blames). The cases
-  \texttt{until\_boundary} and \texttt{window\_sampling} are the formulas
-  discussed below.}
+  divergence (the single origin operator the localizer blames). The two cases are
+  \texttt{until\_boundary}, $(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, and
+  \texttt{window\_sampling}, $\Box_{[0,3]}\bigl((\mathit{mode} \ge 0) \wedge
+  \Diamond_{[0,1]}((\mathit{enable} \ge 0) \wedge \Box_{[1,2]}(\mathit{signal}
+  \ge 0))\bigr) \wedge (\mathit{safety\_margin} \ge 0)$.}
 \input{figures/localization_summary_table}
 \label{tab:e2-localization}
 \end{table}
 
-\tool localizes each discrepancy in \cref{tab:divergence-profile} to where the
-two aligned evaluations first diverge. Using the validated backends of
-\cref{sec:implement-variations}, the localizer compares a diverging pair node by
-node on the shared syntax tree: a single post-order walk reports a
-\emph{minimal divergent node}---a lowest node whose backend outputs disagree
-while all of its children still agree---and the primitive used to evaluate it
-(\cref{tab:e2-localization}).
+\tool localizes each discrepancy in \cref{tab:divergence-profile} to the point
+where the two aligned evaluations first diverge.
+Using the validated backends of \cref{sec:implement-variations}, the localizer
+compares a diverging pair node by node: every backend lowers the formula into
+one shared syntax tree with inspectable per-node outputs, so a single post-order
+walk reports a \emph{minimal divergent node}---a lowest node whose backend
+outputs disagree while all of its children still agree---and the backend
+primitive used to evaluate that node (\cref{tab:e2-localization}).
 
 %\paragraph{Divergence without a verdict flip.}
 Consider the \texttt{window\_sampling} case of \cref{tab:e2-localization}, the
@@ -355,8 +359,12 @@ conjunction
   \ge 0) \wedge \Box_{[1,2]}(\mathit{signal} \ge 0))\bigr) \wedge
   (\mathit{safety\_margin} \ge 0).
 \]
-It reads as a small CPS-style monitoring requirement over a mode signal, an
-enabling signal, a monitored continuous signal, and a safety margin. We evaluate
+It can be read as a small CPS-style monitoring requirement with a mode signal,
+an enabling signal, a monitored continuous signal, and a safety margin: during
+the window $[0,3]$, the system must remain in the required mode; within the
+initial window $[0,1]$, it must become enabled; once enabled, the monitored
+signal must stay above its threshold throughout the following $[1,2]$ window;
+and the run must maintain a nonnegative safety margin. We evaluate
 it on a non-uniform trace whose grid jumps from $t=0$ straight to $t=3$ (samples
 at $t = 0, 3, 4, \dots, 9$), with $\mathit{mode} = \mathit{enable} = 10$ and
 $\mathit{safety\_margin} = 9$ held constant and
@@ -367,20 +375,24 @@ yet the values differ, so no flipped verdict betrays the divergence.
 The localizer pins the gap to the buried $\Box_{[1,2]}$, three temporal levels
 down. Evaluated at the first step, this operator reduces $\mathit{signal}$ over
 the window $[1,2]$, which lies entirely inside the $0 \to 3$ grid gap and so
-contains no sample. Breach interpolates at the window start and returns $+2.0$
-(linear interpolation between $t=0$ and $t=3$ gives $\mathit{signal}(1)=2$),
-which stays binding at the root; TaLiRo finds the window empty and returns the
-always-identity ($+\infty$), making that branch vacuous, so its root value is set
-by the next active constraint---the window $[4,5]$, where $\mathit{signal}=5$---giving
-$+5.0$. The cause lives entirely in how an off-grid temporal window is reduced;
-a more readable walkthrough is given in Appendix~\ref{sec:app-eval}.
+contains no sample. Breach interpolates $\mathit{signal}$ at the window start and
+returns $+2.0$ (because linear interpolation between the samples at $t=0$ and
+$t=3$ gives $\mathit{signal}(1)=2$); TaLiRo finds the window empty and returns
+the always-identity ($+\infty$), so that branch stops constraining the result.
+These two local readings then drive the root through the three nesting levels
+above: Breach's interpolated $+2.0$ propagates unchanged and stays binding at the
+root, whereas TaLiRo's $+\infty$ makes that branch vacuous, so its root value is
+instead set by the next active constraint one $\Box_{[0,3]}$ step over---the
+window $[4,5]$, where $\mathit{signal}=5$---giving $+5.0$.
+The cause lives entirely in how an off-grid temporal window is reduced;
+a more readable walkthrough of this example is given in Appendix~\ref{sec:app-eval}.
 
 %\paragraph{Localizing a discrepancy to its cause.}
 The verdict can also flip outright. On the bounded-until case
 $(x \ge 0)\mathbin{U_{[1,2]}}(y \ge 0)$, Breach and RTAMT disagree on the root
-sign ($-5.0$ vs.\ $+2.0$; RTAMT is the lone outlier, with Breach and TaLiRo both reporting $-5.0$), and the localizer pins every pairwise
-disagreement to the single $U_{[1,2]}$ node---RTAMT's discrete-time until
-composition. The analogous contamination in ARCH-COMP, by contrast, was traced
+sign ($-5.0$ vs.\ $+2.0$; RTAMT is the lone outlier, with Breach and TaLiRo both
+reporting $-5.0$), and the localizer pins every pairwise disagreement to the
+single $U_{[1,2]}$ node---RTAMT's discrete-time until composition. The analogous contamination in ARCH-COMP, by contrast, was traced
 down only by manual investigation~\cite{ernst2021archcomp}; in both cases the
 cause lives in the temporal semantics, which a reader cannot recover from the
 formula alone.
@@ -390,4 +402,4 @@ formula alone.
 \label{sec:conclusion}
 % ----------------------------------------------------------------
 % ================================================================
-\tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary: by separating formula syntax, signal data, backend lowering, and DAG interpretation, it exposes choices otherwise buried in tool internals and mechanically localizes cross-tool discrepancies to minimal divergent formula nodes and responsible operations.  This recasts robustness evaluation as an extensible semantic layer; future work will broaden the supported semantics, including online evaluation, and expand the validation suite.
+\tool makes the implicit choices of STL robustness evaluation explicit at the evaluator boundary: by separating formula syntax, signal data, backend lowering, and DAG interpretation, it exposes choices otherwise buried in tool internals and mechanically localizes cross-tool discrepancies to minimal divergent formula nodes and responsible operations.  This recasts robustness evaluation as an extensible semantic layer rather than an implementation detail of a particular monitor, falsifier, or learning pipeline; future work will broaden the supported semantics, including online evaluation, and expand the validation suite.
