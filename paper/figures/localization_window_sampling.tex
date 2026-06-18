@@ -13,13 +13,13 @@
   agree/.style={fill=white},
   origin/.style={fill=black!12, very thick, double, double distance=1.3pt},
   [{$\wedge$}, diverge, name=root
-    [{$\Box_{[0,3]}$}, diverge
+    [{$\Always_{[0,3]}$}, diverge
       [{$\wedge$}, diverge
         [{$\mathtt{mode}\ge 0$}, agree]
-        [{$\Diamond_{[0,1]}$}, diverge
+        [{$\Eventually_{[0,1]}$}, diverge
           [{$\wedge$}, diverge
             [{$\mathtt{enable}\ge 0$}, agree]
-            [{$\Box_{[1,2]}$}, origin, name=origin
+            [{$\Always_{[1,2]}$}, origin, name=origin
               [{$\mathtt{signal}\ge 0$}, agree]
             ]
           ]

@@ -7,10 +7,10 @@ arrow/.style={->, thick}
 ]
 
 % ---- AST (root at top, leaves at bottom) ----
-\node[box] (astG) {$\Box_{[0,5]}$};
+\node[box] (astG) {$\Always_{[0,5]}$};
 \node[box, below=4mm of astG] (astAnd) {$\wedge$};
 \node[box, below left=4mm and 1mm of astAnd] (astX) {$x \ge 0$};
-\node[box, below right=4mm and 1mm of astAnd] (astF) {$\Diamond_{[0,2]}$};
+\node[box, below right=4mm and 1mm of astAnd] (astF) {$\Eventually_{[0,2]}$};
 \node[box, below=4mm of astF] (astY) {$y \ge 0$};
 
 \draw[arrow] (astG) -- (astAnd);

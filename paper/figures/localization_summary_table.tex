@@ -15,13 +15,13 @@
 \toprule
 Case & Tools compared & $|\varphi|$/depth & $\rho$ & Divergence \\
 \midrule
-\texttt{until\_boundary} & Breach vs.\ RTAMT & 3 / 1 & $-5$ / $+2$ & verdict flip on $\mathcal{U}_{[1,2]}$ \\
-\texttt{window\_sampling} & Breach vs.\ TaLiRo & 10 / 3 & $+2$ / $+5$ & value gap on $\Box_{[1,2]}$ \\
+\texttt{until\_boundary} & Breach vs.\ RTAMT & 3 / 1 & $-5$ / $+2$ & verdict flip on $\Until_{[1,2]}$ \\
+\texttt{window\_sampling} & Breach vs.\ TaLiRo & 10 / 3 & $+2$ / $+5$ & value gap on $\Always_{[1,2]}$ \\
 \bottomrule
 \end{tabular}
 
-% kernels at origin -- until_boundary: $\mathcal{U}_{[1,2]}$ Breach BoundedUntilKernel[1,2] vs.\ RTAMT DiscreteBoundedUntil[1,2]
-% kernels at origin -- window_sampling: $\Box_{[1,2]}$ Breach WindowMin[1,2] overridden by _sliding_min_breach vs.\ TaLiRo SampleMin[1,2]
+% kernels at origin -- until_boundary: $\Until_{[1,2]}$ Breach BoundedUntilKernel[1,2] vs.\ RTAMT DiscreteBoundedUntil[1,2]
+% kernels at origin -- window_sampling: $\Always_{[1,2]}$ Breach WindowMin[1,2] overridden by _sliding_min_breach vs.\ TaLiRo SampleMin[1,2]
 % div_until_boundary verdict at t=0 across tools: Breach -5, RTAMT +2 (outlier), TaLiRo -5, STLCG++ -5.
 % first-divergence step: div_until_boundary t-index 0; div_window_sampling t-index 0.
 % breach's window kernel here is the sliding-min variant (_sliding_min_breach).

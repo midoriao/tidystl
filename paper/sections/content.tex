@@ -99,9 +99,9 @@ STL formulas $\varphi \in \mathbf{Fml}$ are given by:
     \top \mid f(\vec{x}) \geq 0
     \mid \neg\varphi \mid \varphi_1 \vee \varphi_2
     \mid \varphi_1 \wedge \varphi_2
-  \mid \varphi_1 \mathbin{\mathcal{U}_I} \varphi_2
-    \mid \varphi_1 \mathbin{\mathcal{R}_I} \varphi_2
-    \mid \Diamond_I\varphi \mid \Box_I\varphi .
+  \mid \varphi_1 \Until_I \varphi_2
+    \mid \varphi_1 \Release_I \varphi_2
+    \mid \Eventually_I\varphi \mid \Always_I\varphi .
 \]
 Here $f$ is a function symbol, for example $f(x, y) = 4x - y - 3$, and $I$ is a non-singular interval in $\mathbb{R}_{\geq 0}$, for example $[2,5]$, $(1,3]$, or $[0,\infty)$.
 \end{definition}
@@ -111,7 +111,7 @@ Informally, the robust semantics $\rho(\varphi, \sigma, t)$ replaces the Boolean
 verdict with a signed real-value,
 e.g., $\rho(x - 3 \geq 0, \sigma, t) = \sigma_x(t) - 3$.
 The Boolean connectives and temporal operators then aggregate the robustness values using $\min$, $\max$, $\inf$, and $\sup$; for example,
-$\rho(\Box_{[0,2]}\,(x - 3 \geq 0), \sigma, t)
+$\rho(\Always_{[0,2]}\,(x - 3 \geq 0), \sigma, t)
   = \inf_{t' \in [t,\,t+2]} (\sigma_x(t') - 3)$.
 
 We call a design choice in a concrete evaluator's implementation an \emph{implicit semantic choice} if
@@ -126,7 +126,7 @@ an implicit semantic choice.
 \begin{example}[Verdict flip from one implicit choice]
 \label{ex:verdict-flip}
 Consider the \emph{signal beyond horizon} choice of \cref{tab:divergence}.
-Let $\varphi = \Diamond_{[2,4]}(x \geq 0)$ be evaluated at $t = 0$ on a trace ending at $T = 1$ with $x(T) = 3$. The temporal window $[2,4]$ lies entirely beyond the trace. A clamping rule treats the last sample as persisting and reports $+3$ (satisfied), while a pessimistic rule treats the window as unavailable and reports $-\infty$ (violated). Thus, the same formula and trace can receive an opposite Boolean verdict depending on this choice.
+Let $\varphi = \Eventually_{[2,4]}(x \geq 0)$ be evaluated at $t = 0$ on a trace ending at $T = 1$ with $x(T) = 3$. The temporal window $[2,4]$ lies entirely beyond the trace. A clamping rule treats the last sample as persisting and reports $+3$ (satisfied), while a pessimistic rule treats the window as unavailable and reports $-\infty$ (violated). Thus, the same formula and trace can receive an opposite Boolean verdict depending on this choice.
 \end{example}
 
 Crucially, no tool is wrong here: each rule is a defensible reading of the
@@ -213,8 +213,8 @@ such a lowering on an example formula with nested temporal operators.
 \centering
 \scalebox{0.85}{\input{figures/inspectable-dag}}
 \caption{
-Lowering of $\varphi :\equiv \Box_{[0,5]}\bigl((x \ge 0) \wedge
-\Diamond_{[0,2]}(y \ge 0)\bigr)$ from AST (left) to computation DAG (right).
+Lowering of $\varphi :\equiv \Always_{[0,5]}\bigl((x \ge 0) \wedge
+\Eventually_{[0,2]}(y \ge 0)\bigr)$ from AST (left) to computation DAG (right).
 Each node is a primitive operation: the conjunction reduces pointwise while the
 temporal operators aggregate over their annotated window. Edges carry
 intermediate robustness signals that remain inspectable in the evaluation result.
@@ -327,9 +327,9 @@ suite (\cref{sec:app-eval}).
   case lists the two tools compared, the formula size/operator depth, the root
   robustness each tool reports ($\rho$, left/right tool), and the localized
   divergence (the single origin operator the localizer blames). The two cases are
-  \texttt{until\_boundary}, $(x \ge 0)\mathbin{\mathcal{U}_{[1,2]}}(y \ge 0)$, and
-  \texttt{window\_sampling}, $\Box_{[0,3]}\bigl((\mathtt{mode} \ge 0) \wedge
-  \Diamond_{[0,1]}((\mathtt{enable} \ge 0) \wedge \Box_{[1,2]}(\mathtt{signal}
+  \texttt{until\_boundary}, $(x \ge 0)\Until_{[1,2]}(y \ge 0)$, and
+  \texttt{window\_sampling}, $\Always_{[0,3]}\bigl((\mathtt{mode} \ge 0) \wedge
+  \Eventually_{[0,1]}((\mathtt{enable} \ge 0) \wedge \Always_{[1,2]}(\mathtt{signal}
   \ge 0))\bigr) \wedge (\mathtt{safety\_margin} \ge 0)$.}
 \input{figures/localization_summary_table}
 \label{tab:e2-localization}
@@ -349,8 +349,8 @@ Consider the \texttt{window\_sampling} case of \cref{tab:e2-localization}, the
 conjunction
 \[
   \resizebox{\linewidth}{!}{$\displaystyle
-  \Box_{[0,3]}\Bigl((\mathtt{mode} \ge 0) \wedge \Diamond_{[0,1]}\bigl((\mathtt{enable}
-  \ge 0) \wedge \Box_{[1,2]}(\mathtt{signal} \ge 0)\bigr)\Bigr) \wedge
+  \Always_{[0,3]}\Bigl((\mathtt{mode} \ge 0) \wedge \Eventually_{[0,1]}\bigl((\mathtt{enable}
+  \ge 0) \wedge \Always_{[1,2]}(\mathtt{signal} \ge 0)\bigr)\Bigr) \wedge
   (\mathtt{safety\_margin} \ge 0).$}
 \]
 It can be read as a small CPS-style monitoring requirement with a mode signal,
@@ -366,7 +366,7 @@ $\mathtt{signal} = [3, 0, 5, \dots, 5]$.
 Breach reports root robustness $+2.0$ and TaLiRo $+5.0$: both satisfy the spec,
 yet the values differ, so no flipped verdict betrays the divergence.
 
-The localizer pins the gap to the buried $\Box_{[1,2]}$, three temporal levels
+The localizer pins the gap to the buried $\Always_{[1,2]}$, three temporal levels
 down. Evaluated at the first step, this operator reduces $\mathtt{signal}$ over
 the window $[1,2]$, which lies entirely inside the $0 \to 3$ grid gap and so
 contains no sample. Breach interpolates $\mathtt{signal}$ at the window start and
@@ -376,18 +376,18 @@ the always-identity ($+\infty$), so that branch stops constraining the result.
 These two local readings then drive the root through the three nesting levels
 above: Breach's interpolated $+2.0$ propagates unchanged and stays binding at the
 root, whereas TaLiRo's $+\infty$ makes that branch vacuous, so its root value is
-instead set by the next active constraint one $\Box_{[0,3]}$ step over---the
+instead set by the next active constraint one $\Always_{[0,3]}$ step over---the
 window $[4,5]$, where $\mathtt{signal}=5$---giving $+5.0$.
 The cause lives entirely in how an off-grid temporal window is reduced;
 a more readable walkthrough of this example is given in Appendix~\ref{sec:app-eval}.
 
 %\paragraph{Localizing a discrepancy to its cause.}
 The verdict can also flip outright. On the \texttt{until\_boundary} case, the
-bounded-until formula $(x \ge 0)\mathbin{\mathcal{U}_{[1,2]}}(y \ge 0)$, Breach and RTAMT
+bounded-until formula $(x \ge 0)\Until_{[1,2]}(y \ge 0)$, Breach and RTAMT
 disagree on the root
 sign ($-5.0$ vs.\ $+2.0$; RTAMT is the lone outlier, with Breach and TaLiRo both
 reporting $-5.0$), and the localizer pins every pairwise disagreement to the
-single $\mathcal{U}_{[1,2]}$ node---RTAMT's discrete-time until composition. The analogous contamination in ARCH-COMP, by contrast, was traced
+single $\Until_{[1,2]}$ node---RTAMT's discrete-time until composition. The analogous contamination in ARCH-COMP, by contrast, was traced
 down only by manual investigation~\cite{ernst2021archcomp}; in both cases the
 cause lives in the temporal semantics, which a reader cannot recover from the
 formula alone.

@@ -26,15 +26,15 @@ inductively:
   \rho(\neg\varphi,\sigma,t) &= -\rho(\varphi,\sigma,t) \\
   \rho(\varphi_1 \vee \varphi_2, \sigma, t) &= \max(\rho(\varphi_1,\sigma,t),\,\rho(\varphi_2,\sigma,t)) \\
   \rho(\varphi_1 \wedge \varphi_2, \sigma, t) &= \min(\rho(\varphi_1,\sigma,t),\,\rho(\varphi_2,\sigma,t)) \\
-  \rho(\varphi_1 \mathbin{\mathcal{U}_I} \varphi_2, \sigma, t) &= \sup_{t' \in t + I} \min\Bigl(\rho(\varphi_2,\sigma,t'),\, \inf_{t'' \in [t,\,t')} \rho(\varphi_1,\sigma,t'')\Bigr) \\
-  \rho(\Diamond_I\varphi, \sigma, t) &= \sup_{t' \in t + I} \rho(\varphi,\sigma,t') \\
-  \rho(\Box_I\varphi, \sigma, t) &= \inf_{t' \in t + I} \rho(\varphi,\sigma,t'),
+  \rho(\varphi_1 \Until_I \varphi_2, \sigma, t) &= \sup_{t' \in t + I} \min\Bigl(\rho(\varphi_2,\sigma,t'),\, \inf_{t'' \in [t,\,t')} \rho(\varphi_1,\sigma,t'')\Bigr) \\
+  \rho(\Eventually_I\varphi, \sigma, t) &= \sup_{t' \in t + I} \rho(\varphi,\sigma,t') \\
+  \rho(\Always_I\varphi, \sigma, t) &= \inf_{t' \in t + I} \rho(\varphi,\sigma,t'),
 \end{align*}
 where $t + I = \{t + s \mid s \in I\}$ and $f(\sigma_{\vec{x}}(t))$ applies
 $f$ to the values of the variables $\vec{x}$ at time $t$. The release
 operator is defined by duality,
-$\varphi_1 \mathbin{\mathcal{R}_I} \varphi_2 :\equiv
- \neg(\neg\varphi_1 \mathbin{\mathcal{U}_I} \neg\varphi_2)$,
+$\varphi_1 \Release_I \varphi_2 :\equiv
+ \neg(\neg\varphi_1 \Until_I \neg\varphi_2)$,
 and the constant $\bot :\equiv \neg\top$ has
 $\rho(\bot,\sigma,t) = -\infty$.
 
@@ -54,8 +54,8 @@ tool implicitly fixes which formulas it can evaluate at all, before any
 robustness is computed.
 
 \paragraph{Logic fragment.}
-The until operator, with its nested $\inf$, is harder to vectorize than $\Box$
-and $\Diamond$, so some tools support only the box/diamond fragment and drop
+The until operator, with its nested $\inf$, is harder to vectorize than $\Always$
+and $\Eventually$, so some tools support only the box/diamond fragment and drop
 release with it. \cref{def:stl} also admits unbounded intervals such as
 $[0,\infty)$ and an arbitrary function symbol $f$; many tools require a finite
 upper bound and restrict predicates to threshold comparisons or linear
@@ -69,7 +69,7 @@ unchanged. A discrete-time evaluator addresses time by integer index, so it
 admits only the integer-interval fragment: every bound must be an integer
 multiple of the sampling period and the trace must be uniform. \tool's
 RTAMT-compatible backend enforces this as a coverage restriction---on a
-step-$1$ trace $\Box_{[1,2]}$ is admitted but $\Box_{[0.5,1.5]}$ is rejected
+step-$1$ trace $\Always_{[1,2]}$ is admitted but $\Always_{[0.5,1.5]}$ is rejected
 outright, and a non-uniform grid is rejected rather than silently snapped.
 
 \paragraph{Robustness of $\top$ and $\bot$.}
@@ -114,7 +114,7 @@ samples and so contains none, it instead reads a single value: the signal
 interpolated at the window start at the first evaluated step, or the current
 sample's value at later steps (both pinned to Breach ground truth). Both
 backends are piecewise-linear, yet they disagree on any off-grid window: for
-$\Diamond_{[0.3,0.7]}(v \geq 5)$, evaluated where the window lies between
+$\Eventually_{[0.3,0.7]}(v \geq 5)$, evaluated where the window lies between
 samples, the native backend takes the true extremum over the real interval and
 reports $-0.2$, while the Breach-compatible backend returns the window-start
 interpolant $-1.0$. \tool records this among the evaluator-specific
@@ -133,8 +133,8 @@ horizon or by treating the past-end region as \emph{empty}---the \emph{Clamp} an
 \emph{Pessimistic} entries in \cref{tab:divergence}. Under \emph{clamp} (\tool, Breach) the last
 sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. Under
 a \emph{pessimistic} rule (RTAMT discrete, TaLiRo) the out-of-range part contributes
-nothing: the window is effectively empty, so a $\Diamond$ becomes $-\infty$
-(the $\sup$ of an empty set) and a $\Box$ becomes $+\infty$.
+nothing: the window is effectively empty, so a $\Eventually$ becomes $-\infty$
+(the $\sup$ of an empty set) and a $\Always$ becomes $+\infty$.
 RTAMT's dense mode ($\mathrm{RTAMT}_d$), by contrast, extends the final sample,
 matching the clamp rule rather than the discrete mode's pessimistic one.
 This is the \emph{signal beyond horizon} row of \cref{tab:divergence-profile},
@@ -276,11 +276,11 @@ implicit choices studied here concerns its internal operations.
 \input{figures/localization_window_sampling}
 \caption{Tool-vs-tool localization on \texttt{div\_window\_sampling}
   (\textsc{Breach} vs.\ \textsc{TaLiRo}, no ground truth; discussed in
-  \cref{sec:discrepancies}). The buried $\Box_{[1,2]}$ reduces over a window
+  \cref{sec:discrepancies}). The buried $\Always_{[1,2]}$ reduces over a window
   lying entirely between samples on a non-uniform grid: \textsc{Breach}
   interpolates at the window start while \textsc{TaLiRo} returns the
   always-identity. Shaded nodes mark the divergence propagation path up to the
-  single origin $\Box_{[1,2]}$
+  single origin $\Always_{[1,2]}$
   ($\mathtt{WindowMin}$ vs.\ $\mathtt{SampleMin}$), annotated in the dashed box;
   both satisfy the spec ($+2.0$ vs.\ $+5.0$).}
 \label{fig:e2-window-sampling}
@@ -291,7 +291,7 @@ A single constructed trace could sit on a knife edge, so each headline
 case is widened to a swept family of 201 traces whose final sample varies
 over $[-5,5]$, spanning regions of agreement and disagreement; no rule is
 taken as the reference, and the rates are symmetric between the rules by
-construction. For the boundary-rule family ($\Diamond_{[2,4]}(x \ge 0)$,
+construction. For the boundary-rule family ($\Eventually_{[2,4]}(x \ge 0)$,
 window past the trace end), the clamping and pessimistic rules return
 opposite verdicts at the divergence timestep on exactly those traces whose
 final sample is non-negative (101 of 201). The terminal-step family is a
@@ -323,7 +323,7 @@ is not a primary evaluation claim.
 \centering
 \input{figures/scaling-plot}
 \caption{Mean evaluation time (log scale) on
-$\Box_{[0,5]}((x>0)\wedge\Diamond_{[0,2]}(y>0))$; error bars are one
+$\Always_{[0,5]}((x>0)\wedge\Eventually_{[0,2]}(y>0))$; error bars are one
 standard deviation. RTAMT$^\dagger$: batch time is $N \times$ per-trace time.
 Missing STLCG++ bars: OOM.}
 \label{fig:scaling}
