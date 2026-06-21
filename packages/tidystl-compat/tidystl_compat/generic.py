@@ -1,8 +1,29 @@
 """Parametrized backend realizing arbitrary points in the Core 6 config space.
 
-Unlike the faithful per-tool backends, `generic` exposes the implicit-semantics
-choices as independent knobs. With its default config it reproduces `native`.
-See docs/design.md for the backend registration model.
+Unlike the faithful per-tool backends, ``generic`` exposes the implicit-semantics
+choices that distinguish STL tools as six independent knobs (``GenericConfig``).
+With its default config it reproduces ``native`` (principled PL dense-time
+semantics); other settings span the behaviors of the per-tool backends.
+
+The six axes:
+
+- ``signal_model``: how samples become a continuous signal -- ``pl_interp``
+  (piecewise-linear with endpoint interpolation), ``pl_samples`` (PL over samples
+  only), ``zoh`` (piecewise-constant / py-mtl), or ``discrete`` (index-shift /
+  rtamt).
+- ``boundary``: window end-of-trace rule -- ``clamp`` (extend the last value) or
+  ``pessimistic`` (reduction identity, no extension).
+- ``terminal``: top-level binary ``and`` / ``or`` -- ``none`` or
+  ``extend_penultimate`` (Breach's final-sample convention).
+- ``predicate``: predicate robustness -- ``signed`` (raw margin) or ``euclidean``
+  (TaLiRo's ``/||A||`` half-space distance).
+- ``equality``: ``==`` robustness -- ``signed`` (``-|lhs-rhs|``), ``bigm``
+  (Breach), or ``epsilon``.
+- ``until_prefix``: bounded-until left prefix -- ``inclusive`` or ``exclusive``.
+
+Out-of-range field values raise at construction (``GenericConfig.__post_init__``);
+a few unsupported combinations raise at evaluation. See docs/design.md for the
+backend registration model.
 """
 
 from __future__ import annotations

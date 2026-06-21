@@ -17,6 +17,7 @@ dev = [
 
 docs = [
     "tidystl",
+    "tidystl-compat",
     "sphinx>=7.3",
     "myst-parser>=3.0",
     "furo>=2024.5",

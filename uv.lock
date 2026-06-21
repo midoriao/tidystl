@@ -1866,6 +1866,7 @@ docs = [
     { name = "pytest-markdown-docs" },
     { name = "sphinx" },
     { name = "tidystl" },
+    { name = "tidystl-compat" },
 ]
 experiments = [
     { name = "cma" },
@@ -1897,6 +1898,7 @@ docs = [
     { name = "pytest-markdown-docs", specifier = ">=0.9" },
     { name = "sphinx", specifier = ">=7.3" },
     { name = "tidystl", editable = "packages/tidystl" },
+    { name = "tidystl-compat", editable = "packages/tidystl-compat" },
 ]
 experiments = [
     { name = "cma", specifier = ">=3.3" },

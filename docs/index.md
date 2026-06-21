@@ -7,6 +7,7 @@
 usage
 language
 api
+backends
 design
 ```
 
@@ -16,6 +17,7 @@ backends, batch-first.
 - **[Usage](usage.md)** -- user manual: concepts, backend selection, worked examples.
 - **[Specification Language](language.md)** -- formula grammar and robustness rules.
 - **[API Reference](api.md)** -- generated reference for the public API.
+- **[Compatibility Backends](backends.md)** -- per-backend semantics for the external-tool backends.
 - **[Design](design.md)** -- architecture and design rationale.
 
 ## Install

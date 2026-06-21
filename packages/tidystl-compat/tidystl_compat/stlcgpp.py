@@ -1,3 +1,37 @@
+"""STLCG++-compatible backends (numpy and torch).
+
+Reproduces the robustness semantics of STLCG++ (https://github.com/UW-CTRL/stlcgpp),
+a JAX/torch STL library built for gradient-based optimization. Two backends share
+one discrete-time lowering:
+
+- ``StlcgppBackend`` (``stlcgpp``): pure-numpy reference over a uniform grid.
+- ``StlcgppTorchBackend`` (``stlcgpp_torch``): torch-backed and differentiable;
+  the robustness tensor supports ``.backward()``.
+
+Both require a strictly increasing, uniform time grid; operator intervals
+``[a, b]`` are converted to integer sample offsets and must align to the sampling
+period.
+
+Semantics:
+
+- Predicates use signed-margin robustness (``x >= c`` -> ``x - c``); equality
+  ``x == c`` -> ``-|x - c|``. ``not`` negates; ``and`` / ``or`` are pointwise
+  ``min`` / ``max``.
+- ``always`` / ``eventually`` reduce over the sample window, and ``until`` uses an
+  inclusive left prefix. Truncated windows past the trace end are extended by
+  REPEATING THE FINAL SAMPLE (``padding="last"``), not by a reduction identity --
+  this is the distinguishing end-of-trace rule versus the rtamt backend.
+
+The torch backend additionally exposes STLCG++'s smooth ``min`` / ``max``
+approximations for differentiable optimization, selected by ``approx_method``:
+
+- ``"true"`` (default): exact ``min`` / ``max`` (subgradients).
+- ``"softmax"``: softmax-weighted average at inverse-temperature ``temperature``.
+- ``"logsumexp"``: log-sum-exp soft extremum at ``temperature``.
+
+It requires a ``TorchSignal``; the numpy backend requires a ``Signal``.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

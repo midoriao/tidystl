@@ -1,3 +1,39 @@
+"""RTAMT discrete-time-compatible backend.
+
+Reproduces RTAMT's discrete-time STL robustness in pure numpy. RTAMT treats the
+trace as a sequence of samples on a uniform grid and evaluates bounded temporal
+operators by shifting whole sample indices, not by interpolating in real time.
+Use ``RtamtDenseBackend`` for RTAMT's dense-time (piecewise-constant)
+interpretation, or ``NativeBackend`` for tidystl's piecewise-linear semantics.
+
+Grid and interval requirements:
+
+- The time grid must be strictly increasing and uniform; the sampling period
+  ``dt`` is the common spacing (a non-uniform grid raises ``ValueError``).
+- Operator intervals ``[a, b]`` are converted to integer sample offsets
+  ``[round(a/dt), round(b/dt)]`` and must align to ``dt`` (a misaligned bound
+  raises ``ValueError``).
+
+Semantics:
+
+- Predicates use the standard signed-margin robustness: ``x >= c`` (and the
+  strict ``x > c``) evaluate to ``x - c``, ``x <= c`` / ``x < c`` to ``c - x``,
+  and equality ``x == c`` to ``-|x - c|`` (a metric, unlike Breach's BigM
+  convention). Strict and non-strict comparisons coincide.
+- ``not`` negates; ``and`` / ``or`` are pointwise ``min`` / ``max``.
+- ``always[a,b]`` / ``eventually[a,b]`` reduce ``min`` / ``max`` over the sample
+  window ``[i+a', i+b']`` (offsets in samples); ``until[a,b]`` follows RTAMT's
+  discrete bounded-until recurrence.
+- End of trace: a window whose left offset falls past the last sample yields the
+  reduction identity (``+inf`` for always, ``-inf`` for eventually / until),
+  matching RTAMT's bounded-future convention; partial windows reduce over the
+  samples that remain.
+
+``DiscreteDagBuilder`` and ``DiscreteResult`` are exported so other backends
+(e.g. the generic backend) can reuse the discrete lowering without importing
+private names.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

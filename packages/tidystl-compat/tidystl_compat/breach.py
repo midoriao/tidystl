@@ -17,8 +17,8 @@ behaviors not present in tidystl's principled PL semantics:
   ``fun__zero(abs(rhs-lhs), zero_threshold__, true_value__, alpha__)`` and
   sets ``true_value__ = alpha__ = 10000`` on every formula
   (@STL_Formula/STL_Formula.m, Breach 1.11.4), yielding BigM sign semantics
-  (+10000 when |lhs-rhs| <= 1e-13, -10000 otherwise) rather than the metric
-  ``-|lhs-rhs|`` used by the other backends.
+  (``+10000`` when ``|lhs-rhs| <= 1e-13``, ``-10000`` otherwise) rather than the
+  metric ``-|lhs-rhs|`` used by the other backends.
 
 Use NativeBackend for tidystl's principled dense-time PL semantics.
 """
