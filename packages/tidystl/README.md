@@ -75,9 +75,10 @@ reflects what is currently registered.
 ## Documentation
 
 For the full user manual (installation, signals, specification language,
-backend semantics, and worked examples), see **[docs/usage.md](docs/usage.md)**;
-for grammar tables, call signatures, and API contracts, see
-**[docs/reference.md](docs/reference.md)**.
+backend semantics, and worked examples), see **[docs/usage.md](../../docs/usage.md)**;
+for the specification language (grammar tables and robustness rules), see
+**[docs/language.md](../../docs/language.md)**. The full API reference is generated
+from docstrings and published on the documentation site.
 
 ## License
 

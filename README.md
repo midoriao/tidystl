@@ -7,13 +7,13 @@ examples, and experiment/reproduction code.
 ## Routing
 
 - Installable Python packages live under `packages/`.
-- User-facing docs for the core package live under `packages/tidystl/docs/`.
+- User-facing docs for the core package live under `docs/`.
 - Runnable examples live under `examples/`.
 - Experiment, reproduction, external-tool handoff, and generated-record
   material lives under `extra/`.
 
 For package usage, start with `packages/tidystl/README.md` or
-`packages/tidystl/docs/usage.md`.
+`docs/usage.md`.
 
 ## Layout
 

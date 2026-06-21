@@ -9,7 +9,22 @@ from numpy.typing import NDArray
 
 @dataclass
 class Signal:
-    """Batched multi-variable time series. Shape: (N, S, T)."""
+    """A batch of multi-variable traces on a shared time grid.
+
+    Attributes:
+        values: float array of shape `(N, S, T)`; `N` traces, `S` variables,
+            `T` timesteps.
+        times: float array of shape `(T,)`, strictly increasing, in physical
+            time units. Temporal intervals such as `G[0,10]` refer to these
+            units, not to sample indices.
+        labels: mapping from variable name to its index on the `S` axis.
+
+    Indexing: `sig["x"]` returns the `(N, T)` array for one variable;
+    `sig["x", 3]` returns the `(N,)` values at timestep index 3. An unknown
+    variable name raises `KeyError`. Build directly with
+    `Signal(values=..., times=..., labels=...)` for an already-stacked
+    `(N, S, T)` array, or with `Signal.from_dict(...)`.
+    """
 
     values: NDArray[np.floating]  # (N, S, T)
     times: NDArray[np.floating]  # (T,)
@@ -21,6 +36,13 @@ class Signal:
         times: NDArray[np.floating],
         values: dict[str, NDArray[np.floating]],
     ) -> Signal:
+        """Build a `Signal` from a `{name: array}` mapping on a time grid.
+
+        Each value array is `(N, T)`, or `(T,)` which is auto-expanded to
+        `(1, T)`. All variables must share batch size `N` and timestep count
+        `T`, and `T` must equal `times.shape[0]`. A timestep mismatch raises
+        `ValueError`.
+        """
         t_len = times.shape[0]
         arrays: list[NDArray[np.floating]] = []
         labels: dict[str, int] = {}
@@ -64,6 +86,13 @@ class TorchSignal:
         times: NDArray[np.floating],
         values: dict[str, Any],
     ) -> TorchSignal:
+        """Build a `TorchSignal` from a `{name: tensor}` mapping.
+
+        The torch analogue of `Signal.from_dict`: each value tensor is
+        `(N, T)` or `(T,)` (auto-expanded to `(1, T)`); all variables must
+        share `N` and `T`, and `T` must equal `times.shape[0]`. A timestep
+        mismatch raises `ValueError`.
+        """
         import torch  # type: ignore[import-untyped]
 
         _t: Any = torch  # shadow as Any so downstream calls are not Unknown

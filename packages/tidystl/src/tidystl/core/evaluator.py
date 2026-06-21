@@ -29,11 +29,21 @@ class BackendRegistry:
         self._default_name: str | None = None
 
     def register(self, backend: EvaluationBackend, *, default: bool = False) -> None:
+        """Register `backend` under `backend.name`.
+
+        The first registered backend, or any registered with `default=True`,
+        becomes the default used when `backend=None`.
+        """
         self._backends[backend.name] = backend
         if default or self._default_name is None:
             self._default_name = backend.name
 
     def get(self, name: str) -> EvaluationBackend:
+        """Return the backend registered under `name`.
+
+        Raises `LookupError` (listing the available names) if `name` is not
+        registered.
+        """
         try:
             return self._backends[name]
         except KeyError:

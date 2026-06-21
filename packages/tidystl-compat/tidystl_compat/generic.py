@@ -2,7 +2,7 @@
 
 Unlike the faithful per-tool backends, `generic` exposes the implicit-semantics
 choices as independent knobs. With its default config it reproduces `native`.
-See packages/tidystl/docs/design.md for the backend registration model.
+See docs/design.md for the backend registration model.
 """
 
 from __future__ import annotations

@@ -19,8 +19,21 @@ from tidystl.core.signal import Signal, TorchSignal
 
 
 class EvaluationResult(Protocol):
+    """The result every backend's `evaluate()` returns.
+
+    Exposes the robustness array plus the sub-formula trace API. Backends
+    without trace support set `has_trace = False` and raise
+    `NotImplementedError` from `trace_for`/`traced_nodes`.
+    """
+
     robustness: Any
+    """The `(N, T)` robustness array; entry `[n, t]` is trace `n`'s
+    robustness for the formula evaluated at time `times[t]`. A numpy array
+    for `Signal` input, a torch tensor for `TorchSignal` input."""
+
     has_trace: bool
+    """Whether sub-formula traces are available via `trace_for`/`traced_nodes`
+    (`True` for all backends in `tidystl` and `tidystl-compat`)."""
 
     def trace_for(self, node: Node | ArithNode) -> Any:
         """Sub-formula robustness trace for `node`.

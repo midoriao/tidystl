@@ -4,7 +4,7 @@ tidySTL searches a pool of small (formula, signal) candidates and, using the
 generic backend as oracle, selects a minimal battery whose induced
 observational-equivalence quotient is as fine as the candidate pool allows.
 This makes the diagnostic battery synthesized-and-certified rather than
-hand-curated. See packages/tidystl/docs/design.md for the backend model.
+hand-curated. See docs/design.md for the backend model.
 """
 
 from __future__ import annotations

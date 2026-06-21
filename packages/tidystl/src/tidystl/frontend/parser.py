@@ -261,7 +261,12 @@ class _SpecTransformer(Transformer[Token, Node]):
 
 
 def parse(spec: str) -> Node:
-    """Parse a tidystl specification string into a Node tree."""
+    """Parse a tidystl specification string into a `Node` tree.
+
+    The grammar (operators, precedence, predicate arithmetic, robustness
+    rules, reserved keywords) is documented on the
+    [Specification Language](language.md) page.
+    """
     stripped = spec.strip()
     parser = _sectioned_parser if _is_sectioned(stripped) else _inline_parser
 

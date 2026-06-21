@@ -48,7 +48,6 @@ packages = ["src/tidystl"]
 include = [
     "src",
     "tests",
-    "docs",
     "README.md",
     "LICENSE",
     "pyproject.toml",

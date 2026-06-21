@@ -15,6 +15,15 @@ dev = [
     "pyright>=1.1",
 ]
 
+docs = [
+    "tidystl",
+    "sphinx>=7.3",
+    "myst-parser>=3.0",
+    "furo>=2024.5",
+    "linkify-it-py>=2.0",
+    "pytest-markdown-docs>=0.9",
+]
+
 experiments = [
     "tidystl",
     "tidystl-compat",

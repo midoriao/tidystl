@@ -12,17 +12,15 @@ indicates satisfaction (positive) or violation (negative) and whose
 magnitude indicates the margin. This manual assumes basic familiarity with
 STL; see the [References](#references) for background.
 
-Every Python code block in this manual is self-contained and executable;
-the test suite extracts and runs all of them (`packages/tidystl/tests/test_usage_doc.py`).
-
 **Document map**
 
 | Document | Content |
 |---|---|
 | This manual | Installation, concepts, semantics, recipes, troubleshooting |
-| [`reference.md`](reference.md) | API reference: grammar, signatures, contracts |
+| [`language.md`](language.md) | Specification language: grammar and robustness rules |
+| [`api.md`](api.md) | API reference: signatures and contracts |
 | [`design.md`](design.md) | Architecture and design rationale |
-| [`../../../examples/`](../../../examples/) | Runnable demo scripts |
+| [examples/](https://github.com/midoriao/tidystl/tree/main/examples) | Runnable demo scripts |
 
 **Contents**
 
@@ -37,7 +35,7 @@ the test suite extracts and runs all of them (`packages/tidystl/tests/test_usage
   [sub-formula traces](#sub-formula-traces)
 - [Backends and Semantics](#backends-and-semantics):
   [choosing](#choosing-a-backend), [native semantics](#what-nativebackend-computes),
-  [background](#semantics-background), [torch](#differentiable-robustness-with-torch)
+  [background](#semantics-background), [extending](#extending-with-a-custom-backend)
 - [Recipes](#recipes)
 - [Troubleshooting](#troubleshooting)
 - [References](#references)
@@ -76,7 +74,7 @@ python examples/minimal_demo.py
 ```
 
 For development installs (running the test suite, regenerating fixtures),
-see [`../../../CONTRIBUTING.md`](../../../CONTRIBUTING.md).
+see [CONTRIBUTING.md](https://github.com/midoriao/tidystl/blob/main/CONTRIBUTING.md).
 
 ### Quick Start
 
@@ -144,7 +142,7 @@ sig["x", 3]     # (N,) values at timestep index 3
 All variables in one signal must share the batch size and the number of
 timesteps. The exact construction and indexing contracts, including error
 conditions and the direct `Signal(...)` constructor, are in the
-[API reference](reference.md#signals).
+{py:class}`API reference <tidystl.Signal>`.
 
 ## Specification Language
 
@@ -164,18 +162,18 @@ Six operators are available: `G[a,b]` (always), `F[a,b]` (eventually),
 robustness is its signed margin (`x >= c` evaluates to `x - c`).
 
 The full grammar (operator table, precedence, predicate arithmetic and
-robustness rules, reserved keywords) is 
-in the [API reference](reference.md#formula-syntax).
+robustness rules, reserved keywords) is
+on the [Specification Language](language.md) page.
 
 ## Evaluating Robustness
 
 ### robustness() and evaluate()
 
 `robustness(formula, signal, backend=None)` returns the `(N, T)` array
-directly (a numpy array for `Signal` input. The `backend` argument takes a registered name such
+directly (a numpy array for `Signal` input, a torch tensor for `TorchSignal` input). The `backend` argument takes a registered name such
 as `"native"` or `"breach"`, a backend instance, or `None` for the default
 (`NativeBackend`); full signatures and argument contracts are in the
-[API reference](reference.md#evaluation-api). `evaluate()` takes the
+{py:func}`API reference <tidystl.evaluate>`. `evaluate()` takes the
 same arguments and returns the full backend result, which adds
 sub-formula traces:
 
@@ -338,7 +336,44 @@ np.testing.assert_allclose(rho_breach[0], [1.75, 10.0, -1.0], atol=1e-10)
 The base quantitative semantics follows the standard robustness
 definitions [2, 3]; `NativeBackend`'s exact PL window computation is in
 the spirit of Breach's dense-time interpretation [3] computed without
-tool-specific shortcuts. 
+tool-specific shortcuts.
+
+### Extending with a custom backend
+
+A backend is any object with a `name` string and an `evaluate(formula, signal)`
+method returning an `EvaluationResult`. Register backends in a `BackendRegistry`
+and pass it explicitly, or activate a plugin module with
+{py:func}`tidystl.use` (see the [design notes](design.md) for
+the plugin protocol). The following private registry adds a boolean backend
+alongside the native default:
+
+```python
+import numpy as np
+from tidystl import BackendRegistry, NativeBackend, Signal, parse, robustness
+
+
+class BooleanBackend:
+    """Sign of the native robustness: +1 satisfied, -1 violated."""
+
+    name = "boolean"
+
+    def evaluate(self, formula, signal):
+        result = NativeBackend().evaluate(formula, signal)
+        result.robustness = np.sign(result.robustness)
+        return result
+
+
+registry = BackendRegistry()
+registry.register(NativeBackend(), default=True)
+registry.register(BooleanBackend())
+
+sig = Signal.from_dict(
+    times=np.arange(3, dtype=float),
+    values={"x": np.array([[1.0, -2.0, 3.0]])},
+)
+verdict = robustness(parse("x >= 0"), sig, backend="boolean", registry=registry)
+np.testing.assert_allclose(verdict[0], [1.0, -1.0, 1.0])
+```
 
 ## Recipes
 
@@ -431,9 +466,7 @@ python examples/falsification_demo.py    # semantics choice vs optimization
 ```
 
 Benchmark scripts live in
-`extra/experiments/`; see
-[`../../../extra/experiments/README.md`](../../../extra/experiments/README.md) for run
-instructions. 
+`extra/experiments/`; see [the experiments README](https://github.com/midoriao/tidystl/blob/main/extra/experiments/README.md) for run instructions. 
 
 ## Troubleshooting
 
@@ -454,4 +487,4 @@ object you evaluated, not a re-parsed copy.
    Real-Valued Signals.* FORMATS 2010; A. Donze. *Breach, A Toolbox for
    Verification and Parameter Synthesis of Hybrid Systems.* CAV 2010.
 
-To cite tidystl itself, see [`../../../CITATION.cff`](../../../CITATION.cff).
+To cite tidystl, see [CITATION.cff](https://github.com/midoriao/tidystl/blob/main/CITATION.cff).

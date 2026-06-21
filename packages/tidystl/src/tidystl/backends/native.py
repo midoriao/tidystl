@@ -20,7 +20,13 @@ from tidystl.core.signal import Signal, TorchSignal
 
 
 class NativeBackend(EvaluationBackend):
-    """tidystl's default PL dense-time evaluation backend."""
+    """tidystl's default backend: exact piecewise-linear dense-time semantics.
+
+    Computes robustness over the continuous-time interpolation of the signal,
+    so temporal windows are minimized/maximized over interpolated boundary
+    points rather than only at sample times. This is the backend used when
+    `backend=None`.
+    """
 
     name = "native"
 

@@ -51,4 +51,5 @@ This is the principled reference semantics.
 ## See Also
 
 - `usage.md`: user manual: concepts, backend selection, and worked examples.
-- `reference.md`: API reference: grammar tables, call signatures, contracts.
+- `language.md`: specification language: grammar tables and robustness rules.
+- `api.md`: API reference: call signatures and contracts.

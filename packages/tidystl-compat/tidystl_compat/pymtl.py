@@ -3,7 +3,7 @@
 Reproduces the robustness semantics of the ``metric-temporal-logic`` package
 (``import mtl``): piecewise-constant (ZOH) interpolation over an arbitrary,
 possibly non-uniform time grid, with right-half-open temporal windows evaluated
-on a ``dt`` pivot grid. See ``packages/tidystl/docs/design.md`` for the
+on a ``dt`` pivot grid. See ``docs/design.md`` for the
 semantics summary and ``tests/test_pymtl_compat.py`` for cross-validation
 against the real library.
 """
