@@ -90,12 +90,19 @@
 \rowcolor{implgray}
 \multicolumn{2}{@{}l}{%
   \textbf{Implementation-specific}
-  \quad\groupnote{Others, affects acceptance/robustness}
+  \quad\groupnote{Evaluator conventions, affect robustness or acceptance}
 } \\
 
 \rowcolor{gray!4}
-\choicelead{Evaluator conventions}
-& Remaining corner cases specific to implementations \\
+\choicelead{Off-grid windows}
+& Exact endpoints \altsep Samples only \altsep Empty-window fallback \\
+
+\choicelead{Timestamp grids}
+& Validate real times \altsep Reinterpret samples by index \\
+
+\rowcolor{gray!4}
+\choicelead{Infinity encoding}
+& IEEE $\pm\infty$ \altsep Finite sentinels \\
 
 \bottomrule
 \end{tabularx}

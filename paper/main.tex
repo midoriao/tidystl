@@ -26,7 +26,7 @@
 \newcommand{\resolved}[1]{\todo[color=green!25]{#1}}
 % \PH{...}       inline placeholder for unresolved numbers/refs (red brackets)
 \newcommand{\PH}[1]{\textcolor{red}{[#1]}}
-\usepackage{wasysym}
+\usepackage{bbding}
 \usepackage{xspace}
 \usepackage{listings}
 \definecolor{codebg}{gray}{0.94}
@@ -61,12 +61,8 @@
 \usetikzlibrary{positioning,fit,arrows.meta}
 \usepackage[edges]{forest}
 \usepackage[capitalize]{cleveref}
-\crefformat{section}{\S#2#1#3}
-\Crefformat{section}{\S#2#1#3}
-\crefmultiformat{section}{\S#2#1#3}{ and~\S#2#1#3}{, \S#2#1#3}{, and~\S#2#1#3}
-\Crefmultiformat{section}{\S#2#1#3}{ and~\S#2#1#3}{, \S#2#1#3}{, and~\S#2#1#3}
-\crefrangeformat{section}{\S#3#1#4--\S#5#2#6}
-\Crefrangeformat{section}{\S#3#1#4--\S#5#2#6}
+\crefname{section}{Section}{Sections}
+\Crefname{section}{Section}{Sections}
 \crefname{table}{Table}{Tables}
 \Crefname{table}{Table}{Tables}
 \crefname{figure}{Figure}{Figures}
@@ -76,6 +72,9 @@
 \newcommand{\tool}{\textrm{tidySTL}\xspace}
 \newcommand{\toolpkg}{\texttt{tidystl}\xspace}
 
+% Compile extended.tex to select the first argument; main.tex selects the second.
+\newcommand{\ifextended}[2]{\ifdefined\extendedversion#1\else#2\fi}
+
 % STL temporal operators (semantic macros)
 \newcommand{\Always}{\mathop{\Box}\nolimits}
 \newcommand{\Eventually}{\mathop{\Diamond}\nolimits}
@@ -83,9 +82,12 @@
 \newcommand{\Release}{\mathbin{\mathcal{R}}}
 
 \title{tidySTL: Exposing Implicit Semantics in STL Evaluation}
-\author{Sota Sato\inst{1} \and Masaki Waga\inst{2}}
-\institute{National Institute of Advanced Industrial Science and Technology (AIST)
-\and Kyoto University}
+\author{Sota Sato\inst{1}\orcidID{0000-0001-7147-3989}\Envelope{} \and
+Masaki Waga\inst{2}\orcidID{0000-0001-9360-7490}}
+\authorrunning{S. Sato and M. Waga}
+\institute{AIST, Tokyo, Japan\\
+\email{sota.sato@aist.go.jp}
+\and Kyoto University, Kyoto, Japan}
 
 \begin{document}
 \maketitle
@@ -103,13 +105,16 @@ The same architecture also serves as an extensible evaluator layer: new evaluati
 \input{sections/content}
 
 \clearpage
-\appendix
-\renewcommand{\theHsection}{appendix.\Alph{section}}
-% \input{sections/working-notes}
+\ifextended{%
+  \appendix
+  \renewcommand{\theHsection}{appendix.\Alph{section}}
+}{}
 
 \bibliographystyle{splncs04}
 \bibliography{bib/references}
 
-\input{sections/appendix}
+\ifextended{%
+  \input{sections/appendix}
+}{}
 
 \end{document}

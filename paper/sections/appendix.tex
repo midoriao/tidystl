@@ -15,8 +15,8 @@ of these choices implicit.
 \subsection{Standard Robustness}
 
 Following Donz\'e and Maler~\cite{donze2010robust}, fix a signal
-$\sigma$ in the sense of \cref{def:signal} and a formula
-$\varphi \in \mathbf{Fml}$ as in \cref{def:stl}. The standard quantitative
+$\sigma$ in the sense of \cref{def:signal} and an STL formula
+$\varphi$ as in \cref{def:stl}. The standard quantitative
 (robustness) semantics
 $\rho(\varphi, \sigma, t) \in \mathbb{R} \cup \{\pm\infty\}$ is defined
 inductively:
@@ -266,41 +266,6 @@ first divergent op at `and`: PointwiseMin vs PointwiseMin
 The headline results are the tool-vs-tool localizations of
 \cref{sec:discrepancies} (\cref{tab:e2-localization,fig:e2-window-sampling}),
 where the same post-order walk pins a cause buried under several nesting levels.
-Backend pairs whose lowerings differ structurally are compared at the
-shared syntax-tree level rather than between lowered representations;
-predicate-internal arithmetic is treated as a leaf, since none of the
-implicit choices studied here concerns its internal operations.
-
-\begin{figure}[ht]
-\centering
-\input{figures/localization_window_sampling}
-\caption{Tool-vs-tool localization on \texttt{div\_window\_sampling}
-  (\textsc{Breach} vs.\ \textsc{TaLiRo}, no ground truth; discussed in
-  \cref{sec:discrepancies}). The buried $\Always_{[1,2]}$ reduces over a window
-  lying entirely between samples on a non-uniform grid: \textsc{Breach}
-  interpolates at the window start while \textsc{TaLiRo} returns the
-  always-identity. Shaded nodes mark the divergence propagation path up to the
-  single origin $\Always_{[1,2]}$
-  ($\mathtt{WindowMin}$ vs.\ $\mathtt{SampleMin}$), annotated in the dashed box;
-  both satisfy the spec ($+2.0$ vs.\ $+5.0$).}
-\label{fig:e2-window-sampling}
-\end{figure}
-
-\paragraph{Trace-family construction.}
-A single constructed trace could sit on a knife edge, so each headline
-case is widened to a swept family of 201 traces whose final sample varies
-over $[-5,5]$, spanning regions of agreement and disagreement; no rule is
-taken as the reference, and the rates are symmetric between the rules by
-construction. For the boundary-rule family ($\Eventually_{[2,4]}(x \ge 0)$,
-window past the trace end), the clamping and pessimistic rules return
-opposite verdicts at the divergence timestep on exactly those traces whose
-final sample is non-negative (101 of 201). The terminal-step family is a
-conjunction violated only at the final sample; the exact and
-copy-prev rules flip the final verdict on 100 of 201 traces and
-rank the trace oppositely against a fixed reference trace with an interior
-violation---the ranking signal a falsification search acts on---on 80 of
-201. These rates measure the width of the disagreement region within
-each controlled family, not a frequency claim about any particular workload.
 
 \paragraph{Variant accounting.}
 LOC in \cref{tab:variation} counts variant-specific code only: blank,
@@ -363,15 +328,15 @@ OOM: window materialization exceeds memory on the 32\,GB host.}
   TaLiRo~\cite{annpureddy2011staliro}  & Future-time STL & classical \\
   RTAMT~\cite{nickovic2024rtamt} & Future- and past-time STL & classical \\
   STLCG++~\cite{kapoor2025stlcgpp} & Future-time STL & classical and smooth~\cite{levenberg2020stlcg,pant2017smooth} \\
-  SignalTemporalLogic.jl\footnote{https://github.com/sisl/SignalTemporalLogic.jl} & Future-time STL & classical and smooth~\cite{levenberg2020stlcg,pant2017smooth} \\
+  \href{https://github.com/sisl/SignalTemporalLogic.jl}{SignalTemporalLogic.jl} & Future-time STL & classical and smooth~\cite{levenberg2020stlcg,pant2017smooth} \\
   py-signal-temporal-logic~\cite{pyMTL} & Future-time STL & classical \\
   mstlo~\cite{thomsen2026mstlo} & Future-time STL & classical and RoSI-style \\
-  Argus\footnote{\url{https://github.com/anand-bala/argus}}   & Future-time STL & classical \\
-  STLRom~\footnote{\url{https://github.com/decyphir/STLRom}}  & Future-time STL & RoSI-style \\
+  \href{https://github.com/anand-bala/argus}{Argus}   & Future-time STL & classical \\
+  \href{https://github.com/decyphir/STLRom}{STLRom}  & Future-time STL & RoSI-style \\
   % Reelay~\cite{reelay}  & Past-time STL & Boolean \\
   CauMon~\cite{CauMon}  & Future-time STL & causation semantics~\cite{DBLP:conf/cav/ZhangAAH23} \\
   MoonLight~\cite{bartocci2023moonlight} & STREL~\cite{DBLP:conf/memocode/BartocciBLN17} & classical \\
-  \multirow{2}{*}{TempLogic\footnote{\url{https://github.com/fran-penedo/templogic}}}  & Future-time STL, & \multirow{2}{*}{classical} \\
+  \multirow{2}{*}{\href{https://github.com/fran-penedo/templogic}{TempLogic}}  & Future-time STL, & \multirow{2}{*}{classical} \\
   & TSSL~\cite{DBLP:journals/tcns/BartocciGHB18}, SpaTeL~\cite{DBLP:conf/hybrid/HaghighiJKBGB15} & \\\bottomrule
  \end{tabular}
 \end{table}

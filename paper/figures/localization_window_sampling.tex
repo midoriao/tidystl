@@ -6,7 +6,7 @@
 \begin{forest}
   for tree={
     draw, rounded corners, align=center, inner sep=2pt,
-    font=\footnotesize, s sep=5mm, l sep=6mm,
+    font=\footnotesize, s sep=8mm, l sep=4mm,
     parent anchor=south, child anchor=north, edge={-},
   },
   diverge/.style={fill=black!12},
@@ -28,13 +28,12 @@
     ]
     [{$\mathtt{safety\_margin}\ge 0$}, agree]
   ]
-  \node[draw, dashed, rounded corners, fill=white, font=\tiny, align=left,
-        anchor=west] (cl) at ([xshift=14mm]origin.east)
-    {\textbf{divergence origin}\\[0.5pt]
-     window $[1,2]$ lies between samples\\[0.5pt]
-     Breach interpolates at window start;\\
-     TaLiRo: empty window, vacuously true\\[0.5pt]
-     $\rho_{\mathrm{breach}}=+2.0,\ \rho_{\mathrm{taliro}}=+\infty$};
+  \node[draw, dashed, rounded corners, fill=white, font=\scriptsize,
+        align=left, text width=35mm, anchor=west]
+        (cl) at ([xshift=12mm]origin.east)
+    {\textbf{divergence origin}\\[1pt]
+     \texttt{WindowMin} vs.\ \texttt{SampleMin}\\
+     local $\rho$: $+2.0$ vs.\ $+\infty$};
   \draw[-{Latex[length=2mm]}, dashed] (cl.west) -- (origin.east);
   \node[font=\scriptsize, anchor=west, align=left] at ([xshift=3mm]root.east)
     {$\rho_{\mathrm{breach}}=+2.0$ (SAT)\\ $\rho_{\mathrm{taliro}}=+5.0$ (SAT)};
