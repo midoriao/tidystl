@@ -238,7 +238,7 @@ A backend consists of primitive operations, a lowering rule, and an executor;
 extensions may add new primitives during lowering or override existing ones.
 The artifact repository includes the user manual (\texttt{docs/usage.md}) and
 reference implementations. In \cref{sec:implement-variations} we show that
-emulating an existing tool requires only backend changes with little effort; a
+emulating an existing tool requires only compact backend-specific changes; a
 runtime evaluation is reported in \cref{sec:performance}.
 
 \paragraph{Architectural byproducts.}
@@ -365,8 +365,8 @@ visualized in \cref{fig:e2-window-sampling}.}
 \tool localizes each discrepancy in \cref{tab:divergence-profile} to the point
 where the two aligned evaluations first diverge.
 Using the validated backends of \cref{sec:implement-variations}, the localizer
-compares a diverging pair node by node: every backend lowers the formula into
-one shared syntax tree with inspectable per-node outputs, so a single post-order
+compares a diverging pair node by node: the backends expose inspectable outputs
+aligned to one shared syntax tree, so a single post-order
 walk reports a \emph{minimal divergent node}---a lowest node whose backend
 outputs disagree while all of its children still agree---and the backend
 primitive used to evaluate that node (\cref{tab:e2-localization}).
@@ -399,11 +399,11 @@ Consider the following CPS-style requirement:
   (\mathtt{safety\_margin} \ge 0).$}
 \]
 It can be read as a small CPS-style monitoring requirement with a mode signal,
-an enabling signal, a monitored continuous signal, and a safety margin: during
-the window $[0,3]$, the system must remain in the required mode; within the
-initial window $[0,1]$, it must become enabled; once enabled, the monitored
-signal must stay above its threshold throughout the following $[1,2]$ window;
-and the run must maintain a nonnegative safety margin.
+an enabling signal, a monitored continuous signal, and a safety margin. At
+$t=0$, it requires a nonnegative safety margin and the required mode throughout
+$[0,3]$; from each time in that window, an enabled point must occur within the
+next unit, after which the monitored signal must remain above its threshold over
+offsets $[1,2]$.
 The localizer thus exposes an off-grid window choice three temporal levels
 below the root; as detailed in \cref{fig:e2-window-sampling}, the discrepancy
 would be invisible from the Boolean verdicts alone.
