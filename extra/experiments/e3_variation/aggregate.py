@@ -61,11 +61,11 @@ def gather_facts(result_dir: Path) -> list[RunRecord]:
 # (all compatibility backends); which of them land in the emitted tex
 # table is selected separately (see ``DEFAULT_TEX_VARIANTS`` / ``--tex-variants``).
 VARIANTS = (
-    ("breach", "Breach-compatible", "executor op overrides"),
-    ("rtamt", "RTAMT-compatible", "own lowering + executor"),
+    ("breach", "Breach-compatible", "node-interpretation overrides"),
+    ("rtamt", "RTAMT-compatible", "own lowering + node interpretation"),
     ("rtamt_dense", "RTAMT dense-time", "own lowering + executor"),
     ("pymtl", "py-MTL-compatible", "own lowering + executor"),
-    ("taliro", "TaLiRo-compatible", "own lowering + executor"),
+    ("taliro", "TaLiRo-compatible", "own lowering + node interpretation"),
     ("stlcgpp", "STLCG++-compatible", "own lowering + executor"),
     ("stlcgpp_torch", "STLCG++ Torch executor", "executor only"),
     ("tidystl_simd", "Rust SIMD executor", "executor only (native ext.)"),

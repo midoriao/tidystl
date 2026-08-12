@@ -1,9 +1,9 @@
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{2pt}
 \renewcommand{\arraystretch}{1.14}
+\newlength{\choiceedgepad}
+\setlength{\choiceedgepad}{2pt}
 
 \definecolor{finiteblue}{RGB}{232,240,250}
-\definecolor{predgreen}{RGB}{235,247,238}
-\definecolor{fragorange}{RGB}{252,241,229}
 \definecolor{implgray}{RGB}{244,244,244}
 
 \newcommand{\altsep}{\(\,\mid\,\)}
@@ -16,22 +16,26 @@
 }
 
 \newcommand{\groupnote}[1]{%
-  {\normalfont\small\textcolor{black!65}{#1}}%
+  {\normalfont\small\textcolor{black!85}{#1}}%
 }
 
-\begin{tabularx}{\linewidth}{@{}%
+\newcommand{\grouphead}[2]{%
+  \multicolumn{2}{@{\hspace{\choiceedgepad}}l@{\hspace{\choiceedgepad}}}{%
+    \makebox[\dimexpr\linewidth-2\choiceedgepad\relax][l]{\textbf{#1}\hfill\groupnote{#2}}%
+  } \\
+}
+
+\begin{tabularx}{\linewidth}{@{\hspace{\choiceedgepad}}%
   p{0.31\linewidth}
+  @{}
   >{\raggedright\arraybackslash}X
-@{}}
+@{\hspace{\choiceedgepad}}}
 \toprule
-\textbf{Choice} & \textbf{Description} \\
+\textbf{Axis} & \textbf{Choice} \\
 \midrule
 
 \rowcolor{finiteblue}
-\multicolumn{2}{@{}l}{%
-  \textbf{Finite-trace interpretation}
-  \quad\groupnote{Reading samples as a signal, affects robustness}
-} \\
+\grouphead{Finite-trace interpretation}{Reading samples as a signal, affects robustness}
 
 \rowcolor{gray!4}
 \choicelead{Signal model}
@@ -46,26 +50,20 @@
 
 \addlinespace[0.35em]
 
-\rowcolor{predgreen}
-\multicolumn{2}{@{}l}{%
-  \textbf{Predicate semantics}
-  \quad\groupnote{Atomic-level semantics and supported forms}
-} \\
+\rowcolor{finiteblue}
+\grouphead{Predicate semantics}{Atomic-level semantics and supported forms}
 
 \rowcolor{gray!4}
 \choicelead{Distance metric}
-& Signed margin \altsep Euclidean \hfill \textcolor{black!65}{(affects robustness)}\\
+& Signed margin \altsep Euclidean \hfill \textcolor{black!85}{(affects robustness)}\\
 
 \choicelead{Nonstandard predicates}
-& E.g., Equality \hfill \textcolor{black!65}{(affects acceptance/robustness)} \\
+& E.g., Equality \hfill \textcolor{black!85}{(affects acceptance/robustness)} \\
 
 \addlinespace[0.35em]
 
-\rowcolor{fragorange}
-\multicolumn{2}{@{}l}{%
-  \textbf{Logic fragment}
-  \quad\groupnote{Which parts of the full logic are supported, affects acceptance}
-} \\
+\rowcolor{finiteblue}
+\grouphead{Logic fragment}{Which parts of the full logic are supported, affects acceptance}
 
 \rowcolor{gray!4}
 \choicelead{Unbounded intervals}
@@ -88,17 +86,14 @@
 \addlinespace[0.35em]
 
 \rowcolor{implgray}
-\multicolumn{2}{@{}l}{%
-  \textbf{Implementation-specific}
-  \quad\groupnote{Evaluator conventions, affect robustness or acceptance}
-} \\
+\grouphead{Implementation-specific}{Conventions affecting robustness or acceptance}
 
 \rowcolor{gray!4}
 \choicelead{Off-grid windows}
 & Exact endpoints \altsep Samples only \altsep Empty-window fallback \\
 
-\choicelead{Timestamp grids}
-& Validate real times \altsep Reinterpret samples by index \\
+\choicelead{Non-uniform time}
+& As-is \altsep Force equal spacing \altsep Reject \\
 
 \rowcolor{gray!4}
 \choicelead{Infinity encoding}

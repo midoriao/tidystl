@@ -135,7 +135,7 @@ sample is treated as persisting, so an out-of-range query returns $\sigma(T)$. U
 a \emph{pessimistic} rule (RTAMT discrete, TaLiRo) the out-of-range part contributes
 nothing: the window is effectively empty, so a $\Eventually$ becomes $-\infty$
 (the $\sup$ of an empty set) and a $\Always$ becomes $+\infty$.
-RTAMT's dense mode ($\mathrm{RTAMT}_d$), by contrast, extends the final sample,
+RTAMT's dense mode ($\mathrm{RTAMT}_{den}$), by contrast, extends the final sample,
 matching the clamp rule rather than the discrete mode's pessimistic one.
 This is the \emph{signal beyond horizon} row of \cref{tab:divergence-profile},
 illustrated on a concrete trace in \cref{ex:verdict-flip}. It is a sign change
