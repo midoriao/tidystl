@@ -35,8 +35,8 @@ Rather than comparing final outputs alone, \tool evaluates the same formula and
 trace under named tool behaviors, aligns their intermediate robustness values
 along a shared formula structure, and reports where they first diverge
 (\cref{fig:arch}).
-The current implementation can diagnose a recorded monitor prefix as a finite
-trace; incremental evaluation as new samples arrive is future work.
+This finite-trace workflow can diagnose recorded prefixes from runtime
+monitoring, traces produced during falsification, and simulation or test logs.
 
 This paper makes the following contributions.
 \begin{itemize}
@@ -59,7 +59,8 @@ monitoring~\cite{nickovic2020rtamt}; \tool compares evaluator-level choices acro
 these uses. Beyond classical robustness, some
 tools further implement extended semantics or logics:
 STLCG++~\cite{kapoor2025stlcgpp} for smooth robustness,
-mstlo~\cite{thomsen2026mstlo} for the RoSI~\cite{deshmukh2017online}-style finite-prefix uncertainty,
+mstlo~\cite{thomsen2026mstlo} for RoSI-style finite-prefix
+uncertainty~\cite{deshmukh2017online},
 CauMon~\cite{CauMon} for causation, and MoonLight~\cite{bartocci2023moonlight}
 for spatio-temporal properties. Supporting a broader range of these semantics
 is future work.
@@ -147,6 +148,8 @@ Let $\varphi = \Eventually_{[2,4]}(\mathtt{x} \geq 0)$ be evaluated at $t = 0$ o
 Neither rule is intrinsically wrong: a finite trace underdetermines the
 idealized signal. Rather than declaring one value correct, a discrepancy can
 therefore be diagnosed by localizing the implicit choice that produced it.
+In \cref{sec:discrepancies}, we will apply this principle to discrepancies
+between tool behaviors on concrete formula-and-trace inputs.
 
 % ================================================================
 \section{Design and Implementation}
@@ -249,8 +252,8 @@ emulating an existing tool requires only compact backend-specific changes.
 \paragraph{Architectural byproducts.}
 Beyond this paper's scope of cross-tool discrepancy diagnosis,
 the swappable architecture (\cref{fig:arch}) also enables new evaluation strategies to be implemented
-through the same interface: the codebase ships differentiable
-(smooth robustness~\cite{kapoor2025stlcgpp}) and SIMD-optimized backends as
+through the same interface. The codebase ships a differentiable
+(smooth robustness~\cite{kapoor2025stlcgpp}) backend and an SIMD-optimized backend as
 instances of this extensibility.
 
 
@@ -260,20 +263,20 @@ instances of this extensibility.
 % ----------------------------------------------------------------
 % ================================================================
 
-We evaluate \tool~0.2.0 in three parts.\footnote{
+We evaluate \tool~0.2.0 in two parts.\footnote{
 The artifact repository includes the implementation used in our
 empirical study, together with scripts and documentation (\texttt{extra/experiments/}).}
-First, diagnostic cases profile finite-trace choices in the reference tools.
-Second, we assess backend modularity, compatibility with reference-tool outputs,
-and runtime performance (\cref{sec:implement-variations}). Third, using the
-validated backends, we localize cross-tool discrepancies to a formula node and
-expose the operations involved (\cref{sec:discrepancies}).
+First, we assess
+backend modularity, compatibility with reference-tool outputs, and runtime
+performance (\cref{sec:implement-variations}). Second, using the validated
+backends, we localize cross-tool discrepancies to a formula node and expose the
+operations involved (\cref{sec:discrepancies}).
 
-We begin by profiling fixed versions of Breach 1.11.4, RTAMT 0.3.5 (discrete
+Our evaluation uses fixed versions of Breach 1.11.4, RTAMT 0.3.5 (discrete
 default and dense, $\mathrm{RTAMT}_{den}$), and TaLiRo (SVN revision 146).
-\Cref{tab:divergence-profile} covers three finite-trace choices; each diagnostic
-isolates one choice and separates the tools into at least two observable
-behaviors.
+\Cref{tab:divergence-profile} illustrates differences among these tools along
+three implicit-choice axes of finite-trace evaluation; each diagnostic isolates
+one axis and separates the tools into at least two observable behaviors.
 
 \begin{table}[t]
 \centering
@@ -298,34 +301,37 @@ not observable from TaLiRo's whole-trace scalar output.}
 % ----------------------------------------------------------------
 % ================================================================
 
-Each compatibility backend consists of fewer than 200 lines of variant-specific
-code: 85 for Breach, 167 for TaLiRo, and 193 for RTAMT. Blank and comment lines
-are excluded. For Breach, the common DAG representation already suffices, so only
+We implemented compatibility backends for Breach, TaLiRo, and RTAMT to
+reproduce their observed evaluator behavior within \tool.
+The resulting variant-specific implementations each comprise fewer than 200
+lines: 85 for Breach, 167 for TaLiRo, and 193 for RTAMT, excluding blank and
+comment lines.
+For Breach, the common DAG representation already suffices, so only
 node-interpretation overrides are needed. TaLiRo and RTAMT instead require
 custom lowering to represent tool-specific operations with dedicated DAG nodes
 (e.g., normalizing TaLiRo predicates by the coefficient-vector norm and
 converting RTAMT temporal intervals to discrete sample offsets), as well as
 custom node interpretation. All changes remain within the backend boundary,
-leaving the stable core and frontend unchanged. These counts describe
-implementation size, not reverse-engineering effort.
+leaving the stable core and frontend unchanged.
 
 \paragraph{Compatibility validation.}
-For each compatibility backend, we generate outputs from the
-corresponding reference tool on a suite covering its operators. Reproduction
-tests then evaluate the same formulas and traces with the backend and compare
-robustness at every reported timestep for Breach and RTAMT, and at $t=0$ for
-TaLiRo, whose interface returns only a whole-trace scalar. Agreement on this
-suite reduces, but does not eliminate, the risk of mismatches elsewhere.
+We validate each compatibility backend against outputs from the corresponding
+reference tool on a suite covering its operators. These outputs are generated
+in the tools' native environments and stored as committed reference fixtures.
+Reproduction tests evaluate the same formulas and traces with the backend and
+compare robustness at every reported timestep for Breach and RTAMT, and at
+$t=0$ for TaLiRo, whose interface returns only a whole-trace scalar.
 
 \paragraph{Performance.}\label{sec:performance}
 We benchmark
 $\Always_{[0,5]}((\mathtt{x}>0)\wedge\Eventually_{[0,2]}(\mathtt{y}>0))$ on synthetic signals
 sampled at equally spaced points over $[0,10]$.
 \Cref{tab:scaling-main} reports single-trace and batched results for
-$T=101$ and $1001$.
-This benchmark indicates that per-node inspectability remains practical: the
-inspectable backends are competitive with RTAMT and STLCG++ on single traces,
-while vectorization remains effective across batches.
+different time-grid sizes.
+The results show that \tool achieves practical performance with its
+inspectable, swappable backend design. The \tool compatibility backends are competitive
+with RTAMT and STLCG++ on single traces, while vectorization remains effective
+across batches.
 
 
 \begin{table}[t]
@@ -349,9 +355,9 @@ parenthesized values use a Python loop, whereas STLCG++ uses its native
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-\caption{Pairwise localization using validated compatibility backends, without
-declaring either tool behavior correct. Root robustness values ($\rho$) follow
-the tool order; the final column summarizes their
+\caption{Pairwise localization of cross-tool discrepancies using validated
+compatibility backends. Root robustness values ($\rho$) follow the tool order;
+the final column summarizes their
 root-level effect and gives the minimal divergent node computed from aligned
 per-node traces. Formulas appear in
 \cref{ex:window-sampling,ex:until-boundary}; \texttt{window\_sampling} is
@@ -367,25 +373,21 @@ outputs disagree while all of its children still agree---and its first
 divergent timestep.
 Backend pairs whose lowerings differ structurally are compared at the shared
 syntax-tree level; predicate-internal arithmetic is treated as a leaf.
-Here and below, tool names abbreviate their validated compatibility backends.
-Localization identifies the first divergence between these backend implementations;
-fixture agreement does not imply that the reference tools use the same internal
-factorization.
+% Here and below, tool names abbreviate their validated compatibility backends.
+Localization identifies the first divergence between these backend implementations.
 
-\paragraph{Why not diagnostic cases alone?}
-For profiling evaluator choices, diagnostic cases provide a lightweight
-black-box approach. As \cref{tab:divergence-profile} demonstrates, a separating probe can classify an
-evaluator on a known implicit-choice axis. Yet profiles characterize only the
-tested inputs and assumed choices. When two profiles differ on several axes, a
-target formula may activate only a subset---or an interaction---of them; the
-profile alone cannot determine which explains an observed mismatch or where it
-first arises. A compatibility backend requires reverse engineering and
-validation, but exposes aligned per-node traces in the original context.
-Diagnostic cases therefore complement rather than replace localization. Probes
-cheaply identify known choices, whereas emulation localizes concrete
-discrepancies. Using probes to refine a backend is future work.
-\ifextended{\Cref{sec:app-identifiability} quantifies this limitation within a
-finite hypothesis class.}{}
+\paragraph{Connecting profiles to concrete discrepancies.}
+Diagnostic cases give a lightweight black-box profile of evaluator choices:
+as \cref{tab:divergence-profile} demonstrates, a separating probe can classify
+an evaluator along a known implicit-choice axis. A target formula may exercise
+only a subset of those choices, including interactions among them. The
+validated compatibility backends place these choices in the context of the
+target formula: their aligned per-node traces show which behavior affects the
+result and where the divergence begins. Building these backends requires
+reverse engineering and validation.
+\ifextended{\Cref{sec:app-identifiability} quantifies the limits of probe-based
+profiles within a finite hypothesis class.}{}
+Using diagnostic probes to guide backend refinement is future work.
 
 \begin{figure}[t]
 \centering
@@ -429,19 +431,23 @@ $+2.0$. The localizer pins the discrepancy to the single $\Until_{[1,2]}$
 node---RTAMT's discrete-time until composition.
 \end{example}
 
-ARCH-COMP illustrates a concrete use. Profiling would expose the reported
-$\pm 1$ versus $\pm\infty$ encodings for the discrete gear predicate in AT5*.
+The same localization pattern applies to the ARCH-COMP
+case discussed in \cref{sec:intro}. In this case,
+profiling would expose the reported
+$\pm 1$ versus $\pm\infty$ encodings for the discrete gear predicate in
+AT51--AT54.
 If a mismatch remained in a larger formula, a corresponding backend could test
 node-wise whether that difference propagates to the
-result~\cite{ernst2021archcomp}.
+result. Reproducing a participant's verdict therefore requires matching its
+profile, whereas comparing robustness values across participants requires a
+common profile.
 
-The off-grid example shows why robustness values must be compared when verdicts
-agree; the until example shows that an implicit choice can flip a verdict. Both
-localize the root-level mismatch to the operations involved. Choices remain
-use-dependent: interpolation may match the physical signal model, while
-conservative horizon handling may suit incomplete traces. Reproducing a
-participant's verdict requires its profile; comparing or ranking robustness
-across participants requires a common profile.
+Taken together, \cref{ex:window-sampling,ex:until-boundary} demonstrate the two
+complementary outcomes of localization. The former reveals a robustness
+discrepancy hidden by agreeing Boolean verdicts; the latter identifies the
+operation responsible for a verdict flip. These results show that node-wise
+comparison explains cross-tool discrepancies both when Boolean verdicts agree
+and when they differ.
 
 % ================================================================
 \section{Conclusion and Future Work}
