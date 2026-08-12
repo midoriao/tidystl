@@ -274,19 +274,21 @@ operations involved (\cref{sec:discrepancies}).
 
 Our evaluation uses fixed versions of Breach 1.11.4, RTAMT 0.3.5 (discrete
 default and dense, $\mathrm{RTAMT}_{den}$), and TaLiRo (SVN revision 146).
-\Cref{tab:divergence-profile} illustrates differences among these tools along
-three implicit-choice axes of finite-trace evaluation; each diagnostic isolates
-one axis and separates the tools into at least two observable behaviors.
+Each diagnostic pairs a formula and trace chosen so that candidate behaviors
+produce distinct robustness values at the marked readout. Matching the observed
+output to these predictions identifies a tool's behavior along one
+implicit-choice axis without inspecting its implementation.
+\Cref{tab:divergence-profile} compares the observed behaviors along three axes.
 
 \begin{table}[t]
 \centering
-\caption{Implicit-choice profiles for Breach, TaLiRo, and RTAMT in discrete
-and dense modes. Each row isolates one finite-trace choice. \emph{Top}:
-sampled traces used by diagnostics (i)--(iii); horizontal positions follow
-sample index, tick labels show actual timestamps, and the orange ring marks
-the reported sample. \emph{Bottom}: the behavior inferred from each tool's
-output, with the observed robustness in parentheses. \emph{n/o}: the choice is
-not observable from TaLiRo's whole-trace scalar output.}
+\caption{Diagnostic comparison of Breach, TaLiRo, and RTAMT in discrete and
+dense modes. Each row isolates one finite-trace choice. \emph{Top}: sampled
+traces used by diagnostics (i)--(iii); horizontal positions follow sample
+index, tick labels show actual timestamps, and the orange ring marks the
+reported sample. \emph{Bottom}: the behavior inferred from each tool's output,
+with the observed robustness in parentheses. \emph{n/o}: the choice is not
+observable from TaLiRo's whole-trace scalar output.}
 \label{tab:divergence-profile}
 
 \scalebox{0.95}{\input{figures/divergence-signals}}
@@ -294,6 +296,10 @@ not observable from TaLiRo's whole-trace scalar output.}
 \medskip
 \input{figures/divergence-profile}
 \end{table}
+
+Tool groupings vary across the diagnostics: $\mathrm{RTAMT}_{den}$ aligns with
+different tools on different axes. Thus, no pairwise correspondence captures
+all observed behaviors.
 
 % ================================================================
 \subsection{Backend Modularity, Compatibility, and Performance}
@@ -328,18 +334,17 @@ $\Always_{[0,5]}((\mathtt{x}>0)\wedge\Eventually_{[0,2]}(\mathtt{y}>0))$ on synt
 sampled at equally spaced points over $[0,10]$.
 \Cref{tab:scaling-main} reports single-trace and batched results for
 different time-grid sizes.
-The results show that \tool achieves practical performance with its
-inspectable, swappable backend design. The \tool compatibility backends are competitive
-with RTAMT and STLCG++ on single traces, while vectorization remains effective
-across batches.
+The results show that \tool's inspectable, swappable backend design retains
+practical performance: its compatibility backends are competitive with RTAMT
+and STLCG++ on single traces, while vectorization remains effective across
+batches.
 
 
 \begin{table}[t]
 \centering
-\caption{Mean evaluation time in ms (10 runs). Entries are
-$N=1$ ($N=256$); ``-c.'' denotes a \tool compatibility backend. RTAMT's
-parenthesized values use a Python loop, whereas STLCG++ uses its native
-\texttt{torch.vmap} support.}
+\caption{Mean evaluation time in ms (10 runs) for $N=1$ ($N=256$); ``-c.''
+denotes a \tool compatibility backend. RTAMT batches use a Python loop;
+STLCG++ uses native \texttt{torch.vmap}.}
 \label{tab:scaling-main}
 \footnotesize
 \input{figures/scaling-table-main}
@@ -351,23 +356,30 @@ parenthesized values use a Python loop, whereas STLCG++ uses its native
 % ----------------------------------------------------------------
 % ================================================================
 
+The diagnostic cases in \cref{tab:divergence-profile} reveal differences along
+isolated implicit-choice axes, but a concrete formula may exercise only a
+subset or interaction of those choices. We therefore use the validated
+compatibility backends to identify which behavior causes an observed mismatch
+and where it first affects the evaluation. \Cref{tab:e2-localization}
+summarizes the results for two concrete formula-and-trace inputs.
+\ifextended{\Cref{sec:app-identifiability} further quantifies what can be
+inferred from isolated diagnostic cases within a finite hypothesis class.}{}
+
 \begin{table}[t]
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-\caption{Pairwise localization of cross-tool discrepancies using validated
-compatibility backends. Root robustness values ($\rho$) follow the tool order;
-the final column summarizes their
-root-level effect and gives the minimal divergent node computed from aligned
-per-node traces. Formulas appear in
-\cref{ex:window-sampling,ex:until-boundary}; \texttt{window\_sampling} is
-visualized in \cref{fig:e2-window-sampling}.}
+\caption{Pairwise localization using validated compatibility backends. Root
+robustness values ($\rho$) follow the tool order; the final column gives their
+root-level effect and the minimal divergent node. Formulas appear in
+\cref{ex:window-sampling,ex:until-boundary}; \texttt{window\_sampling} is shown
+in \cref{fig:e2-window-sampling}.}
 \input{figures/localization_summary_table}
 \label{tab:e2-localization}
 \end{table}
 
-Using the validated compatibility backends, the localizer compares aligned
-per-node traces on the shared syntax tree. A single post-order walk reports a
+For each backend pair, the localizer compares aligned per-node traces on the
+shared syntax tree. A single post-order walk reports a
 \emph{minimal divergent node}---a lowest node whose backend
 outputs disagree while all of its children still agree---and its first
 divergent timestep.
@@ -376,29 +388,16 @@ syntax-tree level; predicate-internal arithmetic is treated as a leaf.
 % Here and below, tool names abbreviate their validated compatibility backends.
 Localization identifies the first divergence between these backend implementations.
 
-\paragraph{Connecting profiles to concrete discrepancies.}
-Diagnostic cases give a lightweight black-box profile of evaluator choices:
-as \cref{tab:divergence-profile} demonstrates, a separating probe can classify
-an evaluator along a known implicit-choice axis. A target formula may exercise
-only a subset of those choices, including interactions among them. The
-validated compatibility backends place these choices in the context of the
-target formula: their aligned per-node traces show which behavior affects the
-result and where the divergence begins. Building these backends requires
-reverse engineering and validation.
-\ifextended{\Cref{sec:app-identifiability} quantifies the limits of probe-based
-profiles within a finite hypothesis class.}{}
-Using diagnostic probes to guide backend refinement is future work.
-
 \begin{figure}[t]
 \centering
 \input{figures/localization_window_sampling}
 \caption{Localization of the Breach--TaLiRo divergence in
 \cref{ex:window-sampling}. At $t=0$, the highlighted $\Always_{[1,2]}$ window
-lies inside the $0\to3$ sampling gap. Breach interpolates
-$\mathtt{level}(1)=2$, whereas TaLiRo finds no sample and returns $+\infty$.
-Shading traces this first disagreement to the roots: Breach's $+2.0$ remains
-binding, whereas TaLiRo's vacuous branch leaves $+5.0$. Both tools satisfy the
-formula despite reporting different robustness.}
+spans $[1,2]$, entirely between the samples at $t=0$ and $t=3$. Breach
+interpolates $\mathtt{level}(1)=2$, whereas TaLiRo finds no sample and returns
+$+\infty$. Shading traces this first disagreement to the roots: Breach's $+2.0$
+remains binding, whereas TaLiRo's vacuous branch leaves $+5.0$. Both tools
+satisfy the formula despite reporting different robustness.}
 \label{fig:e2-window-sampling}
 \end{figure}
 
@@ -422,6 +421,7 @@ node where Breach and TaLiRo differ, three temporal levels below the root; both
 Boolean verdicts remain satisfied, so final verdict comparison would miss it.
 \end{example}
 
+\begin{samepage}
 \begin{example}[Until verdict flip]
 \label{ex:until-boundary}
 For the bounded-until formula
@@ -430,17 +430,15 @@ $(\mathtt{x} \ge 0)\Until_{[1,2]}(\mathtt{y} \ge 0)$ in
 $+2.0$. The localizer pins the discrepancy to the single $\Until_{[1,2]}$
 node---RTAMT's discrete-time until composition.
 \end{example}
+\end{samepage}
 
-The same localization pattern applies to the ARCH-COMP
-case discussed in \cref{sec:intro}. In this case,
-profiling would expose the reported
-$\pm 1$ versus $\pm\infty$ encodings for the discrete gear predicate in
-AT51--AT54.
-If a mismatch remained in a larger formula, a corresponding backend could test
-node-wise whether that difference propagates to the
-result. Reproducing a participant's verdict therefore requires matching its
-profile, whereas comparing robustness values across participants requires a
-common profile.
+The same pattern applies to the ARCH-COMP case discussed in \cref{sec:intro}.
+A diagnostic case would expose the reported $\pm 1$ versus $\pm\infty$
+encodings for the discrete gear predicate in AT51--AT54; a corresponding
+backend could then test whether this difference propagates through a larger
+formula. Reproducing a participant's verdict requires matching the relevant
+evaluator choices, whereas comparing robustness values across participants
+requires holding them fixed.
 
 Taken together, \cref{ex:window-sampling,ex:until-boundary} demonstrate the two
 complementary outcomes of localization. The former reveals a robustness

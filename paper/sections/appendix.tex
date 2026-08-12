@@ -219,7 +219,7 @@ documents installation, backend semantics, and worked examples; the
 documents how to regenerate every evaluation record, table, and figure.
 
 \paragraph{Diagnostic case set and protocol.}
-The profile of \cref{tab:divergence-profile} uses one diagnostic case per
+The study in \cref{tab:divergence-profile} uses one diagnostic case per
 implicit choice, each a small formula and trace constructed so that only that
 choice can affect the reported robustness. Every case runs on each tool in its
 native environment---Breach (from a committed MATLAB cache), RTAMT in its
@@ -339,17 +339,17 @@ Consider $\Always_{[0.5,1.5]}(x>0)$ on the sampled trace
   (t,x)=(0,-1),(2,10),(4,-1).
 \]
 The recorded Breach fixture, reproduced by the Breach-compatible backend, and
-the generic Breach profile yield
+the generic Breach configuration yield
 \[
   \rho_{\mathrm{Breach}}=[1.75,10,-1], \qquad
   \rho_{\mathrm{generic}}=[4.5,4.5,-1].
 \]
 At $t=0$, the fixture reads the interpolated lower endpoint $x(0.5)=1.75$,
-whereas the generic profile falls back to the midpoint $x(1)=4.5$; none of the
-192 configurations reproduces the fixture. Comparison still localizes this
+whereas the generic configuration falls back to the midpoint $x(1)=4.5$; none
+of the 192 configurations reproduces the fixture. Comparison still localizes this
 out-of-model residual to the $\Always_{[0.5,1.5]}$ node while its predicate child
-agrees. Thus a black-box battery can report that no modeled profile matches,
-but cannot name behavior absent from its hypothesis class.
+agrees. Thus a black-box battery can report that no modeled configuration
+matches, but cannot name behavior absent from its hypothesis class.
 
 This analysis does not make finite fixture validation of a compatibility
 backend complete either. It distinguishes the information the two methods
