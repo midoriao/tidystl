@@ -43,6 +43,8 @@
 ## Build tool directories for auxiliary files
 # latexrun
 latex.out/
+.build/
+dist/
 
 ## Auxiliary and intermediate files from other packages:
 # algorithms
@@ -274,4 +276,3 @@ TSWLatexianTemp*
 
 # Makeindex log files
 *.lpz
-
