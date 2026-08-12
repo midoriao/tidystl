@@ -6,11 +6,11 @@
 %
 % formulas (tidystl syntax):
 %   until_boundary: (x >= 0) U[1,2] (y >= 0)
-%   window_sampling: G[0,3]( (armed >= 0) and F[0,1]( (ready >= 0) and G[1,2](level >= 0) ) ) and (margin >= 0)
+%   window_sampling: G[0,3]( (mode >= 0) and F[0,1]( (enable >= 0) and G[1,2](level >= 0) ) ) and (safety_margin >= 0)
 %
 % signals:
 %   until_boundary: t=[0, 1]; x=[5, -5]; y=[-1, 2]
-%   window_sampling: t=[0, 3, 4, 5, 6, 7, 8, 9]; armed=10 (const); ready=10 (const); margin=9 (const); level=[3, 0, 5, 5, 5, 5, 5, 5]
+%   window_sampling: t=[0, 3, 4, 5, 6, 7, 8, 9]; mode=10 (const); enable=10 (const); safety_margin=9 (const); level=[3, 0, 5, 5, 5, 5, 5, 5]
 \begin{tabular}{@{}llccl@{}}
 \toprule
 Case & Tools compared & $|\varphi|$/depth & $\rho$ & Divergence \\

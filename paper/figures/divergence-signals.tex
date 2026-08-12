@@ -1,7 +1,7 @@
 % Requires \usepackage{tikz}. Three diagnostic input signals (i)--(iii); each row
 % of \cref{tab:divergence-profile} names its signal label next to the test
 % formula. Visual key (see caption): samples spaced EVENLY by index; the t-axis
-% gives each sample's real time; dashed line = value 0; x=blue, y=red; orange
+% gives each sample's real time; dashed line = value 0; signals are blue; orange
 % ring = the readout time whose robustness Table 2 reports.
 %
 % TO EDIT a panel: set its value range [\vmin,\vmax] (mapped to the band
@@ -61,27 +61,26 @@
   \node[font=\scriptsize,anchor=base west] at (-0.12,1.42) {(ii)};
 \end{tikzpicture}
 &
-% ---- (iii) robustness at horizon: x = y = 5, 5, -3 at t = 0, 1, 2; readout at t = 2 ----
+% ---- (iii) robustness at horizon: x = y = 5, -3 at t = 0, 1; readout at t = 1 ----
 \begin{tikzpicture}[xscale=1.45,yscale=1.3775,baseline={(0,0.30cm)},line width=0.9pt,line cap=round]
   \def\vmin{-3}\def\vmax{5}
-  \def\xpts{0/5, 1/5, 2/-3}
-  \draw[gray!75,dashed,line width=0.45pt] (-0.05,{\sigY{0}}) -- ({\sigX{2}+0.05},{\sigY{0}});
+  \def\xpts{0/5, 1/-3}
+  \draw[gray!75,dashed,line width=0.45pt] (-0.05,{\sigY{0}}) -- ({\sigX{1}+0.05},{\sigY{0}});
   \node[font=\scriptsize,black!75,anchor=east] at (-0.08,{\sigY{0}}) {0};
-  \draw[gray!75,line width=0.55pt] ({\sigX{0}},\sigaxisy) -- ({\sigX{2}},\sigaxisy);
-  \foreach \i/\rt in {0/0, 1/1, 2/2} {
+  \draw[gray!75,line width=0.55pt] ({\sigX{0}},\sigaxisy) -- ({\sigX{1}},\sigaxisy);
+  \foreach \i/\rt in {0/0, 1/1} {
     \draw[gray!75,line width=0.65pt] ({\sigX{\i}},\sigaxisy) -- ({\sigX{\i}},\sigticky);
     \node[font=\scriptsize,black!75,anchor=north] at ({\sigX{\i}},{\sigticky+0.01}) {\rt};
   }
-  \node[font=\scriptsize,black!75,anchor=west] at ({\sigX{2}+0.10},\sigaxisy) {$t$};
+  \node[font=\scriptsize,black!75,anchor=west] at ({\sigX{1}+0.10},\sigaxisy) {$t$};
   \foreach \i/\v [count=\n] in \xpts { \coordinate (p\n) at ({\sigX{\i}},{\sigY{\v}}); }
-  \draw[blue] (p1)--(p2)--(p3);
+  \draw[blue] (p1)--(p2);
   \foreach \i/\v [count=\n] in \xpts {
     \fill[blue] (p\n) circle (1.5pt);
     \node[font=\tiny,blue,anchor=south] at ({\sigX{\i}},{\sigY{\v}+0.05}) {\v};
   }
-  \draw[red!70!black] (p1)--(p2)--(p3);
-  \foreach \i/\v [count=\n] in \xpts { \fill[red!70!black] (p\n) circle (1.5pt); }
-  \draw[readoutorange,line width=1.0pt] (p3) circle (2.8pt);
+  \node[font=\scriptsize,blue,anchor=west] at ({\sigX{0}+0.12},{\sigY{5}}) {$x=y$};
+  \draw[readoutorange,line width=1.0pt] (p2) circle (2.8pt);
   \node[font=\scriptsize,anchor=base west] at (-0.12,1.42) {(iii)};
 \end{tikzpicture}
 \\

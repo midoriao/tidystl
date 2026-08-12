@@ -76,8 +76,13 @@
 \newcommand{\ifextended}[2]{\ifdefined\extendedversion#1\else#2\fi}
 
 % STL temporal operators (semantic macros)
-\newcommand{\Always}{\mathop{\Box}\nolimits}
-\newcommand{\Eventually}{\mathop{\Diamond}\nolimits}
+% Use private names because amsfonts.sty and latexsym.sty both define
+% \Box/\Diamond, but select different glyphs (AMSa versus lasy slots "32/"33).
+\DeclareSymbolFont{stllasy}{U}{lasy}{m}{n}
+\DeclareMathSymbol{\STLBox}{\mathord}{stllasy}{"32}
+\DeclareMathSymbol{\STLDiamond}{\mathord}{stllasy}{"33}
+\newcommand{\Always}{\mathop{\STLBox}\nolimits}
+\newcommand{\Eventually}{\mathop{\STLDiamond}\nolimits}
 \newcommand{\Until}{\mathbin{\mathcal{U}}}
 \newcommand{\Release}{\mathbin{\mathcal{R}}}
 

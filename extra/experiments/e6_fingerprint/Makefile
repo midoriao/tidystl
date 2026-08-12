@@ -3,7 +3,7 @@ export UV_PYTHON := 3.12
 export UV_NO_SYNC := true
 export OUTPUTS_ROOT := ../../outputs
 
-.PHONY: all run report smoke synth quotient openworld tierb
+.PHONY: all run report smoke synth quotient openworld syslocalize tierb appendix
 all: run
 
 run:
@@ -28,4 +28,9 @@ quotient:
 openworld:
 	uv run python openworld.py
 
+syslocalize:
+	uv run python syslocalize.py
+
 tierb: synth quotient openworld
+
+appendix: report synth syslocalize

@@ -1,0 +1,82 @@
+{
+  "experiment": "e4_scaling_main_camera_ready",
+  "recorded_at": "2026-08-12T07:33:22+00:00",
+  "git_rev": "eccbceed6c21f38d88d4d11ea5c8a44429371d98",
+  "git_dirty": true,
+  "python": "3.12.13",
+  "spec": "G[0,5]((x > 0) and F[0,2](y > 0))",
+  "signal_duration": 10.0,
+  "seed": 0,
+  "batch_grid": [1, 256],
+  "timestep_grid": [101, 1001],
+  "repeats": 10,
+  "notes": [
+    "Consolidated from successful Infra records run_0002 through run_0006 under /tmp/tidystl-e4-camera-ready/e4_scaling.",
+    "The worktree was dirty only because the camera-ready paper was being edited; the runners were those at git_rev.",
+    "Real RTAMT evaluates a batch with a Python loop; STLCG++ uses torch.vmap."
+  ],
+  "tool_versions": {
+    "rtamt": "0.3.5",
+    "stlcgpp": "0.0.2",
+    "torch": "2.12.0"
+  },
+  "runs": [
+    {
+      "source": "run_0006",
+      "runner": "run_backend.py --backend breach",
+      "backend": "breach",
+      "results": [
+        {"batch_size": 1, "timesteps": 101, "mean_ms": 0.5245, "std_ms": 0.0086},
+        {"batch_size": 1, "timesteps": 1001, "mean_ms": 5.2875, "std_ms": 0.0386},
+        {"batch_size": 256, "timesteps": 101, "mean_ms": 1.1109, "std_ms": 0.0150},
+        {"batch_size": 256, "timesteps": 1001, "mean_ms": 25.8365, "std_ms": 0.0733}
+      ]
+    },
+    {
+      "source": "run_0002",
+      "runner": "run_backend.py --backend taliro",
+      "backend": "taliro",
+      "results": [
+        {"batch_size": 1, "timesteps": 101, "mean_ms": 0.4467, "std_ms": 0.0082},
+        {"batch_size": 1, "timesteps": 1001, "mean_ms": 4.4670, "std_ms": 0.0611},
+        {"batch_size": 256, "timesteps": 101, "mean_ms": 1.0571, "std_ms": 0.0114},
+        {"batch_size": 256, "timesteps": 1001, "mean_ms": 24.9098, "std_ms": 0.6270}
+      ]
+    },
+    {
+      "source": "run_0003",
+      "runner": "run_backend.py --backend rtamt",
+      "backend": "rtamt",
+      "results": [
+        {"batch_size": 1, "timesteps": 101, "mean_ms": 0.2560, "std_ms": 0.0089},
+        {"batch_size": 1, "timesteps": 1001, "mean_ms": 2.2367, "std_ms": 0.0293},
+        {"batch_size": 256, "timesteps": 101, "mean_ms": 0.8156, "std_ms": 0.0079},
+        {"batch_size": 256, "timesteps": 1001, "mean_ms": 22.3119, "std_ms": 0.2578}
+      ]
+    },
+    {
+      "source": "run_0004",
+      "runner": "run_rtamt.py",
+      "backend": "rtamt-real",
+      "batching": "Python loop over single-trace evaluations",
+      "results": [
+        {"batch_size": 1, "timesteps": 101, "mean_ms": 0.2965, "std_ms": 0.0161},
+        {"batch_size": 1, "timesteps": 1001, "mean_ms": 2.3499, "std_ms": 0.2641},
+        {"batch_size": 256, "timesteps": 101, "mean_ms": 49.7625, "std_ms": 0.4278},
+        {"batch_size": 256, "timesteps": 1001, "mean_ms": 485.1429, "std_ms": 3.1332}
+      ]
+    },
+    {
+      "source": "run_0005",
+      "runner": "run_stlcgpp.py",
+      "backend": "stlcgpp-real",
+      "batching": "torch.vmap",
+      "results": [
+        {"batch_size": 1, "timesteps": 101, "mean_ms": 0.2055, "std_ms": 0.0251},
+        {"batch_size": 1, "timesteps": 1001, "mean_ms": 3.7780, "std_ms": 0.1922},
+        {"batch_size": 256, "timesteps": 101, "mean_ms": 4.8244, "std_ms": 0.1458},
+        {"batch_size": 256, "timesteps": 1001, "mean_ms": 556.1706, "std_ms": 161.0691}
+      ]
+    }
+  ]
+}

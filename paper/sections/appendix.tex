@@ -235,16 +235,16 @@ marked \emph{n/o} (not observable) rather than guessed.
 Each \tool compatibility backend is validated separately against its tool's
 committed reference fixtures---real-tool robustness regenerated from Breach,
 RTAMT, and TaLiRo---by the artifact's per-tool reproduction
-test suite at absolute tolerance $10^{-6}$ on the operator-coverage regression
-suite. The check is per-timestep for the Breach- and RTAMT-compatible backends;
+test suite on the operator-coverage regression suites. The check is per-timestep
+for the Breach- and RTAMT-compatible backends;
 for TaLiRo it is at $t=0$ only, the single value \texttt{dp\_taliro} reports.
 The backends implement each tool's \emph{documented} behavior where it is
 specified and, where it is not, the behavior pinned by these committed
 reference fixtures; the check therefore verifies the implementations rather than
-defining the rules. The one case where a backend departs from its
-reference tool is itself an implicit choice this paper aims to surface: where
-real RTAMT silently reinterprets a non-uniform grid as uniformly indexed
-samples, the RTAMT-compatible backend makes this an \emph{explicit} coverage
+defining the rules. One deliberate departure surfaces an implicit choice in the
+reference tool: real RTAMT silently reinterprets a non-uniform grid as uniformly
+indexed samples, whereas the RTAMT-compatible backend makes this an
+\emph{explicit} coverage
 rejection rather than reproducing the silent reinterpretation (cf.\ the
 coverage choices of \cref{sec:app-corner}).
 
@@ -253,7 +253,10 @@ Across any pair of validated backends, the localizer exploits that \tool
 backends share one formula representation with inspectable per-node outputs:
 it walks the shared syntax tree in post-order and reports every \emph{minimal
 divergent node}---a node whose outputs disagree while all its children
-agree---together with each backend's primitive operation at that node. To
+agree---together with each backend's primitive operation at that node.
+Tool names in the localization results denote these validated operational
+models; fixture agreement does not establish that a reference tool uses the
+same internal factorization. To
 illustrate the output format, on two minimal single-operator cases (the
 \emph{signal beyond horizon} and \emph{robustness at horizon} choices) the
 listing reads:
@@ -265,13 +268,14 @@ first divergent op at `and`: PointwiseMin vs PointwiseMin
 \end{lstlisting}
 The headline results are the tool-vs-tool localizations of
 \cref{sec:discrepancies} (\cref{tab:e2-localization,fig:e2-window-sampling}),
-where the same post-order walk pins a cause buried under several nesting levels.
+where the same post-order walk identifies a first divergent node buried under
+several nesting levels.
 
 \paragraph{Variant accounting.}
-LOC in \cref{tab:variation} counts variant-specific code only: blank,
+The LOC reported in \cref{sec:implement-variations} counts variant-specific code only: blank,
 comment-only, and docstring lines are excluded, and shared infrastructure is
-excluded. The native backend is the baseline and has no row. The full
-regression suite comprises 103 tests and passes with all variants installed.
+excluded. The native backend is the baseline and has no row. The full regression
+suite passes with all variants installed.
 
 \paragraph{Performance sanity check.}
 The benchmark in \cref{fig:scaling} compares \tool backends with real RTAMT and STLCG++ on
@@ -307,6 +311,56 @@ OOM: window materialization exceeds memory on the 32\,GB host.}
 \input{figures/scaling-table}
 \end{table}
 
+\subsection{Black-Box Identifiability Analysis}
+\label{sec:app-identifiability}
+
+To quantify the limitation of diagnostic cases within a closed hypothesis
+class, the supplementary analysis uses the generic backend to enumerate
+$4\mathbin{\times}2\mathbin{\times}2\mathbin{\times}2\mathbin{\times}3
+\mathbin{\times}2=192$ configurations over six modeled axes: signal model,
+boundary rule, terminal-step rule, predicate metric, equality semantics, and
+until-prefix convention. A seven-probe battery partitions their generated root
+traces into 33 observational-equivalence classes. From a pool combining 13
+formulas with six signals (78 candidates), an automated search finds five probes
+that induce the same finest partition; no additional probe from this pool
+uniquely identifies every configuration. This does not claim
+non-identifiability under every possible probe battery.
+
+Querying each subformula separately does not recover its behavior in context.
+In the validated Breach-compatible model, for example, the copy-prev convention
+of \cref{tab:divergence-profile} applies only when a binary Boolean operator is
+the formula root; extracting an inner conjunction activates behavior absent in
+its original context.
+
+We also use an out-of-model reference behavior to test residual detection outside this
+six-axis model, which leaves the off-grid-window strategy unparameterized.
+Consider $\Always_{[0.5,1.5]}(x>0)$ on the sampled trace
+\[
+  (t,x)=(0,-1),(2,10),(4,-1).
+\]
+The recorded Breach fixture, reproduced by the Breach-compatible backend, and
+the generic Breach profile yield
+\[
+  \rho_{\mathrm{Breach}}=[1.75,10,-1], \qquad
+  \rho_{\mathrm{generic}}=[4.5,4.5,-1].
+\]
+At $t=0$, the fixture reads the interpolated lower endpoint $x(0.5)=1.75$,
+whereas the generic profile falls back to the midpoint $x(1)=4.5$; none of the
+192 configurations reproduces the fixture. Comparison still localizes this
+out-of-model residual to the $\Always_{[0.5,1.5]}$ node while its predicate child
+agrees. Thus a black-box battery can report that no modeled profile matches,
+but cannot name behavior absent from its hypothesis class.
+
+This analysis does not make finite fixture validation of a compatibility
+backend complete either. It distinguishes the information the two methods
+provide: probes identify an observational class within an assumed space,
+whereas a validated backend states an operational hypothesis and produces
+intermediate traces for a target formula in its original context. A promising
+hybrid is to synthesize probes, use their inferred class and residuals to
+initialize or refine a backend, and then validate that backend against further
+fixtures.
+
+\clearpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Comparison with Other Tools}\label[appendix]{section:detailed_comparison}

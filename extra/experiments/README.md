@@ -8,6 +8,7 @@ independently runnable and documented by its own README:
 - [`e3_variation/`](e3_variation/) -- code cost and locality of each semantic/computational variant
 - [`e4_scaling/`](e4_scaling/) -- batch x signal-length scaling, tidystl backends vs real tools
 - [`e5b_verdict_flip/`](e5b_verdict_flip/) -- verdict-flip rate between two named semantic rules
+- [`e6_fingerprint/`](e6_fingerprint/) -- supplementary black-box identifiability and open-world analysis
 
 
 ## Reproduction
@@ -44,6 +45,8 @@ target tier needs.
   (`report`/`all` emit the supplementary `tab:divergence-matrix`.)
 - **e2**: `report` writes the table under `extra/outputs/`; `make -C e2_localization
   emit-ref` refreshes the committed `figs/` reference the paper mirrors.
+- **e6**: `appendix` reproduces the quotient, synthesized battery, and open-world
+  localization reported only in the extended paper.
 
 
 

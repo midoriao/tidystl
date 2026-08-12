@@ -43,7 +43,7 @@ temporal nesting depth 3 (`G[0,3] > F[0,1] > G[1,2]`) on a **non-uniform** grid
 with a wide segment `[0,3]`:
 
 ```text
-G[0,3]( (armed >= 0) and F[0,1]( (ready >= 0) and G[1,2](level >= 0) ) ) and (margin >= 0)
+G[0,3]( (mode >= 0) and F[0,1]( (enable >= 0) and G[1,2](level >= 0) ) ) and (safety_margin >= 0)
 ```
 
 The buried `G[1,2](level >= 0)` reduces over a window lying entirely **between

@@ -84,17 +84,19 @@ bootstrap-exp:
 	cd ../.. && $(REPRO_ENV) uv sync --group experiments
 
 reproduce-full: bootstrap-exp
-	@echo "==== [1/6] e1: records + tab:divergence-profile ===="
+	@echo "==== [1/7] e1: records + tab:divergence-profile ===="
 	$(MAKE) -C e1_divergence run profile
-	@echo "==== [2/6] e3: records + tab:variation ===="
+	@echo "==== [2/7] e3: records + tab:variation ===="
 	$(MAKE) -C e3_variation all
-	@echo "==== [3/6] e2: records + tab:e2-localization ===="
+	@echo "==== [3/7] e2: records + tab:e2-localization ===="
 	$(MAKE) -C e2_localization all
-	@echo "==== [4/6] e5b: clean N=201 sweep + verdict-flip rates ===="
+	@echo "==== [4/7] e5b: clean N=201 sweep + verdict-flip rates ===="
 	$(MAKE) -C e5b_verdict_flip all
-	@echo "==== [5/6] e4: records + tab:scaling ===="
+	@echo "==== [5/7] e4: records + tab:scaling ===="
 	$(MAKE) -C e4_scaling all
-	@echo "==== [6/6] backend fidelity suite ===="
+	@echo "==== [6/7] e6: extended-paper identifiability analysis ===="
+	$(MAKE) -C e6_fingerprint appendix
+	@echo "==== [7/7] backend fidelity suite ===="
 	$(REPRO_ENV) UV_NO_SYNC=true uv run --only-group experiments \
 	  python -m pytest ../../packages/tidystl-compat/tests
 
