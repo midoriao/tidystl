@@ -412,6 +412,8 @@ Consider the following CPS-style requirement:
 \]
 The formula combines a nested temporal response with the independent constraint
 $\mathtt{safety\_margin}\ge0$.
+The trace has eight samples: $t=0,3$, then unit-spaced through $9$;
+$\mathtt{level}$ is $3,0$, then $5$. Thus $[1,2]$ contains no sample.
 The outer $\Always_{[0,3]}$ requires the system to remain in the required mode
 and reach an enabled point within one time unit. From that point,
 $\mathtt{level}$ must remain nonnegative at offsets $[1,2]$.
@@ -424,21 +426,21 @@ Boolean verdicts remain satisfied, so final verdict comparison would miss it.
 \begin{samepage}
 \begin{example}[Until verdict flip]
 \label{ex:until-boundary}
-For the bounded-until formula
-$(\mathtt{x} \ge 0)\Until_{[1,2]}(\mathtt{y} \ge 0)$ in
-\texttt{until\_boundary}, Breach and TaLiRo report $-5.0$, while RTAMT reports
+For $(\mathtt{x} \ge 0)\Until_{[1,2]}(\mathtt{y} \ge 0)$ in
+\texttt{until\_boundary}, the two samples are at $t=0,1$ with
+$\mathtt{x}=[5,-5]$ and $\mathtt{y}=[-1,2]$, so $[1,2]$ reaches past the trace.
+Breach and TaLiRo report $-5.0$, while RTAMT reports
 $+2.0$. The localizer pins the discrepancy to the single $\Until_{[1,2]}$
-node---RTAMT's discrete-time until composition.
+node.
 \end{example}
 \end{samepage}
 
 The same pattern applies to the ARCH-COMP case discussed in \cref{sec:intro}.
-A diagnostic case would expose the reported $\pm 1$ versus $\pm\infty$
-encodings for the discrete gear predicate in AT51--AT54; a corresponding
-backend could then test whether this difference propagates through a larger
-formula. Reproducing a participant's verdict requires matching the relevant
-evaluator choices, whereas comparing robustness values across participants
-requires holding them fixed.
+Attributing the reported mismatch between the tools to their predicate
+encodings ($\pm 1$ versus $\pm\infty$) required manual debugging. \tool
+replaces that task with automatic node-wise localization, exposing the
+responsible evaluator behavior as an explicit, comparable algorithmic
+difference.
 
 Taken together, \cref{ex:window-sampling,ex:until-boundary} demonstrate the two
 complementary outcomes of localization. The former reveals a robustness
