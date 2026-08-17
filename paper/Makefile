@@ -1,3 +1,4 @@
+.DEFAULT_GOAL := help
 SHELL := /bin/sh
 
 PACKAGE_NAME := tidystl-rv2026-source
@@ -19,15 +20,17 @@ SUBMISSION_FILES := Makefile README.md $(PAPER_SOURCES)
 
 .PHONY: all pdf extended dist-pdf source-zip submission-check clean
 
-all: pdf
+.PHONY: help
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*## "} \
+		/^[a-zA-Z0-9_.-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' \
+		$(MAKEFILE_LIST)
 
-pdf:
+pdf:　## Build the main PDF
 	latexmk -pdf main.tex
 
-extended:
+extended: ## Build the extended version PDF
 	latexmk -pdf extended.tex
-
-dist-pdf: $(DIST_PDF)
 
 $(DIST_PDF): $(PAPER_SOURCES)
 	@mkdir -p "$(DIST_DIR)"
@@ -54,9 +57,7 @@ $(SOURCE_ZIP): $(SUBMISSION_FILES)
 	zip -X -q -r "$(abspath $(SOURCE_ZIP))" .; \
 	echo "Created $(SOURCE_ZIP)"
 
-# Compile from a clean extraction, so this check cannot use files left by a
-# build in the working tree.
-submission-check: $(DIST_PDF) $(SOURCE_ZIP)
+submission: $(DIST_PDF) $(SOURCE_ZIP) ## Prepare submission source and verify
 	@set -eu; \
 	tmp=$$(mktemp -d "$${TMPDIR:-/tmp}/tidystl-submission.XXXXXX"); \
 	trap 'rm -rf "$$tmp"' EXIT HUP INT TERM; \
@@ -67,5 +68,6 @@ submission-check: $(DIST_PDF) $(SOURCE_ZIP)
 	test -s "$(abspath $(DIST_PDF))"; \
 	echo "Verified: $(SOURCE_ZIP) builds main.pdf from a clean extraction"
 
-clean:
+clean: ## Clean up build artifacts
 	latexmk -c main.tex extended.tex
+	rm -rf $(STAGE_ROOT) $(DIST_DIR)
